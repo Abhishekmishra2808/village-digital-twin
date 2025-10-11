@@ -1,0 +1,14 @@
+services:
+  # Backend WebSocket Server
+  - type: web
+    name: sundarpur-backend
+    env: node
+    region: singapore
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
