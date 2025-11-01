@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useVillageStore } from './store/villageStore';
 import LandingPage from './components/Landing/LandingPage';
 import LoginPage from './components/Auth/LoginPage';
@@ -28,6 +28,19 @@ function App() {
   const { activeView, sidebarCollapsed, infoPanelOpen, isAuthenticated, userRole, login } = useVillageStore();
   const [showLanding, setShowLanding] = useState(true);
   useWebSocket();
+
+  // Control body overflow based on authentication state
+  useEffect(() => {
+    if (isAuthenticated) {
+      document.body.classList.add('dashboard-mode');
+    } else {
+      document.body.classList.remove('dashboard-mode');
+    }
+    
+    return () => {
+      document.body.classList.remove('dashboard-mode');
+    };
+  }, [isAuthenticated]);
 
   // Show landing page first
   if (showLanding && !isAuthenticated) {
