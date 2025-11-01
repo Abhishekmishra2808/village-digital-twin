@@ -10,7 +10,7 @@
 
 /* Modern Dark Theme - Login stays white, Dashboard goes dark */
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
   color: #e2e8f0;
   /* overflow: hidden removed - let landing page scroll naturally */
@@ -21,20 +21,22 @@ body.dashboard-mode {
   overflow: hidden;
 }
 
-/* Landing Page Typography System */
+/* Landing Page Typography System - IBM Plex */
 .landing-page h1,
 .landing-page h2,
 .landing-page h3,
 .landing-page h4,
 .landing-page .tech-text,
 .landing-page button {
-  font-family: 'Roboto Mono', monospace;
+  font-family: 'IBM Plex Mono', monospace;
+  letter-spacing: -0.02em;
 }
 
 .landing-page p,
 .landing-page li,
+.landing-page a,
 .landing-page span:not(.tech-text) {
-  font-family: 'Inter', sans-serif;
+  font-family: 'IBM Plex Sans', sans-serif;
 }
 
 /* Beautiful gradient backgrounds */
