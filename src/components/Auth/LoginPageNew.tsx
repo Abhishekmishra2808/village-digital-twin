@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { User, Shield, Briefcase, ChevronRight, Lock, Mail, AlertCircle, Loader } from 'lucide-react';
 import { useVillageStore } from '../../store/villageStore';
+import { API_URL } from '../../config/api';
 
 const roles = [
   { 
@@ -45,7 +46,7 @@ export default function LoginPage() {
         ? { email, password, name, role: selectedRole }
         : { email, password };
 
-      const response = await fetch(`http://localhost:3001${endpoint}`, {
+      const response = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
@@ -83,7 +84,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:3001/api/auth/login', {
+      const response = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: demoEmail, password: demoPassword })

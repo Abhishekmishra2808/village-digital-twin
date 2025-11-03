@@ -15,6 +15,7 @@ import {
   X
 } from 'lucide-react';
 import { useVillageStore, type GovernmentScheme } from '../../store/villageStore';
+import { API_URL } from '../../config/api';
 
 export default function CitizenDashboard() {
   const schemes = useVillageStore((state) => state.schemes);
@@ -62,7 +63,7 @@ export default function CitizenDashboard() {
       };
 
       // Submit feedback to backend (Gemini AI will process it)
-      const response = await fetch('http://localhost:3001/api/feedback', {
+      const response = await fetch(`${API_URL}/api/feedback`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
