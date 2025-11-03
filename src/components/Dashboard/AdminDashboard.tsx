@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { 
   Briefcase, 
   TrendingUp, 
-  AlertTriangle, 
-  CheckCircle,
+  AlertTriangle,
   ChevronDown,
   ChevronUp,
   Calendar,
@@ -11,8 +10,6 @@ import {
   Users,
   Star,
   MapPin,
-  FileText,
-  Clock,
   MessageSquare
 } from 'lucide-react';
 import { useVillageStore } from '../../store/villageStore';
@@ -31,11 +28,6 @@ export default function AdminDashboard() {
   const avgProgress = schemes.length > 0 ? Math.round(schemes.reduce((sum, s) => sum + s.overallProgress, 0) / schemes.length) : 0;
   const totalFeedback = schemes.reduce((sum, s) => sum + s.feedbackCount, 0);
   const avgRating = schemes.length > 0 ? (schemes.reduce((sum, s) => sum + s.citizenRating, 0) / schemes.length).toFixed(1) : '0.0';
-
-  // Get recent feedback (schemes with most recent updates)
-  const recentFeedback = [...schemes]
-    .sort((a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime())
-    .slice(0, 5);
 
   const toggleExpand = (schemeId: string) => {
     setExpandedScheme(expandedScheme === schemeId ? null : schemeId);
