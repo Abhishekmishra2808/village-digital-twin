@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useVillageStore } from './store/villageStore';
 import LandingPage from './components/Landing/LandingPage';
-import LoginPage from './components/Auth/LoginPage';
+import LoginPage from './components/Auth/LoginPageNew';
 import TopNav from './components/Layout/TopNav';
 import Sidebar from './components/Sidebar/Sidebar';
 import StatusBar from './components/Layout/StatusBar';
@@ -18,14 +18,14 @@ import FieldWorkerView from './components/Views/FieldWorkerView';
 import RoadsView from './components/Views/RoadsView';
 import WasteView from './components/Views/WasteView';
 import MapView from './components/Views/MapView';
-import TrafficView from './components/Views/TrafficView';
 import EnvironmentView from './components/Views/EnvironmentView';
 import FloodView from './components/Views/FloodView';
+import SchemesView from './components/Views/SchemesView';
 import AdminControls from './components/ControlPanel/AdminControls';
 import useWebSocket from './hooks/useWebSocket';
 
 function App() {
-  const { activeView, sidebarCollapsed, infoPanelOpen, isAuthenticated, userRole, login } = useVillageStore();
+  const { activeView, sidebarCollapsed, infoPanelOpen, isAuthenticated, userRole } = useVillageStore();
   const [showLanding, setShowLanding] = useState(true);
   useWebSocket();
 
@@ -49,7 +49,7 @@ function App() {
 
   // Show login page if not authenticated
   if (!isAuthenticated) {
-    return <LoginPage onLogin={login} />;
+    return <LoginPage />;
   }
 
   // Render appropriate view based on activeView and userRole
@@ -64,6 +64,8 @@ function App() {
         return <Dashboard />;
       case 'map':
         return <MapView />;
+      case 'schemes':
+        return <SchemesView />;
       case 'water':
         return <WaterView />;
       case 'power':
@@ -74,8 +76,6 @@ function App() {
         return <WasteView />;
       case 'agriculture':
         return <AgricultureView />;
-      case 'traffic':
-        return <TrafficView />;
       case 'environment':
         return <EnvironmentView />;
       case 'flood':

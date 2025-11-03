@@ -54,8 +54,6 @@ export function generateVillageData() {
       { id: 's006', type: 'soil_moisture', name: 'Field Sensor 3', coords: [73.8575, 18.5215], value: 65, unit: '%', status: 'active', lastUpdate: new Date().toISOString() },
       { id: 's007', type: 'air_quality', name: 'AQI Monitor North', coords: [73.8577, 18.5224], value: 38, unit: 'AQI', status: 'active', lastUpdate: new Date().toISOString() },
       { id: 's008', type: 'air_quality', name: 'AQI Monitor South', coords: [73.8557, 18.5184], value: 45, unit: 'AQI', status: 'active', lastUpdate: new Date().toISOString() },
-      { id: 's009', type: 'traffic', name: 'Traffic Counter Main', coords: [73.8565, 18.5190], value: 124, unit: 'vehicles/hr', status: 'active', lastUpdate: new Date().toISOString() },
-      { id: 's010', type: 'traffic', name: 'Traffic Counter School', coords: [73.8567, 18.5210], value: 87, unit: 'vehicles/hr', status: 'active', lastUpdate: new Date().toISOString() },
       { id: 's011', type: 'noise', name: 'Noise Monitor Market', coords: [73.8587, 18.5194], value: 68, unit: 'dB', status: 'active', lastUpdate: new Date().toISOString() },
       { id: 's012', type: 'rainfall', name: 'Rain Gauge', coords: [73.8567, 18.5204], value: 0, unit: 'mm', status: 'active', lastUpdate: new Date().toISOString() },
       { id: 's013', type: 'flood', name: 'Water Level Sensor', coords: [73.8555, 18.5185], value: 0.2, unit: 'm', status: 'active', lastUpdate: new Date().toISOString() },
@@ -71,8 +69,6 @@ export function generateVillageData() {
       { id: 's022', type: 'air_quality', name: 'AQI Monitor West', coords: [73.8537, 18.5204], value: 43, unit: 'AQI', status: 'active', lastUpdate: new Date().toISOString() },
       { id: 's023', type: 'water_quality', name: 'Water Quality Sensor 2', coords: [73.8577, 18.5224], value: 7.1, unit: 'pH', status: 'active', lastUpdate: new Date().toISOString(), tds: 238 },
       { id: 's024', type: 'water_quality', name: 'Water Quality Sensor 3', coords: [73.8557, 18.5184], value: 7.3, unit: 'pH', status: 'active', lastUpdate: new Date().toISOString(), tds: 251 },
-      { id: 's025', type: 'traffic', name: 'Traffic Counter Temple', coords: [73.8577, 18.5194], value: 95, unit: 'vehicles/hr', status: 'active', lastUpdate: new Date().toISOString() },
-      { id: 's026', type: 'traffic', name: 'Traffic Counter Market', coords: [73.8587, 18.5194], value: 156, unit: 'vehicles/hr', status: 'active', lastUpdate: new Date().toISOString() },
       { id: 's027', type: 'noise', name: 'Noise Monitor School', coords: [73.8567, 18.5214], value: 65, unit: 'dB', status: 'active', lastUpdate: new Date().toISOString() },
       { id: 's028', type: 'noise', name: 'Noise Monitor Residential', coords: [73.8547, 18.5214], value: 52, unit: 'dB', status: 'active', lastUpdate: new Date().toISOString() },
       { id: 's029', type: 'temperature', name: 'Temp Sensor Temple', coords: [73.8577, 18.5194], value: 28.2, unit: '°C', status: 'active', lastUpdate: new Date().toISOString() },
@@ -101,6 +97,150 @@ export function generateVillageData() {
       { id: 'cr003', category: 'power', title: 'Street light not working', coords: [73.8555, 18.5200], status: 'completed', priority: 'low', createdAt: '2024-10-07T19:45:00Z', assignedTo: 'Electrician #5', photos: 0, description: 'Street light pole #23 not functioning' },
       { id: 'cr004', category: 'waste', title: 'Garbage accumulation', coords: [73.8580, 18.5190], status: 'pending', priority: 'high', createdAt: '2024-10-09T08:20:00Z', assignedTo: null, photos: 3, description: 'Garbage not collected for 3 days' },
       { id: 'cr005', category: 'road', title: 'Road markings faded', coords: [73.8565, 18.5209], status: 'pending', priority: 'low', createdAt: '2024-10-08T16:00:00Z', assignedTo: null, photos: 1, description: 'Road markings need repainting at village circle' }
+    ],
+    
+    schemes: [
+      {
+        id: 'sch001',
+        name: 'Swachh Bharat Abhiyan - Phase 2',
+        category: 'Sanitation',
+        village: 'Sundarpur',
+        district: 'Pune',
+        totalBudget: 2500000,
+        budgetUtilized: 1875000,
+        startDate: '2024-01-15',
+        endDate: '2024-12-31',
+        overallProgress: 75,
+        status: 'on-track',
+        description: 'Construction of community toilets and solid waste management infrastructure',
+        phases: [
+          { id: 1, name: 'Site Survey & Planning', progress: 100, status: 'completed', startDate: '2024-01-15', endDate: '2024-02-15', budget: 250000, spent: 245000 },
+          { id: 2, name: 'Toilet Construction', progress: 90, status: 'on-track', startDate: '2024-02-16', endDate: '2024-06-30', budget: 1500000, spent: 1350000 },
+          { id: 3, name: 'Waste Management Setup', progress: 55, status: 'on-track', startDate: '2024-05-01', endDate: '2024-10-31', budget: 500000, spent: 275000 },
+          { id: 4, name: 'Awareness Campaign', progress: 40, status: 'delayed', startDate: '2024-08-01', endDate: '2024-12-31', budget: 250000, spent: 5000 }
+        ],
+        vendorReports: [
+          { id: 1, vendorName: 'Green Build Contractors', submittedDate: '2024-09-15', phase: 2, workCompleted: 'Construction of 12 toilet units', expenseClaimed: 450000, verificationStatus: 'verified', documents: ['progress-report.pdf', 'bills.pdf'] },
+          { id: 2, vendorName: 'EcoWaste Solutions', submittedDate: '2024-09-10', phase: 3, workCompleted: 'Installation of 5 waste segregation units', expenseClaimed: 125000, verificationStatus: 'pending', documents: ['invoice.pdf'] }
+        ],
+        discrepancies: [],
+        citizenRating: 4.2,
+        feedbackCount: 28,
+        lastUpdated: new Date().toISOString()
+      },
+      {
+        id: 'sch002',
+        name: 'Jal Jeevan Mission - Pipeline Extension',
+        category: 'Water Supply',
+        village: 'Sundarpur',
+        district: 'Pune',
+        totalBudget: 4200000,
+        budgetUtilized: 2940000,
+        startDate: '2023-11-01',
+        endDate: '2024-11-30',
+        overallProgress: 70,
+        status: 'delayed',
+        description: 'Extension of water pipeline network to ensure tap water connection for every household',
+        phases: [
+          { id: 1, name: 'Pipeline Procurement', progress: 100, status: 'completed', startDate: '2023-11-01', endDate: '2024-01-31', budget: 1200000, spent: 1180000 },
+          { id: 2, name: 'Excavation & Laying', progress: 85, status: 'delayed', startDate: '2024-02-01', endDate: '2024-07-31', budget: 2000000, spent: 1700000 },
+          { id: 3, name: 'Household Connections', progress: 35, status: 'delayed', startDate: '2024-06-01', endDate: '2024-11-30', budget: 1000000, spent: 60000 }
+        ],
+        vendorReports: [
+          { id: 1, vendorName: 'AquaTech Infrastructure', submittedDate: '2024-09-20', phase: 2, workCompleted: '3.2 km pipeline laid', expenseClaimed: 850000, verificationStatus: 'verified', documents: ['progress-photos.pdf', 'material-bills.pdf'] },
+          { id: 2, vendorName: 'AquaTech Infrastructure', submittedDate: '2024-08-15', phase: 2, workCompleted: '2.1 km pipeline laid', expenseClaimed: 650000, verificationStatus: 'rejected', documents: ['invoice.pdf'] }
+        ],
+        discrepancies: [
+          { type: 'budget-overrun', severity: 'medium', description: 'Phase 2 showing 15% higher material costs than estimated', reportedDate: '2024-09-01' }
+        ],
+        citizenRating: 3.8,
+        feedbackCount: 45,
+        lastUpdated: new Date().toISOString()
+      },
+      {
+        id: 'sch003',
+        name: 'PMAY - Affordable Housing',
+        category: 'Housing',
+        village: 'Sundarpur',
+        district: 'Pune',
+        totalBudget: 8500000,
+        budgetUtilized: 7225000,
+        startDate: '2023-06-01',
+        endDate: '2024-10-31',
+        overallProgress: 85,
+        status: 'on-track',
+        description: 'Construction of 25 pucca houses for economically weaker sections under Pradhan Mantri Awas Yojana',
+        phases: [
+          { id: 1, name: 'Beneficiary Selection', progress: 100, status: 'completed', startDate: '2023-06-01', endDate: '2023-07-31', budget: 100000, spent: 95000 },
+          { id: 2, name: 'Land Allocation', progress: 100, status: 'completed', startDate: '2023-08-01', endDate: '2023-09-30', budget: 300000, spent: 280000 },
+          { id: 3, name: 'House Construction', progress: 88, status: 'on-track', startDate: '2023-10-01', endDate: '2024-09-30', budget: 7500000, spent: 6600000 },
+          { id: 4, name: 'Handover & Documentation', progress: 60, status: 'on-track', startDate: '2024-09-01', endDate: '2024-10-31', budget: 600000, spent: 250000 }
+        ],
+        vendorReports: [
+          { id: 1, vendorName: 'Shree Constructions', submittedDate: '2024-09-25', phase: 3, workCompleted: '22 houses at finishing stage', expenseClaimed: 2200000, verificationStatus: 'verified', documents: ['completion-report.pdf', 'quality-cert.pdf'] }
+        ],
+        discrepancies: [],
+        citizenRating: 4.6,
+        feedbackCount: 52,
+        lastUpdated: new Date().toISOString()
+      },
+      {
+        id: 'sch004',
+        name: 'MGNREGA - Rural Road Development',
+        category: 'Employment',
+        village: 'Sundarpur',
+        district: 'Pune',
+        totalBudget: 1800000,
+        budgetUtilized: 540000,
+        startDate: '2024-06-01',
+        endDate: '2025-03-31',
+        overallProgress: 30,
+        status: 'on-track',
+        description: 'Rural road construction and maintenance providing employment to 150 households',
+        phases: [
+          { id: 1, name: 'Worker Registration', progress: 100, status: 'completed', startDate: '2024-06-01', endDate: '2024-06-30', budget: 50000, spent: 48000 },
+          { id: 2, name: 'Road Survey & Marking', progress: 100, status: 'completed', startDate: '2024-07-01', endDate: '2024-07-31', budget: 100000, spent: 95000 },
+          { id: 3, name: 'Road Construction Phase 1', progress: 45, status: 'on-track', startDate: '2024-08-01', endDate: '2024-12-31', budget: 900000, spent: 397000 },
+          { id: 4, name: 'Road Construction Phase 2', progress: 0, status: 'not-started', startDate: '2025-01-01', endDate: '2025-03-31', budget: 750000, spent: 0 }
+        ],
+        vendorReports: [
+          { id: 1, vendorName: 'Village Panchayat (Self)', submittedDate: '2024-09-30', phase: 3, workCompleted: '1.8 km road constructed, 145 workers employed', expenseClaimed: 350000, verificationStatus: 'verified', documents: ['attendance-sheets.pdf', 'wage-disbursement.pdf'] }
+        ],
+        discrepancies: [],
+        citizenRating: 4.1,
+        feedbackCount: 34,
+        lastUpdated: new Date().toISOString()
+      },
+      {
+        id: 'sch005',
+        name: 'Village Electrification - Solar Street Lights',
+        category: 'Power',
+        village: 'Sundarpur',
+        district: 'Pune',
+        totalBudget: 1500000,
+        budgetUtilized: 1650000,
+        startDate: '2024-03-01',
+        endDate: '2024-09-30',
+        overallProgress: 95,
+        status: 'discrepant',
+        description: 'Installation of 75 solar-powered LED street lights across the village',
+        phases: [
+          { id: 1, name: 'Site Identification', progress: 100, status: 'completed', startDate: '2024-03-01', endDate: '2024-03-31', budget: 100000, spent: 95000 },
+          { id: 2, name: 'Equipment Procurement', progress: 100, status: 'completed', startDate: '2024-04-01', endDate: '2024-05-31', budget: 900000, spent: 1050000 },
+          { id: 3, name: 'Installation & Testing', progress: 100, status: 'completed', startDate: '2024-06-01', endDate: '2024-09-15', budget: 500000, spent: 505000 }
+        ],
+        vendorReports: [
+          { id: 1, vendorName: 'SolarBright Systems', submittedDate: '2024-09-18', phase: 2, workCompleted: '75 solar light units delivered', expenseClaimed: 1050000, verificationStatus: 'under-review', documents: ['purchase-order.pdf', 'delivery-challan.pdf'] },
+          { id: 2, vendorName: 'ElectroTech Services', submittedDate: '2024-09-20', phase: 3, workCompleted: '75 lights installed and commissioned', expenseClaimed: 505000, verificationStatus: 'verified', documents: ['installation-report.pdf', 'testing-cert.pdf'] }
+        ],
+        discrepancies: [
+          { type: 'budget-exceeded', severity: 'high', description: 'Total expenditure exceeded approved budget by ₹1.5 Lakh', reportedDate: '2024-09-22' },
+          { type: 'procurement-irregularity', severity: 'high', description: 'Equipment purchased at 16% higher cost than market rate', reportedDate: '2024-09-25' }
+        ],
+        citizenRating: 3.5,
+        feedbackCount: 61,
+        lastUpdated: new Date().toISOString()
+      }
     ],
     
     alerts: [],
@@ -195,12 +335,6 @@ export function updateSensorData(state) {
         sensor.value = temp + (Math.random() - 0.5) * 3;
         break;
         
-      case 'traffic':
-        // Traffic pattern
-        const trafficFactor = (hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19) ? 1.5 : 0.6;
-        sensor.value = Math.round(100 * trafficFactor * (0.8 + Math.random() * 0.4));
-        break;
-        
       case 'noise':
         const noiseFactor = (hour >= 6 && hour <= 22) ? 1.0 : 0.4;
         sensor.value = Math.round(50 * noiseFactor + Math.random() * 30);
@@ -274,6 +408,85 @@ export function updateSensorData(state) {
         
       default:
         sensor.value += (Math.random() - 0.5) * 0.5;
+    }
+  });
+  
+  // Update government schemes - simulate progress and events
+  newState.schemes.forEach(scheme => {
+    scheme.lastUpdated = new Date().toISOString();
+    
+    // Randomly update progress (slow incremental changes)
+    if (Math.random() > 0.7 && scheme.status !== 'completed') {
+      scheme.phases.forEach(phase => {
+        if (phase.status === 'on-track' || phase.status === 'delayed') {
+          // Increase progress by 0.5-2%
+          phase.progress = Math.min(100, phase.progress + Math.random() * 2);
+          
+          // Update spent amount proportionally
+          const progressRatio = phase.progress / 100;
+          phase.spent = Math.min(phase.budget, Math.round(phase.budget * progressRatio * (0.95 + Math.random() * 0.1)));
+          
+          // Mark as completed if progress reaches 100%
+          if (phase.progress >= 100) {
+            phase.status = 'completed';
+          }
+        }
+      });
+      
+      // Recalculate overall progress
+      const totalProgress = scheme.phases.reduce((sum, p) => sum + p.progress, 0);
+      scheme.overallProgress = Math.round(totalProgress / scheme.phases.length);
+      
+      // Recalculate total budget utilized
+      const totalSpent = scheme.phases.reduce((sum, p) => sum + p.spent, 0);
+      scheme.budgetUtilized = totalSpent;
+      
+      // Update status based on budget and timeline
+      const budgetOverrun = scheme.budgetUtilized > scheme.totalBudget;
+      const hasDiscrepancies = scheme.discrepancies && scheme.discrepancies.length > 0;
+      
+      if (budgetOverrun || hasDiscrepancies) {
+        scheme.status = 'discrepant';
+      } else if (scheme.overallProgress >= 100) {
+        scheme.status = 'completed';
+      } else {
+        // Check if any phase is delayed
+        const hasDelayedPhase = scheme.phases.some(p => p.status === 'delayed');
+        scheme.status = hasDelayedPhase ? 'delayed' : 'on-track';
+      }
+    }
+    
+    // Randomly add new vendor report (5% chance per update)
+    if (Math.random() > 0.95 && scheme.status !== 'completed') {
+      const ongoingPhases = scheme.phases.filter(p => p.status === 'on-track' || p.status === 'delayed');
+      if (ongoingPhases.length > 0) {
+        const randomPhase = ongoingPhases[Math.floor(Math.random() * ongoingPhases.length)];
+        const newReportId = (scheme.vendorReports.length || 0) + 1;
+        
+        const vendors = ['Green Build Contractors', 'AquaTech Infrastructure', 'Shree Constructions', 'ElectroTech Services', 'Village Panchayat (Self)'];
+        const randomVendor = vendors[Math.floor(Math.random() * vendors.length)];
+        
+        const expenseClaimed = Math.round(randomPhase.budget * 0.1 * (0.8 + Math.random() * 0.4));
+        
+        scheme.vendorReports.push({
+          id: newReportId,
+          vendorName: randomVendor,
+          submittedDate: new Date().toISOString().split('T')[0],
+          phase: randomPhase.id,
+          workCompleted: `Progress update for ${randomPhase.name}`,
+          expenseClaimed: expenseClaimed,
+          verificationStatus: Math.random() > 0.7 ? 'verified' : 'pending',
+          documents: ['progress-report.pdf']
+        });
+      }
+    }
+    
+    // Randomly update citizen feedback (3% chance)
+    if (Math.random() > 0.97) {
+      scheme.feedbackCount += 1;
+      // Recalculate average rating
+      const newRating = 1 + Math.random() * 4; // Random rating between 1-5
+      scheme.citizenRating = Number(((scheme.citizenRating * (scheme.feedbackCount - 1) + newRating) / scheme.feedbackCount).toFixed(1));
     }
   });
   

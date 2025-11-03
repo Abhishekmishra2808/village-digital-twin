@@ -72,6 +72,75 @@ export interface CitizenReport {
   description: string;
 }
 
+export interface SchemePhase {
+  id: number;
+  name: string;
+  progress: number;
+  status: 'completed' | 'on-track' | 'delayed' | 'not-started';
+  startDate: string;
+  endDate: string;
+  budget: number;
+  spent: number;
+}
+
+export interface VendorReport {
+  id: number;
+  vendorName: string;
+  submittedDate: string;
+  phase: number;
+  workCompleted: string;
+  expenseClaimed: number;
+  verificationStatus: 'verified' | 'pending' | 'rejected' | 'under-review';
+  documents: string[];
+}
+
+export interface SchemeDiscrepancy {
+  id?: string;
+  type: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  description: string;
+  reportedDate?: string;
+  date?: string;
+  reportedBy?: string;
+  categories?: string[];
+  concerns?: string[];
+  status?: string;
+}
+
+export interface FeedbackHistory {
+  id: string;
+  rating: number;
+  aiSummary: string;
+  concerns: string[];
+  sentiment: string;
+  categories: string[];
+  urgency: string;
+  timestamp: string;
+  isUrgent: boolean;
+}
+
+export interface GovernmentScheme {
+  id: string;
+  name: string;
+  category: string;
+  village: string;
+  district: string;
+  totalBudget: number;
+  budgetUtilized: number;
+  startDate: string;
+  endDate: string;
+  overallProgress: number;
+  status: 'on-track' | 'delayed' | 'completed' | 'discrepant';
+  description: string;
+  phases: SchemePhase[];
+  vendorReports: VendorReport[];
+  discrepancies: SchemeDiscrepancy[];
+  citizenRating: number;
+  feedbackCount: number;
+  feedbackHistory?: FeedbackHistory[];
+  lastUpdated: string;
+}
+
 export interface Alert {
   id: string;
   type: 'info' | 'warning' | 'critical';
@@ -96,6 +165,7 @@ interface VillageState {
   roads: Road[];
   sensors: Sensor[];
   citizenReports: CitizenReport[];
+  schemes: GovernmentScheme[];
   alerts: Alert[];
   kpis: KPIs;
   selectedAsset: any | null;
@@ -130,6 +200,7 @@ export const useVillageStore = create<VillageState>((set) => ({
   roads: [],
   sensors: [],
   citizenReports: [],
+  schemes: [],
   alerts: [],
   kpis: {
     infrastructureHealth: 0,
@@ -157,6 +228,7 @@ export const useVillageStore = create<VillageState>((set) => ({
     roads: data.roads || [],
     sensors: data.sensors || [],
     citizenReports: data.citizenReports || [],
+    schemes: data.schemes || [],
     alerts: data.alerts || [],
     kpis: data.kpis || {},
   }),

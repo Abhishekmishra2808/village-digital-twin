@@ -2,8 +2,6 @@ import {
   Home, 
   Droplet, 
   Zap, 
-  Navigation, 
-  Trash2, 
   Sprout,
   Bell,
   Users,
@@ -12,21 +10,19 @@ import {
   ChevronLeft,
   ChevronRight,
   Map,
-  TrafficCone,
   Leaf,
-  CloudRain
+  CloudRain,
+  Briefcase
 } from 'lucide-react';
 import { useVillageStore } from '../../store/villageStore';
 
 const menuItems = [
   { id: 'dashboard', icon: Home, label: 'Dashboard' },
   { id: 'map', icon: Map, label: '3D Map View' },
+  { id: 'schemes', icon: Briefcase, label: 'Government Schemes' },
   { id: 'water', icon: Droplet, label: 'Water Infrastructure' },
   { id: 'power', icon: Zap, label: 'Power Grid' },
-  { id: 'roads', icon: Navigation, label: 'Roads & Transport' },
-  { id: 'waste', icon: Trash2, label: 'Waste Management' },
   { id: 'agriculture', icon: Sprout, label: 'Agriculture' },
-  { id: 'traffic', icon: TrafficCone, label: 'Traffic Management' },
   { id: 'environment', icon: Leaf, label: 'Environment Monitor' },
   { id: 'flood', icon: CloudRain, label: 'Flood Prediction' },
   { id: 'alerts', icon: Bell, label: 'Alerts & Notifications' },
@@ -49,12 +45,12 @@ export default function Sidebar() {
       );
     }
     if (userRole === 'user') {
-      // Citizens see basic menu
+      // Citizens see basic menu (no roads and waste)
       return menuItems.filter(item => 
-        ['dashboard', 'map', 'water', 'power', 'environment', 'flood', 'reports', 'settings'].includes(item.id)
+        ['dashboard', 'map', 'schemes', 'water', 'power', 'environment', 'flood', 'reports', 'settings'].includes(item.id)
       );
     }
-    // Admin sees all
+    // Admin sees all except roads and waste (removed from admin view)
     return menuItems;
   };
 

@@ -1,0 +1,1166 @@
+import { useState } from 'react';
+import { 
+  Briefcase, 
+  TrendingUp, 
+  AlertTriangle, 
+  CheckCircle, 
+  DollarSign,
+  Users,
+  FileText,
+  Filter,
+  Search,
+  ChevronRight,
+  Calendar,
+  MapPin,
+  Star,
+  MessageSquare,
+  X,
+  Upload,
+  Plus,
+  Send,
+  ThumbsUp,
+  Flag
+} from 'lucide-react';
+import { useVillageStore, type GovernmentScheme } from '../../store/villageStore';
+
+export default function SchemesView() {
+  // Get schemes from store instead of mock data
+  const schemes = useVillageStore((state) => state.schemes);
+  
+  const [selectedScheme, setSelectedScheme] = useState<GovernmentScheme | null>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [showAddSchemeModal, setShowAddSchemeModal] = useState(false);
+  const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Calculate summary statistics
+      name: 'Swachh Bharat Abhiyan - Dustbin Installation',
+      category: 'sanitation',
+      village: 'Shirdi',
+      district: 'Ahmednagar',
+      totalBudget: 5000000, // ₹50 Lakh
+      budgetUtilized: 3200000,
+      startDate: '2025-01-01',
+      endDate: '2025-03-31',
+      overallProgress: 68,
+      status: 'on-track',
+      phases: [
+        { id: 'p1', name: 'Site Survey & Planning', startDate: '2025-01-01', endDate: '2025-01-15', plannedCompletion: 100, actualCompletion: 100, status: 'completed' },
+        { id: 'p2', name: 'Procurement of 250 Dustbins', startDate: '2025-01-16', endDate: '2025-02-15', plannedCompletion: 100, actualCompletion: 100, status: 'completed' },
+        { id: 'p3', name: 'Installation & Training', startDate: '2025-02-16', endDate: '2025-03-31', plannedCompletion: 70, actualCompletion: 68, status: 'on-track' }
+      ],
+      vendorReports: [
+        { month: 'January 2025', workDone: 'Site survey completed, 250 locations identified', expenseClaimed: 500000, proofDocuments: ['survey_report.pdf', 'location_map.pdf'], verificationStatus: 'verified' },
+        { month: 'February 2025', workDone: '250 dustbins procured and delivered', expenseClaimed: 1200000, proofDocuments: ['invoice.pdf', 'delivery_receipt.pdf'], verificationStatus: 'verified' },
+        { month: 'March 2025', workDone: '170 dustbins installed, training ongoing', expenseClaimed: 1500000, proofDocuments: ['installation_photos.pdf'], verificationStatus: 'pending' }
+      ],
+      discrepancies: [],
+      citizenRating: 4.2,
+      feedbackCount: 28,
+      lastUpdated: '2025-03-15'
+    },
+    {
+      id: 'JJM-2025-002',
+      name: 'Jal Jeevan Mission - Pipeline & Water Supply',
+      category: 'water',
+      village: 'Shirdi',
+      district: 'Ahmednagar',
+      totalBudget: 12000000, // ₹1.2 Crore
+      budgetUtilized: 8500000,
+      startDate: '2025-02-01',
+      endDate: '2025-04-30',
+      overallProgress: 58,
+      status: 'delayed',
+      phases: [
+        { id: 'p1', name: 'Pipeline Route Survey', startDate: '2025-02-01', endDate: '2025-02-10', plannedCompletion: 100, actualCompletion: 100, status: 'completed' },
+        { id: 'p2', name: 'Pipeline Laying (5km)', startDate: '2025-02-11', endDate: '2025-03-20', plannedCompletion: 100, actualCompletion: 75, status: 'delayed' },
+        { id: 'p3', name: 'Water Tank Construction', startDate: '2025-03-21', endDate: '2025-04-15', plannedCompletion: 60, actualCompletion: 40, status: 'delayed' },
+        { id: 'p4', name: 'Connection & Testing', startDate: '2025-04-16', endDate: '2025-04-30', plannedCompletion: 0, actualCompletion: 0, status: 'on-track' }
+      ],
+      vendorReports: [
+        { month: 'February 2025', workDone: 'Route survey completed, 2km pipeline laid', expenseClaimed: 3500000, proofDocuments: ['survey.pdf', 'progress1.pdf'], verificationStatus: 'verified' },
+        { month: 'March 2025', workDone: '1.8km additional pipeline, tank foundation started', expenseClaimed: 5000000, proofDocuments: ['progress2.pdf'], verificationStatus: 'discrepancy' }
+      ],
+      discrepancies: [
+        'Budget overrun: ₹5L claimed vs ₹4.2L allocated for March',
+        'Pipeline completion delayed by 15 days'
+      ],
+      citizenRating: 3.5,
+      feedbackCount: 42,
+      lastUpdated: '2025-03-20'
+    },
+    {
+      id: 'PMAY-2025-003',
+      name: 'PMAY - 40 Houses Construction',
+      category: 'housing',
+      village: 'Shirdi',
+      district: 'Ahmednagar',
+      totalBudget: 48000000, // ₹4.8 Crore
+      budgetUtilized: 22000000,
+      startDate: '2025-01-01',
+      endDate: '2025-06-30',
+      overallProgress: 52,
+      status: 'on-track',
+      phases: [
+        { id: 'p1', name: 'Beneficiary Identification', startDate: '2025-01-01', endDate: '2025-01-20', plannedCompletion: 100, actualCompletion: 100, status: 'completed' },
+        { id: 'p2', name: 'Foundation Work (40 units)', startDate: '2025-01-21', endDate: '2025-03-15', plannedCompletion: 100, actualCompletion: 100, status: 'completed' },
+        { id: 'p3', name: 'Wall Construction', startDate: '2025-03-16', endDate: '2025-05-15', plannedCompletion: 55, actualCompletion: 52, status: 'on-track' },
+        { id: 'p4', name: 'Roofing & Finishing', startDate: '2025-05-16', endDate: '2025-06-30', plannedCompletion: 0, actualCompletion: 0, status: 'on-track' }
+      ],
+      vendorReports: [
+        { month: 'January 2025', workDone: 'Beneficiaries finalized, land allotment completed', expenseClaimed: 1000000, proofDocuments: ['beneficiary_list.pdf'], verificationStatus: 'verified' },
+        { month: 'February 2025', workDone: '40 foundations completed', expenseClaimed: 8000000, proofDocuments: ['foundation_photos.pdf'], verificationStatus: 'verified' },
+        { month: 'March 2025', workDone: '21 units wall construction completed', expenseClaimed: 13000000, proofDocuments: ['progress_march.pdf'], verificationStatus: 'verified' }
+      ],
+      discrepancies: [],
+      citizenRating: 4.6,
+      feedbackCount: 65,
+      lastUpdated: '2025-03-25'
+    },
+    {
+      id: 'MGNREGA-2025-004',
+      name: 'MGNREGA - Road Repair & Maintenance',
+      category: 'employment',
+      village: 'Shirdi',
+      district: 'Ahmednagar',
+      totalBudget: 3500000, // ₹35 Lakh
+      budgetUtilized: 2800000,
+      startDate: '2025-03-01',
+      endDate: '2025-05-31',
+      overallProgress: 75,
+      status: 'on-track',
+      phases: [
+        { id: 'p1', name: 'Road Assessment & Planning', startDate: '2025-03-01', endDate: '2025-03-10', plannedCompletion: 100, actualCompletion: 100, status: 'completed' },
+        { id: 'p2', name: 'Pothole Filling (8km)', startDate: '2025-03-11', endDate: '2025-04-20', plannedCompletion: 100, actualCompletion: 100, status: 'completed' },
+        { id: 'p3', name: 'Side Drain Construction', startDate: '2025-04-21', endDate: '2025-05-31', plannedCompletion: 50, actualCompletion: 52, status: 'on-track' }
+      ],
+      vendorReports: [
+        { month: 'March 2025', workDone: '8km road assessed, 3km potholes filled', expenseClaimed: 1200000, proofDocuments: ['assessment.pdf', 'work_progress.pdf'], verificationStatus: 'verified' },
+        { month: 'April 2025', workDone: 'Remaining 5km potholes filled, drain work started', expenseClaimed: 1600000, proofDocuments: ['april_progress.pdf'], verificationStatus: 'pending' }
+      ],
+      discrepancies: [],
+      citizenRating: 4.1,
+      feedbackCount: 34,
+      lastUpdated: '2025-04-18'
+    },
+    {
+      id: 'ELEC-2025-005',
+      name: 'Rural Electrification - Transformer Installation',
+      category: 'power',
+      village: 'Shirdi',
+      district: 'Ahmednagar',
+      totalBudget: 8000000, // ₹80 Lakh
+      budgetUtilized: 7200000,
+      startDate: '2025-01-01',
+      endDate: '2025-04-30',
+      overallProgress: 42,
+      status: 'discrepant',
+      phases: [
+        { id: 'p1', name: 'Site Selection & Approval', startDate: '2025-01-01', endDate: '2025-01-20', plannedCompletion: 100, actualCompletion: 100, status: 'completed' },
+        { id: 'p2', name: 'Transformer Procurement (3 units)', startDate: '2025-01-21', endDate: '2025-02-28', plannedCompletion: 100, actualCompletion: 100, status: 'completed' },
+        { id: 'p3', name: 'Installation & Grid Connection', startDate: '2025-03-01', endDate: '2025-04-30', plannedCompletion: 75, actualCompletion: 25, status: 'critical' }
+      ],
+      vendorReports: [
+        { month: 'January 2025', workDone: '3 sites approved, land acquisition completed', expenseClaimed: 800000, proofDocuments: ['approval.pdf'], verificationStatus: 'verified' },
+        { month: 'February 2025', workDone: '3 transformers procured and delivered', expenseClaimed: 4500000, proofDocuments: ['procurement.pdf'], verificationStatus: 'verified' },
+        { month: 'March 2025', workDone: 'Installation delayed due to equipment issues', expenseClaimed: 1900000, proofDocuments: ['delay_report.pdf'], verificationStatus: 'discrepancy' }
+      ],
+      discrepancies: [
+        'Installation progress only 25% vs planned 75%',
+        'March expense ₹19L claimed but minimal work completed',
+        'No proper justification for equipment delay'
+      ],
+      citizenRating: 2.8,
+      feedbackCount: 58,
+      lastUpdated: '2025-03-28'
+    }
+  ];
+
+  // Calculate summary statistics
+  const totalSchemes = schemes.length;
+  const onTrackSchemes = schemes.filter(s => s.status === 'on-track' || s.status === 'completed').length;
+  const delayedSchemes = schemes.filter(s => s.status === 'delayed').length;
+  const discrepantSchemes = schemes.filter(s => s.status === 'discrepant').length;
+  const totalBudget = schemes.reduce((sum, s) => sum + s.totalBudget, 0);
+  const budgetUtilized = schemes.reduce((sum, s) => sum + s.budgetUtilized, 0);
+  const avgProgress = Math.round(schemes.reduce((sum, s) => sum + s.overallProgress, 0) / schemes.length);
+  const totalFeedback = schemes.reduce((sum, s) => sum + s.feedbackCount, 0);
+
+  // Filter schemes
+  const filteredSchemes = schemes.filter(scheme => {
+    const matchesCategory = filterCategory === 'all' || scheme.category === filterCategory;
+    const matchesStatus = filterStatus === 'all' || scheme.status === filterStatus;
+    const matchesSearch = scheme.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          scheme.village.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesStatus && matchesSearch;
+  });
+
+  // Status badge component
+  const StatusBadge = ({ status }: { status: string }) => {
+    const colors = {
+      'on-track': 'bg-green-100 text-green-800 border-green-200',
+      'delayed': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      'discrepant': 'bg-red-100 text-red-800 border-red-200',
+      'completed': 'bg-blue-100 text-blue-800 border-blue-200'
+    };
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium border ${colors[status as keyof typeof colors]}`}>
+        {status.replace('-', ' ').toUpperCase()}
+      </span>
+    );
+  };
+
+  // Category icon component
+  const CategoryIcon = ({ category }: { category: string }) => {
+    const icons = {
+      sanitation: '🧹',
+      water: '💧',
+      housing: '🏠',
+      employment: '👷',
+      power: '⚡'
+    };
+    return <span className="text-2xl">{icons[category as keyof typeof icons]}</span>;
+  };
+
+  return (
+    <div className="h-full overflow-auto bg-gray-50">
+      <div className="max-w-7xl mx-auto p-6">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center space-x-3 mb-2">
+            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+              <Briefcase size={24} className="text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Government Schemes Dashboard</h1>
+              <p className="text-gray-600">Real-time monitoring of rural development projects</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Summary KPI Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm font-medium text-gray-600">Total Schemes</div>
+              <Briefcase size={20} className="text-purple-600" />
+            </div>
+            <div className="text-3xl font-bold text-gray-900">{totalSchemes}</div>
+            <div className="text-xs text-gray-500 mt-1">Active projects in Shirdi</div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm font-medium text-gray-600">Budget Utilization</div>
+              <DollarSign size={20} className="text-green-600" />
+            </div>
+            <div className="text-3xl font-bold text-gray-900">{Math.round((budgetUtilized / totalBudget) * 100)}%</div>
+            <div className="text-xs text-gray-500 mt-1">₹{(budgetUtilized / 10000000).toFixed(1)}Cr / ₹{(totalBudget / 10000000).toFixed(1)}Cr</div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm font-medium text-gray-600">Avg Progress</div>
+              <TrendingUp size={20} className="text-blue-600" />
+            </div>
+            <div className="text-3xl font-bold text-gray-900">{avgProgress}%</div>
+            <div className="flex items-center space-x-2 mt-2">
+              <span className="text-xs text-green-600">✓ {onTrackSchemes} On Track</span>
+              <span className="text-xs text-yellow-600">⏱ {delayedSchemes} Delayed</span>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm font-medium text-gray-600">Discrepancies</div>
+              <AlertTriangle size={20} className="text-red-600" />
+            </div>
+            <div className="text-3xl font-bold text-red-600">{discrepantSchemes}</div>
+            <div className="text-xs text-gray-500 mt-1">{totalFeedback} citizen feedbacks received</div>
+          </div>
+        </div>
+
+        {/* Filters & Search */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center space-x-2">
+              <Filter size={18} className="text-gray-400" />
+              <select 
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="all">All Categories</option>
+                <option value="sanitation">Sanitation</option>
+                <option value="water">Water Supply</option>
+                <option value="housing">Housing</option>
+                <option value="employment">Employment</option>
+                <option value="power">Electrification</option>
+              </select>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <select 
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="all">All Status</option>
+                <option value="on-track">On Track</option>
+                <option value="delayed">Delayed</option>
+                <option value="discrepant">Discrepant</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+
+            <div className="flex-1 min-w-[200px]">
+              <div className="relative">
+                <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input 
+                  type="text"
+                  placeholder="Search schemes or villages..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+            </div>
+
+            <button className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors">
+              Export Report
+            </button>
+
+            <button 
+              onClick={() => setShowAddSchemeModal(true)}
+              className="px-4 py-2 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-lg text-sm font-medium hover:from-green-600 hover:to-teal-700 transition-all shadow-sm flex items-center space-x-2"
+            >
+              <Plus size={16} />
+              <span>Add New Scheme</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Schemes List */}
+        <div className="space-y-4">
+          {filteredSchemes.map((scheme) => (
+            <div 
+              key={scheme.id}
+              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => setSelectedScheme(scheme)}
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-start space-x-4">
+                  <CategoryIcon category={scheme.category} />
+                  <div>
+                    <div className="flex items-center space-x-2 mb-1">
+                      <h3 className="text-lg font-bold text-gray-900">{scheme.name}</h3>
+                      <StatusBadge status={scheme.status} />
+                    </div>
+                    <div className="flex items-center space-x-4 text-sm text-gray-600">
+                      <div className="flex items-center space-x-1">
+                        <MapPin size={14} />
+                        <span>{scheme.village}, {scheme.district}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Calendar size={14} />
+                        <span>{new Date(scheme.startDate).toLocaleDateString()} - {new Date(scheme.endDate).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <FileText size={14} />
+                        <span>{scheme.id}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <ChevronRight size={20} className="text-gray-400" />
+              </div>
+
+              {/* Progress Bar */}
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700">Overall Progress</span>
+                  <span className="text-sm font-bold text-gray-900">{scheme.overallProgress}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div 
+                    className={`h-3 rounded-full transition-all ${
+                      scheme.status === 'discrepant' ? 'bg-red-500' :
+                      scheme.status === 'delayed' ? 'bg-yellow-500' :
+                      'bg-green-500'
+                    }`}
+                    style={{ width: `${scheme.overallProgress}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Budget & Metrics */}
+              <div className="grid grid-cols-4 gap-4 mb-4">
+                <div>
+                  <div className="text-xs text-gray-600 mb-1">Budget Allocated</div>
+                  <div className="text-sm font-bold text-gray-900">₹{(scheme.totalBudget / 100000).toFixed(1)}L</div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-600 mb-1">Budget Utilized</div>
+                  <div className="text-sm font-bold text-gray-900">₹{(scheme.budgetUtilized / 100000).toFixed(1)}L</div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-600 mb-1">Citizen Rating</div>
+                  <div className="flex items-center space-x-1">
+                    <Star size={14} className="text-yellow-500 fill-yellow-500" />
+                    <span className="text-sm font-bold text-gray-900">{scheme.citizenRating.toFixed(1)}</span>
+                    <span className="text-xs text-gray-500">({scheme.feedbackCount})</span>
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-600 mb-1">Last Updated</div>
+                  <div className="text-sm font-bold text-gray-900">{new Date(scheme.lastUpdated).toLocaleDateString()}</div>
+                </div>
+              </div>
+
+              {/* Discrepancies Alert */}
+              {scheme.discrepancies.length > 0 && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <div className="flex items-start space-x-2">
+                    <AlertTriangle size={16} className="text-red-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <div className="text-sm font-bold text-red-900 mb-1">Discrepancies Detected</div>
+                      <ul className="text-xs text-red-700 space-y-1">
+                        {scheme.discrepancies.map((disc, idx) => (
+                          <li key={idx}>• {disc}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Quick Actions */}
+              <div className="flex items-center space-x-2 mt-4 pt-4 border-t border-gray-200">
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedScheme(scheme);
+                    setShowDetailsModal(true);
+                  }}
+                  className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg text-xs font-medium hover:bg-purple-200 transition-colors"
+                >
+                  View Details
+                </button>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedScheme(scheme);
+                    setShowDetailsModal(true);
+                  }}
+                  className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-200 transition-colors"
+                >
+                  Vendor Reports
+                </button>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedScheme(scheme);
+                    setShowFeedbackModal(true);
+                  }}
+                  className="px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs font-medium hover:bg-green-200 transition-colors flex items-center space-x-1"
+                >
+                  <MessageSquare size={12} />
+                  <span>Citizen Feedback</span>
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {filteredSchemes.length === 0 && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+            <div className="text-gray-400 mb-2">
+              <Search size={48} className="mx-auto" />
+            </div>
+            <p className="text-gray-600">No schemes found matching your filters</p>
+          </div>
+        )}
+      </div>
+
+      {/* Scheme Details Modal */}
+      {showDetailsModal && selectedScheme && (
+        <SchemeDetailsModal 
+          scheme={selectedScheme} 
+          onClose={() => {
+            setShowDetailsModal(false);
+            setSelectedScheme(null);
+          }}
+        />
+      )}
+
+      {/* Citizen Feedback Modal */}
+      {showFeedbackModal && selectedScheme && (
+        <CitizenFeedbackModal 
+          scheme={selectedScheme} 
+          onClose={() => {
+            setShowFeedbackModal(false);
+            setSelectedScheme(null);
+          }}
+        />
+      )}
+
+      {/* Add Scheme Modal */}
+      {showAddSchemeModal && (
+        <AddSchemeModal 
+          onClose={() => setShowAddSchemeModal(false)}
+          onSubmit={(newScheme) => {
+            console.log('New scheme added:', newScheme);
+            setShowAddSchemeModal(false);
+            // In real app, this would send to backend
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+// Scheme Details Modal Component
+function SchemeDetailsModal({ scheme, onClose }: { scheme: Scheme; onClose: () => void }) {
+  const [activeTab, setActiveTab] = useState<'overview' | 'phases' | 'reports'>('overview');
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 text-white">
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <h2 className="text-2xl font-bold mb-2">{scheme.name}</h2>
+              <div className="flex items-center space-x-4 text-sm">
+                <div className="flex items-center space-x-1">
+                  <MapPin size={14} />
+                  <span>{scheme.village}, {scheme.district}</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <FileText size={14} />
+                  <span>{scheme.id}</span>
+                </div>
+              </div>
+            </div>
+            <button 
+              onClick={onClose}
+              className="p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
+            >
+              <X size={24} />
+            </button>
+          </div>
+
+          {/* Quick Stats */}
+          <div className="grid grid-cols-3 gap-4">
+            <div className="bg-white bg-opacity-20 rounded-lg p-3">
+              <div className="text-xs opacity-90">Progress</div>
+              <div className="text-2xl font-bold">{scheme.overallProgress}%</div>
+            </div>
+            <div className="bg-white bg-opacity-20 rounded-lg p-3">
+              <div className="text-xs opacity-90">Budget</div>
+              <div className="text-2xl font-bold">₹{(scheme.budgetUtilized / 100000).toFixed(1)}L</div>
+              <div className="text-xs opacity-75">of ₹{(scheme.totalBudget / 100000).toFixed(1)}L</div>
+            </div>
+            <div className="bg-white bg-opacity-20 rounded-lg p-3">
+              <div className="text-xs opacity-90">Rating</div>
+              <div className="flex items-center space-x-1">
+                <Star size={16} className="fill-yellow-300 text-yellow-300" />
+                <span className="text-2xl font-bold">{scheme.citizenRating.toFixed(1)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="border-b border-gray-200 px-6">
+          <div className="flex space-x-8">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`py-4 border-b-2 transition-colors ${
+                activeTab === 'overview'
+                  ? 'border-purple-600 text-purple-600 font-medium'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Overview
+            </button>
+            <button
+              onClick={() => setActiveTab('phases')}
+              className={`py-4 border-b-2 transition-colors ${
+                activeTab === 'phases'
+                  ? 'border-purple-600 text-purple-600 font-medium'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Phases & Timeline
+            </button>
+            <button
+              onClick={() => setActiveTab('reports')}
+              className={`py-4 border-b-2 transition-colors ${
+                activeTab === 'reports'
+                  ? 'border-purple-600 text-purple-600 font-medium'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Vendor Reports
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-400px)]">
+          {activeTab === 'overview' && (
+            <div className="space-y-6">
+              {/* Discrepancies */}
+              {scheme.discrepancies.length > 0 && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <AlertTriangle className="text-red-600" size={20} />
+                    <h3 className="font-bold text-red-900">Critical Discrepancies</h3>
+                  </div>
+                  <ul className="space-y-2">
+                    {scheme.discrepancies.map((disc, idx) => (
+                      <li key={idx} className="text-sm text-red-700 flex items-start space-x-2">
+                        <span className="text-red-500 mt-1">•</span>
+                        <span>{disc}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Timeline */}
+              <div>
+                <h3 className="font-bold text-gray-900 mb-3">Project Timeline</h3>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <div className="text-xs text-gray-600">Start Date</div>
+                      <div className="font-bold text-gray-900">{new Date(scheme.startDate).toLocaleDateString()}</div>
+                    </div>
+                    <div className="flex-1 mx-4">
+                      <div className="h-2 bg-gray-200 rounded-full">
+                        <div 
+                          className="h-2 bg-purple-600 rounded-full"
+                          style={{ width: `${scheme.overallProgress}%` }}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-600">End Date</div>
+                      <div className="font-bold text-gray-900">{new Date(scheme.endDate).toLocaleDateString()}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Budget Breakdown */}
+              <div>
+                <h3 className="font-bold text-gray-900 mb-3">Budget Breakdown</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="text-sm text-blue-700 mb-1">Total Allocated</div>
+                    <div className="text-2xl font-bold text-blue-900">₹{(scheme.totalBudget / 100000).toFixed(2)}L</div>
+                  </div>
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="text-sm text-green-700 mb-1">Total Utilized</div>
+                    <div className="text-2xl font-bold text-green-900">₹{(scheme.budgetUtilized / 100000).toFixed(2)}L</div>
+                  </div>
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                    <div className="text-sm text-purple-700 mb-1">Remaining</div>
+                    <div className="text-2xl font-bold text-purple-900">₹{((scheme.totalBudget - scheme.budgetUtilized) / 100000).toFixed(2)}L</div>
+                  </div>
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div className="text-sm text-yellow-700 mb-1">Utilization Rate</div>
+                    <div className="text-2xl font-bold text-yellow-900">{Math.round((scheme.budgetUtilized / scheme.totalBudget) * 100)}%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'phases' && (
+            <div className="space-y-4">
+              {scheme.phases.map((phase, idx) => (
+                <div key={phase.id} className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h4 className="font-bold text-gray-900 mb-1">Phase {idx + 1}: {phase.name}</h4>
+                      <div className="text-sm text-gray-600">
+                        {new Date(phase.startDate).toLocaleDateString()} - {new Date(phase.endDate).toLocaleDateString()}
+                      </div>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      phase.status === 'completed' ? 'bg-green-100 text-green-800' :
+                      phase.status === 'on-track' ? 'bg-blue-100 text-blue-800' :
+                      phase.status === 'delayed' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {phase.status.toUpperCase()}
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Planned: {phase.plannedCompletion}%</span>
+                      <span className="text-gray-600">Actual: {phase.actualCompletion}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div 
+                        className={`h-3 rounded-full ${
+                          phase.status === 'completed' ? 'bg-green-500' :
+                          phase.status === 'on-track' ? 'bg-blue-500' :
+                          phase.status === 'delayed' ? 'bg-yellow-500' :
+                          'bg-red-500'
+                        }`}
+                        style={{ width: `${phase.actualCompletion}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {activeTab === 'reports' && (
+            <div className="space-y-4">
+              {scheme.vendorReports.map((report, idx) => (
+                <div key={idx} className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h4 className="font-bold text-gray-900 mb-1">{report.month}</h4>
+                      <p className="text-sm text-gray-600">{report.workDone}</p>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      report.verificationStatus === 'verified' ? 'bg-green-100 text-green-800' :
+                      report.verificationStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {report.verificationStatus.toUpperCase()}
+                    </span>
+                  </div>
+                  
+                  <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                    <div className="text-sm text-gray-700 mb-1">Expense Claimed</div>
+                    <div className="text-xl font-bold text-gray-900">₹{(report.expenseClaimed / 100000).toFixed(2)} Lakh</div>
+                  </div>
+
+                  <div>
+                    <div className="text-sm font-medium text-gray-700 mb-2">Supporting Documents:</div>
+                    <div className="space-y-1">
+                      {report.proofDocuments.map((doc, docIdx) => (
+                        <div key={docIdx} className="flex items-center space-x-2 text-sm text-blue-600 hover:text-blue-800">
+                          <FileText size={14} />
+                          <span>{doc}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="border-t border-gray-200 p-4 bg-gray-50 flex justify-end space-x-3">
+          <button
+            onClick={onClose}
+            className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Citizen Feedback Modal Component
+function CitizenFeedbackModal({ scheme, onClose }: { scheme: Scheme; onClose: () => void }) {
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState('');
+  const [escalate, setEscalate] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = () => {
+    const feedback = {
+      schemeId: scheme.id,
+      rating,
+      comment,
+      escalated: escalate,
+      timestamp: new Date().toISOString(),
+      anonymous: true
+    };
+    console.log('Anonymous feedback submitted:', feedback);
+    setSubmitted(true);
+    setTimeout(() => onClose(), 2000);
+  };
+
+  if (submitted) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle size={32} className="text-green-600" />
+          </div>
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">Thank You!</h3>
+          <p className="text-gray-600">Your anonymous feedback has been submitted successfully.</p>
+          {escalate && (
+            <p className="text-sm text-orange-600 mt-2">⚠️ Your issue will be escalated to authorities</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-green-500 to-teal-600 p-6 text-white">
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <h2 className="text-2xl font-bold mb-2">Submit Anonymous Feedback</h2>
+              <p className="text-sm opacity-90">Your identity will remain completely confidential</p>
+            </div>
+            <button 
+              onClick={onClose}
+              className="p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
+            >
+              <X size={24} />
+            </button>
+          </div>
+          <div className="bg-white bg-opacity-20 rounded-lg p-3">
+            <div className="text-xs opacity-90 mb-1">Project</div>
+            <div className="font-bold">{scheme.name}</div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-6">
+          {/* Privacy Notice */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start space-x-3">
+              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <Users size={16} className="text-blue-600" />
+              </div>
+              <div className="text-sm text-blue-900">
+                <p className="font-medium mb-1">100% Anonymous</p>
+                <p className="text-blue-700">No personal information is collected. Your feedback helps improve public services.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Rating */}
+          <div>
+            <label className="block text-sm font-bold text-gray-900 mb-3">
+              How would you rate this project? *
+            </label>
+            <div className="flex items-center space-x-2">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => setRating(star)}
+                  className="group transition-transform hover:scale-110"
+                >
+                  <Star 
+                    size={40} 
+                    className={`${
+                      star <= rating 
+                        ? 'fill-yellow-400 text-yellow-400' 
+                        : 'text-gray-300 hover:text-yellow-300'
+                    } transition-colors`}
+                  />
+                </button>
+              ))}
+              {rating > 0 && (
+                <span className="ml-4 text-sm font-medium text-gray-700">
+                  {rating === 1 ? 'Poor' : rating === 2 ? 'Below Average' : rating === 3 ? 'Average' : rating === 4 ? 'Good' : 'Excellent'}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Comment */}
+          <div>
+            <label className="block text-sm font-bold text-gray-900 mb-2">
+              Your Feedback (Optional)
+            </label>
+            <textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Share your experience about this project... (completely anonymous)"
+              rows={4}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+            />
+            <div className="text-xs text-gray-500 mt-1">{comment.length} / 500 characters</div>
+          </div>
+
+          {/* Escalation Option */}
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+            <label className="flex items-start space-x-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={escalate}
+                onChange={(e) => setEscalate(e.target.checked)}
+                className="mt-1 w-5 h-5 text-orange-600 rounded focus:ring-orange-500"
+              />
+              <div className="text-sm">
+                <div className="font-bold text-orange-900 flex items-center space-x-2 mb-1">
+                  <Flag size={14} />
+                  <span>Escalate this issue to district authorities</span>
+                </div>
+                <p className="text-orange-700">
+                  Check this if you believe there are serious issues requiring immediate official attention.
+                </p>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="border-t border-gray-200 p-4 bg-gray-50 flex justify-between items-center">
+          <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <ThumbsUp size={16} />
+            <span>{scheme.feedbackCount} citizens have provided feedback</span>
+          </div>
+          <div className="flex space-x-3">
+            <button
+              onClick={onClose}
+              className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={rating === 0}
+              className="px-6 py-2 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-lg font-medium hover:from-green-600 hover:to-teal-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+            >
+              <Send size={16} />
+              <span>Submit Anonymously</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Add Scheme Modal Component (For Panchayat Admins)
+function AddSchemeModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (scheme: any) => void }) {
+  const [formData, setFormData] = useState({
+    name: '',
+    category: 'sanitation',
+    village: 'Shirdi',
+    district: 'Ahmednagar',
+    totalBudget: '',
+    startDate: '',
+    endDate: '',
+    description: ''
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newScheme = {
+      ...formData,
+      id: `SCH-${Date.now()}`,
+      totalBudget: parseInt(formData.totalBudget),
+      budgetUtilized: 0,
+      overallProgress: 0,
+      status: 'on-track',
+      phases: [],
+      vendorReports: [],
+      discrepancies: [],
+      citizenRating: 0,
+      feedbackCount: 0,
+      lastUpdated: new Date().toISOString()
+    };
+    onSubmit(newScheme);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 text-white">
+          <div className="flex items-start justify-between">
+            <div>
+              <h2 className="text-2xl font-bold mb-2">Add New Government Scheme</h2>
+              <p className="text-sm opacity-90">Register a new project for monitoring and transparency</p>
+            </div>
+            <button 
+              onClick={onClose}
+              className="p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
+            >
+              <X size={24} />
+            </button>
+          </div>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
+          <div className="space-y-6">
+            {/* Scheme Name */}
+            <div>
+              <label className="block text-sm font-bold text-gray-900 mb-2">
+                Scheme Name *
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="e.g., Jal Jeevan Mission - Pipeline Extension"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+
+            {/* Category */}
+            <div>
+              <label className="block text-sm font-bold text-gray-900 mb-2">
+                Category *
+              </label>
+              <select
+                required
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="sanitation">Sanitation</option>
+                <option value="water">Water Supply</option>
+                <option value="housing">Housing</option>
+                <option value="employment">Employment</option>
+                <option value="power">Electrification</option>
+              </select>
+            </div>
+
+            {/* Location */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-bold text-gray-900 mb-2">
+                  Village *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.village}
+                  onChange={(e) => setFormData({ ...formData, village: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-900 mb-2">
+                  District *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.district}
+                  onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+            </div>
+
+            {/* Budget */}
+            <div>
+              <label className="block text-sm font-bold text-gray-900 mb-2">
+                Total Budget (₹) *
+              </label>
+              <input
+                type="number"
+                required
+                value={formData.totalBudget}
+                onChange={(e) => setFormData({ ...formData, totalBudget: e.target.value })}
+                placeholder="e.g., 5000000 for ₹50 Lakh"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+              {formData.totalBudget && (
+                <div className="text-sm text-gray-600 mt-1">
+                  ₹{(parseInt(formData.totalBudget) / 100000).toFixed(2)} Lakh
+                </div>
+              )}
+            </div>
+
+            {/* Timeline */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-bold text-gray-900 mb-2">
+                  Start Date *
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={formData.startDate}
+                  onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-900 mb-2">
+                  End Date *
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={formData.endDate}
+                  onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-bold text-gray-900 mb-2">
+                Project Description
+              </label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Describe the project objectives, scope, and expected outcomes..."
+                rows={4}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+              />
+            </div>
+
+            {/* Info Box */}
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <div className="flex items-start space-x-3">
+                <Upload size={20} className="text-purple-600 mt-1" />
+                <div className="text-sm text-purple-900">
+                  <p className="font-medium mb-1">Next Steps</p>
+                  <p className="text-purple-700">
+                    After creating the scheme, you can add project phases, upload vendor reports, and track progress through the dashboard.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+
+        {/* Footer */}
+        <div className="border-t border-gray-200 p-4 bg-gray-50 flex justify-end space-x-3">
+          <button
+            onClick={onClose}
+            type="button"
+            className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            type="submit"
+            className="px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-indigo-700 transition-all flex items-center space-x-2"
+          >
+            <Plus size={16} />
+            <span>Create Scheme</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
