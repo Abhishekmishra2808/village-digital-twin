@@ -487,7 +487,7 @@ export default function CitizenDashboard() {
                       value={comment}
                       onChange={(e) => setComment(e.target.value)}
                       placeholder="Share your experience in your own words, any language... AI will analyze and anonymize your feedback."
-                      className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                      className="w-full border border-gray-300 rounded-lg p-3 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                       rows={4}
                       maxLength={500}
                     />
