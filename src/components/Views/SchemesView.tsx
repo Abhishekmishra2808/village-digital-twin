@@ -917,11 +917,11 @@ function VendorReportsTab({ scheme }: { scheme: GovernmentScheme }) {
                                 <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
                                   <div>
                                     <span className="text-gray-600">Planned: </span>
-                                    <span className="font-medium">{disc.plannedValue}</span>
+                                    <span className="font-medium text-gray-900">{disc.plannedValue}</span>
                                   </div>
                                   <div>
                                     <span className="text-gray-600">Actual: </span>
-                                    <span className="font-medium">{disc.actualValue}</span>
+                                    <span className="font-medium text-gray-900">{disc.actualValue}</span>
                                   </div>
                                 </div>
                               </div>
@@ -1121,7 +1121,7 @@ function PhasesMilestonesSection({ phases, onChange }: { phases: any[]; onChange
                   updated[index].plannedWork = e.target.value;
                   onChange(updated);
                 }}
-                className="w-full text-sm border border-gray-300 rounded px-2 py-1"
+                className="w-full text-sm text-gray-900 border border-gray-300 rounded px-2 py-1"
                 rows={2}
                 placeholder="Planned work for this phase..."
               />
