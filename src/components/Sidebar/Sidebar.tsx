@@ -55,52 +55,69 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className={`fixed left-0 top-16 bottom-8 bg-white border-r border-gray-200 shadow-sm transition-all duration-300 z-10 ${
-      sidebarCollapsed ? 'w-16' : 'w-64'
-    }`}>
-      {/* Toggle Button */}
-      <button
-        onClick={toggleSidebar}
-        className="absolute -right-3 top-6 w-6 h-6 bg-gray-900 rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors shadow-lg"
-      >
-        {sidebarCollapsed ? <ChevronRight size={14} className="text-white" /> : <ChevronLeft size={14} className="text-white" />}
-      </button>
+    <>
+      {/* Mobile Overlay */}
+      {!sidebarCollapsed && (
+        <div 
+          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-20 top-16 bottom-8"
+          onClick={toggleSidebar}
+        />
+      )}
 
-      {/* Menu Items */}
-      <nav className="p-2 space-y-1">
-        {getMenuItems().map((item) => {
-          const Icon = item.icon;
-          const isActive = activeView === item.id;
-          const showBadge = item.id === 'alerts' && unreadAlerts > 0;
+      {/* Sidebar */}
+      <aside className={`fixed left-0 top-16 bottom-8 bg-white border-r border-gray-200 shadow-sm transition-all duration-300 z-30 ${
+        sidebarCollapsed ? 'md:w-16 -translate-x-full md:translate-x-0' : 'w-64 translate-x-0'
+      }`}>
+        {/* Toggle Button - Desktop Only */}
+        <button
+          onClick={toggleSidebar}
+          className="hidden md:block absolute -right-3 top-6 w-6 h-6 bg-gray-900 rounded-full items-center justify-center hover:bg-gray-800 transition-colors shadow-lg"
+        >
+          {sidebarCollapsed ? <ChevronRight size={14} className="text-white" /> : <ChevronLeft size={14} className="text-white" />}
+        </button>
 
-          return (
-            <button
-              key={item.id}
-              onClick={() => setActiveView(item.id)}
-              className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
-                isActive 
-                  ? 'bg-gray-900 text-white shadow-sm' 
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-              }`}
-              title={sidebarCollapsed ? item.label : ''}
-            >
-              <Icon size={20} className="flex-shrink-0" />
-              {!sidebarCollapsed && (
-                <>
-                  <span className="text-sm font-medium flex-1 text-left">
-                    {item.label}
-                  </span>
-                  {showBadge && (
-                    <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">
-                      {unreadAlerts}
+        {/* Menu Items */}
+        <nav className="p-2 space-y-1 overflow-y-auto h-full">
+          {getMenuItems().map((item) => {
+            const Icon = item.icon;
+            const isActive = activeView === item.id;
+            const showBadge = item.id === 'alerts' && unreadAlerts > 0;
+
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveView(item.id);
+                  // Close mobile menu after selection
+                  if (window.innerWidth < 768 && !sidebarCollapsed) {
+                    toggleSidebar();
+                  }
+                }}
+                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                  isActive 
+                    ? 'bg-gray-900 text-white shadow-sm' 
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                }`}
+                title={sidebarCollapsed ? item.label : ''}
+              >
+                <Icon size={20} className="flex-shrink-0" />
+                {!sidebarCollapsed && (
+                  <>
+                    <span className="text-sm font-medium flex-1 text-left">
+                      {item.label}
                     </span>
-                  )}
-                </>
-              )}
-            </button>
-          );
-        })}
-      </nav>
-    </aside>
+                    {showBadge && (
+                      <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">
+                        {unreadAlerts}
+                      </span>
+                    )}
+                  </>
+                )}
+              </button>
+            );
+          })}
+        </nav>
+      </aside>
+    </>
   );
 }

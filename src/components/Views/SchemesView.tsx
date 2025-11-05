@@ -28,6 +28,7 @@ export default function SchemesView() {
   const [selectedScheme, setSelectedScheme] = useState<GovernmentScheme | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showAddSchemeModal, setShowAddSchemeModal] = useState(false);
+  const [modalInitialTab, setModalInitialTab] = useState<'overview' | 'phases' | 'reports'>('overview');
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -77,24 +78,25 @@ export default function SchemesView() {
 
   return (
     <div className="h-full overflow-auto bg-gray-50">
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto p-3 md:p-6">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
+        <div className="mb-6 md:mb-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                <Briefcase size={24} className="text-white" />
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Briefcase size={20} className="md:hidden text-white" />
+                <Briefcase size={24} className="hidden md:block text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Government Schemes Dashboard</h1>
-                <p className="text-gray-600">Real-time monitoring of rural development projects</p>
+                <h1 className="text-xl md:text-3xl font-bold text-gray-900">Government Schemes Dashboard</h1>
+                <p className="text-sm md:text-base text-gray-600">Real-time monitoring of rural development projects</p>
               </div>
             </div>
             {/* Only show "Add New Scheme" button to admins */}
             {userRole === 'admin' && (
               <button
                 onClick={() => setShowAddSchemeModal(true)}
-                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md flex items-center space-x-2"
+                className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md flex items-center justify-center space-x-2"
               >
                 <Plus size={20} />
                 <span>Add New Scheme</span>
@@ -104,47 +106,51 @@ export default function SchemesView() {
         </div>
 
         {/* Summary KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-medium text-gray-600">Total Schemes</div>
-              <Briefcase size={20} className="text-purple-600" />
+              <div className="text-xs md:text-sm font-medium text-gray-600">Total Schemes</div>
+              <Briefcase size={16} className="md:hidden text-purple-600" />
+              <Briefcase size={20} className="hidden md:block text-purple-600" />
             </div>
-            <div className="text-3xl font-bold text-gray-900">{totalSchemes}</div>
-            <div className="text-xs text-gray-500 mt-1">Active projects</div>
+            <div className="text-2xl md:text-3xl font-bold text-gray-900">{totalSchemes}</div>
+            <div className="text-[10px] md:text-xs text-gray-500 mt-1">Active projects</div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-medium text-gray-600">On Track / Delayed</div>
-              <TrendingUp size={20} className="text-green-600" />
+              <div className="text-xs md:text-sm font-medium text-gray-600">On Track / Delayed</div>
+              <TrendingUp size={16} className="md:hidden text-green-600" />
+              <TrendingUp size={20} className="hidden md:block text-green-600" />
             </div>
-            <div className="text-3xl font-bold text-gray-900">{onTrackSchemes} / {delayedSchemes}</div>
-            <div className="text-xs text-gray-500 mt-1">{discrepantSchemes} with discrepancies</div>
+            <div className="text-2xl md:text-3xl font-bold text-gray-900">{onTrackSchemes} / {delayedSchemes}</div>
+            <div className="text-[10px] md:text-xs text-gray-500 mt-1">{discrepantSchemes} with discrepancies</div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-medium text-gray-600">Budget Utilization</div>
-              <DollarSign size={20} className="text-blue-600" />
+              <div className="text-xs md:text-sm font-medium text-gray-600">Budget Utilization</div>
+              <DollarSign size={16} className="md:hidden text-blue-600" />
+              <DollarSign size={20} className="hidden md:block text-blue-600" />
             </div>
-            <div className="text-3xl font-bold text-gray-900">{totalBudget > 0 ? Math.round((budgetUtilized / totalBudget) * 100) : 0}%</div>
-            <div className="text-xs text-gray-500 mt-1">₹{(budgetUtilized / 10000000).toFixed(1)}Cr of ₹{(totalBudget / 10000000).toFixed(1)}Cr</div>
+            <div className="text-2xl md:text-3xl font-bold text-gray-900">{totalBudget > 0 ? Math.round((budgetUtilized / totalBudget) * 100) : 0}%</div>
+            <div className="text-[10px] md:text-xs text-gray-500 mt-1">₹{(budgetUtilized / 10000000).toFixed(1)}Cr of ₹{(totalBudget / 10000000).toFixed(1)}Cr</div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-sm font-medium text-gray-600">Avg Progress</div>
-              <CheckCircle size={20} className="text-indigo-600" />
+              <div className="text-xs md:text-sm font-medium text-gray-600">Avg Progress</div>
+              <CheckCircle size={16} className="md:hidden text-indigo-600" />
+              <CheckCircle size={20} className="hidden md:block text-indigo-600" />
             </div>
-            <div className="text-3xl font-bold text-gray-900">{avgProgress}%</div>
-            <div className="text-xs text-gray-500 mt-1">{totalFeedback} citizen feedbacks</div>
+            <div className="text-2xl md:text-3xl font-bold text-gray-900">{avgProgress}%</div>
+            <div className="text-[10px] md:text-xs text-gray-500 mt-1">{totalFeedback} citizen feedbacks</div>
           </div>
         </div>
 
         {/* Filters & Search */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 md:p-4 mb-4 md:mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4">
             <div className="relative">
               <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
@@ -152,7 +158,7 @@ export default function SchemesView() {
                 placeholder="Search schemes..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm md:text-base text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
             </div>
 
@@ -201,49 +207,56 @@ export default function SchemesView() {
         </div>
 
         {/* Schemes Grid */}
-        <div className="grid grid-cols-1 gap-6 mb-8">
+        <div className="grid grid-cols-1 gap-4 md:gap-6 mb-6 md:mb-8">
           {filteredSchemes.map((scheme) => (
             <div
               key={scheme.id}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => {
-                setSelectedScheme(scheme);
-                setShowDetailsModal(true);
-              }}
+              className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6 hover:shadow-md transition-shadow"
             >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-start space-x-4 flex-1">
-                  <div className="text-4xl">{categoryIcons[scheme.category] || '📋'}</div>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">{scheme.name}</h3>
-                    <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
-                      <div className="flex items-center space-x-1">
-                        <MapPin size={14} />
-                        <span>{scheme.village}, {scheme.district}</span>
+              <div 
+                className="cursor-pointer"
+                onClick={() => {
+                  setSelectedScheme(scheme);
+                  setModalInitialTab('overview');
+                  setShowDetailsModal(true);
+                }}
+              >
+                <div className="flex flex-col sm:flex-row items-start justify-between mb-3 md:mb-4 gap-3">
+                  <div className="flex items-start space-x-3 md:space-x-4 flex-1 w-full">
+                    <div className="text-3xl md:text-4xl flex-shrink-0">{categoryIcons[scheme.category] || '📋'}</div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2 line-clamp-2">{scheme.name}</h3>
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-xs md:text-sm text-gray-600 mb-2 md:mb-3 space-y-1 sm:space-y-0">
+                        <div className="flex items-center space-x-1">
+                          <MapPin size={12} className="md:hidden flex-shrink-0" />
+                          <MapPin size={14} className="hidden md:block flex-shrink-0" />
+                          <span className="truncate">{scheme.village}, {scheme.district}</span>
+                        </div>
+                        <div className="hidden lg:flex items-center space-x-1">
+                          <Calendar size={14} className="flex-shrink-0" />
+                          <span className="truncate">{new Date(scheme.startDate).toLocaleDateString()} - {new Date(scheme.endDate).toLocaleDateString()}</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <FileText size={12} className="md:hidden flex-shrink-0" />
+                          <FileText size={14} className="hidden md:block flex-shrink-0" />
+                          <span className="truncate">{scheme.id}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center space-x-1">
-                        <Calendar size={14} />
-                        <span>{new Date(scheme.startDate).toLocaleDateString()} - {new Date(scheme.endDate).toLocaleDateString()}</span>
+                      <div className="flex items-center space-x-2 md:space-x-3 flex-wrap gap-1">
+                        <StatusBadge status={scheme.status} />
+                        <span className="text-xs md:text-sm text-gray-600">{scheme.category}</span>
                       </div>
-                      <div className="flex items-center space-x-1">
-                        <FileText size={14} />
-                        <span>{scheme.id}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <StatusBadge status={scheme.status} />
-                      <span className="text-sm text-gray-600">{scheme.category}</span>
                     </div>
                   </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-purple-600">{scheme.overallProgress}%</div>
-                  <div className="text-xs text-gray-500">Complete</div>
+                  <div className="text-right sm:flex-shrink-0">
+                    <div className="text-xl md:text-2xl font-bold text-purple-600">{scheme.overallProgress}%</div>
+                    <div className="text-[10px] md:text-xs text-gray-500">Complete</div>
+                  </div>
                 </div>
               </div>
 
               {/* Progress Bar */}
-              <div className="mb-4">
+              <div className="mb-3 md:mb-4">
                 <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                   <div
                     className={`h-2 transition-all ${
@@ -258,32 +271,87 @@ export default function SchemesView() {
               </div>
 
               {/* Stats Grid */}
-              <div className="grid grid-cols-4 gap-4 mb-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-3 md:mb-4">
                 <div>
-                  <div className="text-xs text-gray-600 mb-1">Budget Allocated</div>
-                  <div className="text-sm font-bold text-gray-900">₹{(scheme.totalBudget / 100000).toFixed(1)}L</div>
+                  <div className="text-[10px] md:text-xs text-gray-600 mb-1">Budget Allocated</div>
+                  <div className="text-xs md:text-sm font-bold text-gray-900">₹{(scheme.totalBudget / 100000).toFixed(1)}L</div>
                 </div>
                 <div>
-                  <div className="text-xs text-gray-600 mb-1">Budget Utilized</div>
-                  <div className="text-sm font-bold text-gray-900">₹{(scheme.budgetUtilized / 100000).toFixed(1)}L</div>
+                  <div className="text-[10px] md:text-xs text-gray-600 mb-1">Budget Utilized</div>
+                  <div className="text-xs md:text-sm font-bold text-gray-900">₹{(scheme.budgetUtilized / 100000).toFixed(1)}L</div>
                 </div>
                 <div>
-                  <div className="text-xs text-gray-600 mb-1">Citizen Rating</div>
+                  <div className="text-[10px] md:text-xs text-gray-600 mb-1">Citizen Rating</div>
                   <div className="flex items-center space-x-1">
-                    <Star size={14} className="text-yellow-500 fill-yellow-500" />
-                    <span className="text-sm font-bold text-gray-900">{scheme.citizenRating.toFixed(1)}</span>
-                    <span className="text-xs text-gray-500">({scheme.feedbackCount})</span>
+                    <Star size={12} className="md:hidden text-yellow-500 fill-yellow-500" />
+                    <Star size={14} className="hidden md:block text-yellow-500 fill-yellow-500" />
+                    <span className="text-xs md:text-sm font-bold text-gray-900">{scheme.citizenRating.toFixed(1)}</span>
+                    <span className="text-[10px] md:text-xs text-gray-500">({scheme.feedbackCount})</span>
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs text-gray-600 mb-1">Last Updated</div>
-                  <div className="text-sm font-bold text-gray-900">{new Date(scheme.lastUpdated).toLocaleDateString()}</div>
+                  <div className="text-[10px] md:text-xs text-gray-600 mb-1">Last Updated</div>
+                  <div className="text-xs md:text-sm font-bold text-gray-900">{new Date(scheme.lastUpdated).toLocaleDateString()}</div>
                 </div>
               </div>
 
-              {/* Discrepancies Alert */}
+              {/* Vendor Report Summary - Show discrepancies and overdue work from latest report */}
+              {scheme.vendorReports && scheme.vendorReports.length > 0 && (() => {
+                const latestReport = scheme.vendorReports[scheme.vendorReports.length - 1];
+                const hasDiscrepancies = (latestReport.complianceAnalysis?.discrepancies?.length ?? 0) > 0;
+                const hasOverdueWork = (latestReport.complianceAnalysis?.overdueWork?.length ?? 0) > 0;
+                
+                return (hasDiscrepancies || hasOverdueWork) ? (
+                  <div className="mb-3 md:mb-4 space-y-2">
+                    {hasDiscrepancies && latestReport.complianceAnalysis?.discrepancies && (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-2 md:p-3">
+                        <div className="flex items-start space-x-2">
+                          <AlertTriangle size={14} className="md:hidden text-red-600 mt-0.5 flex-shrink-0" />
+                          <AlertTriangle size={16} className="hidden md:block text-red-600 mt-0.5 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-bold text-red-900 mb-1">
+                              Vendor Discrepancies ({latestReport.complianceAnalysis.discrepancies.length})
+                            </div>
+                            <ul className="text-xs text-red-700 space-y-1">
+                              {latestReport.complianceAnalysis.discrepancies.slice(0, 2).map((disc: any, idx: number) => (
+                                <li key={idx}>• {disc.description}</li>
+                              ))}
+                              {latestReport.complianceAnalysis.discrepancies.length > 2 && (
+                                <li className="text-red-600 font-medium">+ {latestReport.complianceAnalysis.discrepancies.length - 2} more</li>
+                              )}
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {hasOverdueWork && latestReport.complianceAnalysis?.overdueWork && (
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 md:p-3">
+                        <div className="flex items-start space-x-2">
+                          <AlertTriangle size={14} className="md:hidden text-yellow-600 mt-0.5 flex-shrink-0" />
+                          <AlertTriangle size={16} className="hidden md:block text-yellow-600 mt-0.5 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-bold text-yellow-900 mb-1">
+                              Overdue Work ({latestReport.complianceAnalysis.overdueWork.length})
+                            </div>
+                            <ul className="text-xs text-yellow-700 space-y-1">
+                              {latestReport.complianceAnalysis.overdueWork.slice(0, 2).map((work: any, idx: number) => (
+                                <li key={idx}>• {work.task} ({work.delayDays} days late)</li>
+                              ))}
+                              {latestReport.complianceAnalysis.overdueWork.length > 2 && (
+                                <li className="text-yellow-600 font-medium">+ {latestReport.complianceAnalysis.overdueWork.length - 2} more</li>
+                              )}
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : null;
+              })()}
+
+              {/* Discrepancies Alert (Legacy - from scheme.discrepancies) */}
               {scheme.discrepancies.length > 0 && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
                   <div className="flex items-start space-x-2">
                     <AlertTriangle size={16} className="text-red-600 mt-0.5 flex-shrink-0" />
                     <div>
@@ -299,28 +367,32 @@ export default function SchemesView() {
               )}
 
               {/* Quick Actions */}
-              <div className="flex items-center space-x-2 mt-4 pt-4 border-t border-gray-200">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-3 md:pt-4 border-t border-gray-200">
                 <button 
                   onClick={(e) => {
                     e.stopPropagation();
                     setSelectedScheme(scheme);
+                    setModalInitialTab('overview');
                     setShowDetailsModal(true);
                   }}
-                  className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg text-xs font-medium hover:bg-purple-200 transition-colors"
+                  className="px-3 py-2 bg-purple-100 text-purple-700 rounded-lg text-xs md:text-sm font-medium hover:bg-purple-200 transition-colors whitespace-nowrap"
                 >
-                  View Details
+                  View Full Details
                 </button>
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedScheme(scheme);
-                    setShowDetailsModal(true);
-                  }}
-                  className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-200 transition-colors"
-                >
-                  Vendor Reports
-                </button>
-                {/* Citizen Feedback button removed from admin portal */}
+                {userRole === 'admin' && (
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedScheme(scheme);
+                      setModalInitialTab('reports');
+                      setShowDetailsModal(true);
+                    }}
+                    className="px-3 py-2 bg-green-100 text-green-700 rounded-lg text-xs md:text-sm font-medium hover:bg-green-200 transition-colors flex items-center justify-center space-x-1 whitespace-nowrap"
+                  >
+                    <Upload size={12} />
+                    <span>Upload Vendor Report</span>
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -339,10 +411,12 @@ export default function SchemesView() {
       {/* Scheme Details Modal */}
       {showDetailsModal && selectedScheme && (
         <SchemeDetailsModal 
-          scheme={selectedScheme} 
+          scheme={selectedScheme}
+          initialTab={modalInitialTab}
           onClose={() => {
             setShowDetailsModal(false);
             setSelectedScheme(null);
+            setModalInitialTab('overview');
           }}
         />
       )}
@@ -364,63 +438,76 @@ export default function SchemesView() {
 }
 
 // Scheme Details Modal Component
-function SchemeDetailsModal({ scheme, onClose }: { scheme: GovernmentScheme; onClose: () => void }) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'phases' | 'reports'>('overview');
+function SchemeDetailsModal({ 
+  scheme, 
+  onClose, 
+  initialTab = 'overview' 
+}: { 
+  scheme: GovernmentScheme; 
+  onClose: () => void; 
+  initialTab?: 'overview' | 'phases' | 'reports';
+}) {
+  const [activeTab, setActiveTab] = useState<'overview' | 'phases' | 'reports'>(initialTab);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 md:p-4">
+      <div className="bg-white rounded-xl md:rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] md:max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 text-white">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <h2 className="text-2xl font-bold mb-2">{scheme.name}</h2>
-              <div className="flex items-center space-x-4 text-sm">
+        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-4 md:p-6 text-white">
+          <div className="flex items-start justify-between mb-3 md:mb-4">
+            <div className="flex-1 pr-2">
+              <h2 className="text-lg md:text-2xl font-bold mb-1 md:mb-2 line-clamp-2">{scheme.name}</h2>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-xs md:text-sm space-y-1 sm:space-y-0">
                 <div className="flex items-center space-x-1">
-                  <MapPin size={14} />
-                  <span>{scheme.village}, {scheme.district}</span>
+                  <MapPin size={12} className="md:hidden" />
+                  <MapPin size={14} className="hidden md:block" />
+                  <span className="truncate">{scheme.village}, {scheme.district}</span>
                 </div>
                 <div className="flex items-center space-x-1">
-                  <FileText size={14} />
-                  <span>{scheme.id}</span>
+                  <FileText size={12} className="md:hidden" />
+                  <FileText size={14} className="hidden md:block" />
+                  <span className="truncate">{scheme.id}</span>
                 </div>
               </div>
             </div>
             <button 
               onClick={onClose}
-              className="p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
+              className="p-1.5 md:p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors flex-shrink-0"
+              aria-label="Close"
             >
-              <X size={24} />
+              <X size={20} className="md:hidden" />
+              <X size={24} className="hidden md:block" />
             </button>
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-white bg-opacity-20 rounded-lg p-3">
-              <div className="text-xs opacity-90">Progress</div>
-              <div className="text-2xl font-bold">{scheme.overallProgress}%</div>
+          <div className="grid grid-cols-3 gap-2 md:gap-4">
+            <div className="bg-white bg-opacity-20 rounded-lg p-2 md:p-3">
+              <div className="text-[10px] md:text-xs opacity-90">Progress</div>
+              <div className="text-lg md:text-2xl font-bold">{scheme.overallProgress}%</div>
             </div>
-            <div className="bg-white bg-opacity-20 rounded-lg p-3">
-              <div className="text-xs opacity-90">Budget</div>
-              <div className="text-2xl font-bold">₹{(scheme.budgetUtilized / 100000).toFixed(1)}L</div>
-              <div className="text-xs opacity-75">of ₹{(scheme.totalBudget / 100000).toFixed(1)}L</div>
+            <div className="bg-white bg-opacity-20 rounded-lg p-2 md:p-3">
+              <div className="text-[10px] md:text-xs opacity-90">Budget</div>
+              <div className="text-lg md:text-2xl font-bold">₹{(scheme.budgetUtilized / 100000).toFixed(1)}L</div>
+              <div className="text-[9px] md:text-xs opacity-75">of ₹{(scheme.totalBudget / 100000).toFixed(1)}L</div>
             </div>
-            <div className="bg-white bg-opacity-20 rounded-lg p-3">
-              <div className="text-xs opacity-90">Rating</div>
+            <div className="bg-white bg-opacity-20 rounded-lg p-2 md:p-3">
+              <div className="text-[10px] md:text-xs opacity-90">Rating</div>
               <div className="flex items-center space-x-1">
-                <Star size={16} className="fill-yellow-300 text-yellow-300" />
-                <span className="text-2xl font-bold">{scheme.citizenRating.toFixed(1)}</span>
+                <Star size={14} className="md:hidden fill-yellow-300 text-yellow-300" />
+                <Star size={16} className="hidden md:block fill-yellow-300 text-yellow-300" />
+                <span className="text-lg md:text-2xl font-bold">{scheme.citizenRating.toFixed(1)}</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="border-b border-gray-200 px-6">
-          <div className="flex space-x-8">
+        <div className="border-b border-gray-200 px-3 md:px-6 overflow-x-auto">
+          <div className="flex space-x-4 md:space-x-8 min-w-max">
             <button
               onClick={() => setActiveTab('overview')}
-              className={`py-4 border-b-2 transition-colors ${
+              className={`py-3 md:py-4 border-b-2 transition-colors text-sm md:text-base whitespace-nowrap ${
                 activeTab === 'overview'
                   ? 'border-purple-600 text-purple-600 font-medium'
                   : 'border-transparent text-gray-600 hover:text-gray-900'
@@ -430,7 +517,7 @@ function SchemeDetailsModal({ scheme, onClose }: { scheme: GovernmentScheme; onC
             </button>
             <button
               onClick={() => setActiveTab('phases')}
-              className={`py-4 border-b-2 transition-colors ${
+              className={`py-3 md:py-4 border-b-2 transition-colors text-sm md:text-base whitespace-nowrap ${
                 activeTab === 'phases'
                   ? 'border-purple-600 text-purple-600 font-medium'
                   : 'border-transparent text-gray-600 hover:text-gray-900'
@@ -913,6 +1000,373 @@ function VendorReportsTab({ scheme }: { scheme: GovernmentScheme }) {
   );
 }
 
+// Helper Components for Scheme Creation
+
+// 1. Phases & Milestones Section
+function PhasesMilestonesSection({ phases, onChange }: { phases: any[]; onChange: (phases: any[]) => void }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const addPhase = () => {
+    onChange([...phases, {
+      id: phases.length + 1,
+      name: `Phase ${phases.length + 1}`,
+      milestones: [],
+      deliverables: [],
+      plannedWork: '',
+      timeline: '',
+      budget: 0,
+      startDate: '',
+      endDate: ''
+    }]);
+  };
+
+  const removePhase = (index: number) => {
+    onChange(phases.filter((_, i) => i !== index));
+  };
+
+  return (
+    <div className="border border-gray-300 rounded-lg">
+      <button
+        type="button"
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+      >
+        <div className="flex items-center space-x-2">
+          <FileText size={18} className="text-purple-600" />
+          <span className="font-medium text-gray-900">1. Project Phases & Milestones</span>
+          {phases.length > 0 && (
+            <span className="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded-full">
+              {phases.length} phases
+            </span>
+          )}
+        </div>
+        <span className="text-gray-500">{isExpanded ? '−' : '+'}</span>
+      </button>
+
+      {isExpanded && (
+        <div className="p-4 border-t border-gray-200 space-y-3">
+          {phases.map((phase, index) => (
+            <div key={index} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+              <div className="flex items-center justify-between mb-2">
+                <input
+                  type="text"
+                  value={phase.name}
+                  onChange={(e) => {
+                    const updated = [...phases];
+                    updated[index].name = e.target.value;
+                    onChange(updated);
+                  }}
+                  className="font-medium text-gray-900 bg-transparent border-none focus:outline-none"
+                  placeholder="Phase name"
+                />
+                <button
+                  type="button"
+                  onClick={() => removePhase(index)}
+                  className="text-red-600 hover:text-red-800"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <textarea
+                value={phase.plannedWork}
+                onChange={(e) => {
+                  const updated = [...phases];
+                  updated[index].plannedWork = e.target.value;
+                  onChange(updated);
+                }}
+                className="w-full text-sm border border-gray-300 rounded px-2 py-1"
+                rows={2}
+                placeholder="Planned work for this phase..."
+              />
+            </div>
+          ))}
+
+          <button
+            type="button"
+            onClick={addPhase}
+            className="w-full border-2 border-dashed border-gray-300 rounded-lg py-2 text-sm text-gray-600 hover:border-purple-400 hover:text-purple-600 transition-colors"
+          >
+            + Add Phase
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// 2. Contractors Section
+function ContractorsSection({ contractors, onChange }: { contractors: any[]; onChange: (contractors: any[]) => void }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const addContractor = () => {
+    onChange([...contractors, {
+      name: '',
+      company: '',
+      contact: '',
+      role: '',
+      assignedPhase: ''
+    }]);
+  };
+
+  const removeContractor = (index: number) => {
+    onChange(contractors.filter((_, i) => i !== index));
+  };
+
+  return (
+    <div className="border border-gray-300 rounded-lg">
+      <button
+        type="button"
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+      >
+        <div className="flex items-center space-x-2">
+          <Briefcase size={18} className="text-indigo-600" />
+          <span className="font-medium text-gray-900">2. Assign Contractors & Vendors</span>
+          {contractors.length > 0 && (
+            <span className="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded-full">
+              {contractors.length} assigned
+            </span>
+          )}
+        </div>
+        <span className="text-gray-500">{isExpanded ? '−' : '+'}</span>
+      </button>
+
+      {isExpanded && (
+        <div className="p-4 border-t border-gray-200 space-y-3">
+          {contractors.map((contractor, index) => (
+            <div key={index} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+              <div className="flex items-center justify-between mb-2">
+                <input
+                  type="text"
+                  value={contractor.name}
+                  onChange={(e) => {
+                    const updated = [...contractors];
+                    updated[index].name = e.target.value;
+                    onChange(updated);
+                  }}
+                  className="font-medium text-gray-900 bg-white border border-gray-300 rounded px-2 py-1 text-sm flex-1 mr-2"
+                  placeholder="Contractor name"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeContractor(index)}
+                  className="text-red-600 hover:text-red-800"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="text"
+                  value={contractor.company}
+                  onChange={(e) => {
+                    const updated = [...contractors];
+                    updated[index].company = e.target.value;
+                    onChange(updated);
+                  }}
+                  className="text-sm border border-gray-300 rounded px-2 py-1"
+                  placeholder="Company"
+                />
+                <input
+                  type="text"
+                  value={contractor.contact}
+                  onChange={(e) => {
+                    const updated = [...contractors];
+                    updated[index].contact = e.target.value;
+                    onChange(updated);
+                  }}
+                  className="text-sm border border-gray-300 rounded px-2 py-1"
+                  placeholder="Contact"
+                />
+              </div>
+            </div>
+          ))}
+
+          <button
+            type="button"
+            onClick={addContractor}
+            className="w-full border-2 border-dashed border-gray-300 rounded-lg py-2 text-sm text-gray-600 hover:border-indigo-400 hover:text-indigo-600 transition-colors"
+          >
+            + Add Contractor
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// 3. Documents Section
+function DocumentsSection({ documents, onChange }: { documents: string[]; onChange: (documents: string[]) => void }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [newDoc, setNewDoc] = useState('');
+
+  const addDocument = () => {
+    if (newDoc.trim()) {
+      onChange([...documents, newDoc.trim()]);
+      setNewDoc('');
+    }
+  };
+
+  const removeDocument = (index: number) => {
+    onChange(documents.filter((_, i) => i !== index));
+  };
+
+  return (
+    <div className="border border-gray-300 rounded-lg">
+      <button
+        type="button"
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+      >
+        <div className="flex items-center space-x-2">
+          <Upload size={18} className="text-green-600" />
+          <span className="font-medium text-gray-900">3. Supporting Documents</span>
+          {documents.length > 0 && (
+            <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">
+              {documents.length} documents
+            </span>
+          )}
+        </div>
+        <span className="text-gray-500">{isExpanded ? '−' : '+'}</span>
+      </button>
+
+      {isExpanded && (
+        <div className="p-4 border-t border-gray-200 space-y-3">
+          {documents.map((doc, index) => (
+            <div key={index} className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded px-3 py-2">
+              <span className="text-sm text-gray-700">{doc}</span>
+              <button
+                type="button"
+                onClick={() => removeDocument(index)}
+                className="text-red-600 hover:text-red-800"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          ))}
+
+          <div className="flex space-x-2">
+            <input
+              type="text"
+              value={newDoc}
+              onChange={(e) => setNewDoc(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addDocument())}
+              className="flex-1 text-sm border border-gray-300 rounded px-3 py-2"
+              placeholder="Document name or URL..."
+            />
+            <button
+              type="button"
+              onClick={addDocument}
+              className="px-4 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+            >
+              Add
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// 4. Monitoring Checkpoints Section
+function MonitoringSection({ checkpoints, onChange }: { checkpoints: any[]; onChange: (checkpoints: any[]) => void }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const addCheckpoint = () => {
+    onChange([...checkpoints, {
+      title: '',
+      date: '',
+      description: '',
+      responsible: ''
+    }]);
+  };
+
+  const removeCheckpoint = (index: number) => {
+    onChange(checkpoints.filter((_, i) => i !== index));
+  };
+
+  return (
+    <div className="border border-gray-300 rounded-lg">
+      <button
+        type="button"
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+      >
+        <div className="flex items-center space-x-2">
+          <CheckCircle size={18} className="text-orange-600" />
+          <span className="font-medium text-gray-900">4. Monitoring Checkpoints</span>
+          {checkpoints.length > 0 && (
+            <span className="bg-orange-100 text-orange-700 text-xs px-2 py-1 rounded-full">
+              {checkpoints.length} checkpoints
+            </span>
+          )}
+        </div>
+        <span className="text-gray-500">{isExpanded ? '−' : '+'}</span>
+      </button>
+
+      {isExpanded && (
+        <div className="p-4 border-t border-gray-200 space-y-3">
+          {checkpoints.map((checkpoint, index) => (
+            <div key={index} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+              <div className="flex items-center justify-between mb-2">
+                <input
+                  type="text"
+                  value={checkpoint.title}
+                  onChange={(e) => {
+                    const updated = [...checkpoints];
+                    updated[index].title = e.target.value;
+                    onChange(updated);
+                  }}
+                  className="font-medium text-gray-900 bg-white border border-gray-300 rounded px-2 py-1 text-sm flex-1 mr-2"
+                  placeholder="Checkpoint title"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeCheckpoint(index)}
+                  className="text-red-600 hover:text-red-800"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="date"
+                  value={checkpoint.date}
+                  onChange={(e) => {
+                    const updated = [...checkpoints];
+                    updated[index].date = e.target.value;
+                    onChange(updated);
+                  }}
+                  className="text-sm border border-gray-300 rounded px-2 py-1"
+                />
+                <input
+                  type="text"
+                  value={checkpoint.responsible}
+                  onChange={(e) => {
+                    const updated = [...checkpoints];
+                    updated[index].responsible = e.target.value;
+                    onChange(updated);
+                  }}
+                  className="text-sm border border-gray-300 rounded px-2 py-1"
+                  placeholder="Responsible person"
+                />
+              </div>
+            </div>
+          ))}
+
+          <button
+            type="button"
+            onClick={addCheckpoint}
+            className="w-full border-2 border-dashed border-gray-300 rounded-lg py-2 text-sm text-gray-600 hover:border-orange-400 hover:text-orange-600 transition-colors"
+          >
+            + Add Checkpoint
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Add Scheme Modal Component
 function AddSchemeModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (scheme: any) => void }) {
   const [formData, setFormData] = useState({
@@ -923,8 +1377,13 @@ function AddSchemeModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
     totalBudget: '',
     startDate: '',
     endDate: '',
-    description: ''
+    description: '',
+    phases: [] as any[],
+    contractors: [] as any[],
+    documents: [] as string[],
+    monitoringCheckpoints: [] as any[]
   });
+  const [currentStep, setCurrentStep] = useState(1); // 1: Basic Info, 2: Phases, 3: Contractors, 4: Documents & Monitoring
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [isExtractingPDF, setIsExtractingPDF] = useState(false);
@@ -968,7 +1427,11 @@ function AddSchemeModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
           totalBudget: result.data.totalBudget?.toString() || '',
           startDate: result.data.startDate || '',
           endDate: result.data.endDate || '',
-          description: result.data.description || ''
+          description: result.data.description || '',
+          phases: result.data.phases || [],
+          contractors: [],
+          documents: [],
+          monitoringCheckpoints: []
         });
 
         alert('✅ PDF data extracted successfully! Please review and edit if needed.');
@@ -1198,19 +1661,31 @@ function AddSchemeModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
               />
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-start space-x-2">
-                <FileText size={16} className="text-blue-600 mt-0.5 flex-shrink-0" />
-                <div className="text-sm text-blue-900">
-                  <div className="font-medium mb-1">Next Steps</div>
-                  <ul className="text-xs text-blue-700 space-y-1 list-disc list-inside">
-                    <li>Add project phases and milestones</li>
-                    <li>Upload supporting documents</li>
-                    <li>Assign contractors and vendors</li>
-                    <li>Set up monitoring checkpoints</li>
-                  </ul>
-                </div>
-              </div>
+            {/* Additional Sections - Expandable */}
+            <div className="border-t border-gray-200 pt-4 space-y-4">
+              {/* 1. Add Project Phases */}
+              <PhasesMilestonesSection
+                phases={formData.phases}
+                onChange={(phases) => setFormData({ ...formData, phases })}
+              />
+
+              {/* 2. Assign Contractors */}
+              <ContractorsSection
+                contractors={formData.contractors}
+                onChange={(contractors) => setFormData({ ...formData, contractors })}
+              />
+
+              {/* 3. Upload Documents */}
+              <DocumentsSection
+                documents={formData.documents}
+                onChange={(documents) => setFormData({ ...formData, documents })}
+              />
+
+              {/* 4. Monitoring Checkpoints */}
+              <MonitoringSection
+                checkpoints={formData.monitoringCheckpoints}
+                onChange={(checkpoints) => setFormData({ ...formData, monitoringCheckpoints: checkpoints })}
+              />
             </div>
 
             {/* Error Message */}

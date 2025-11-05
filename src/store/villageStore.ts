@@ -91,8 +91,34 @@ export interface VendorReport {
   phase: number;
   workCompleted: string;
   expenseClaimed: number;
-  verificationStatus: 'verified' | 'pending' | 'rejected' | 'under-review';
+  verificationStatus: 'verified' | 'pending' | 'rejected' | 'under-review' | 'approved';
   documents: string[];
+  pdfFileName?: string;
+  complianceAnalysis?: {
+    overallCompliance: number;
+    matchingItems?: string[];
+    discrepancies?: Array<{
+      category: string;
+      severity: 'low' | 'medium' | 'high' | 'critical';
+      description: string;
+      plannedWork?: string;
+      actualWork?: string;
+    }>;
+    overdueWork?: Array<{
+      task: string;
+      plannedDate: string;
+      status: string;
+      delayDays: number;
+    }>;
+    budgetAnalysis?: {
+      plannedBudget: number;
+      actualSpent: number;
+      variance: number;
+      variancePercentage: number;
+    };
+    aiSummary?: string;
+    aiProcessed?: boolean;
+  };
 }
 
 export interface SchemeDiscrepancy {
