@@ -10,6 +10,9 @@
     "server": "node backend/server.js"
   },
   "dependencies": {
+    "@capacitor/android": "^7.4.4",
+    "@capacitor/cli": "^7.4.4",
+    "@capacitor/core": "^7.4.4",
     "chart.js": "^4.4.1",
     "date-fns": "^3.3.0",
     "framer-motion": "^11.18.2",
