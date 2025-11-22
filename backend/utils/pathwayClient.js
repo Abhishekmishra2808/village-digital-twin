@@ -34,9 +34,15 @@ class PathwayClient {
   async callRag(payload) {
     let lastError;
     
+    // Transform backend payload to Pathway's expected format
+    // Pathway QARestServer expects: {"prompt": "question text"}
+    const pathwayPayload = {
+      prompt: payload.question || payload.prompt
+    };
+    
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
-        const response = await axios.post(this.baseURL, payload, {
+        const response = await axios.post(this.baseURL, pathwayPayload, {
           headers: {
             'Authorization': `Bearer ${this.token}`,
             'Content-Type': 'application/json'
@@ -78,6 +84,7 @@ class PathwayClient {
 
   /**
    * Normalize Pathway response to expected format
+   * Pathway returns {response: string}, we map it to {answer: string}
    */
   _normalizeResponse(data) {
     if (!data || typeof data !== 'object') {
@@ -85,7 +92,7 @@ class PathwayClient {
     }
 
     return {
-      answer: data.answer || 'No answer provided',
+      answer: data.answer || data.response || 'No answer provided',
       citations: Array.isArray(data.citations) ? data.citations : [],
       trace_id: data.trace_id || data.traceId || `trace_${Date.now()}`,
       cached: data.cached || false
