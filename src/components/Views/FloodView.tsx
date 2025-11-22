@@ -91,7 +91,7 @@ export default function FloodView() {
   };
 
   return (
-    <div className="h-full w-full overflow-auto bg-gray-50 p-6">
+    <div className="h-full w-full overflow-auto bg-transparent p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -101,14 +101,14 @@ export default function FloodView() {
                 <CloudRain size={24} className="text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Flood Prediction & Management</h1>
-                <p className="text-gray-600">AI-based flood warnings and drainage system monitoring</p>
+                <h1 className="text-3xl font-bold text-white">Flood Prediction & Management</h1>
+                <p className="text-slate-400">AI-based flood warnings and drainage system monitoring</p>
               </div>
             </div>
             <select
               value={forecastDays}
               onChange={(e) => setForecastDays(Number(e.target.value))}
-              className="px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-900 text-sm"
+              className="px-4 py-2 rounded-lg bg-slate-800 border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value={3}>3-Day Forecast</option>
               <option value={7}>7-Day Forecast</option>
@@ -119,82 +119,82 @@ export default function FloodView() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
             <div className="flex items-center gap-3 mb-2">
-              <Waves size={20} className="text-blue-600" />
-              <h3 className="text-gray-600 text-sm">Drainage Points</h3>
+              <Waves size={20} className="text-blue-400" />
+              <h3 className="text-slate-400 text-sm">Drainage Points</h3>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.totalDrains}</p>
+            <p className="text-3xl font-bold text-white">{stats.totalDrains}</p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
             <div className="flex items-center gap-3 mb-2">
-              <AlertTriangle size={20} className="text-red-600" />
-              <h3 className="text-gray-600 text-sm">Critical Drains</h3>
+              <AlertTriangle size={20} className="text-red-400" />
+              <h3 className="text-slate-400 text-sm">Critical Drains</h3>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.criticalDrains}</p>
+            <p className="text-3xl font-bold text-white">{stats.criticalDrains}</p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
             <div className="flex items-center gap-3 mb-2">
-              <Droplets size={20} className="text-blue-600" />
-              <h3 className="text-gray-600 text-sm">Avg Capacity</h3>
+              <Droplets size={20} className="text-blue-400" />
+              <h3 className="text-slate-400 text-sm">Avg Capacity</h3>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.avgCapacity}%</p>
+            <p className="text-3xl font-bold text-white">{stats.avgCapacity}%</p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
             <div className="flex items-center gap-3 mb-2">
-              <MapPin size={20} className="text-orange-600" />
-              <h3 className="text-gray-600 text-sm">High Risk Zones</h3>
+              <MapPin size={20} className="text-orange-400" />
+              <h3 className="text-slate-400 text-sm">High Risk Zones</h3>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.highRiskZones}</p>
+            <p className="text-3xl font-bold text-white">{stats.highRiskZones}</p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
             <div className="flex items-center gap-3 mb-2">
-              <CloudRain size={20} className="text-blue-600" />
-              <h3 className="text-gray-600 text-sm">3-Day Rainfall</h3>
+              <CloudRain size={20} className="text-blue-400" />
+              <h3 className="text-slate-400 text-sm">3-Day Rainfall</h3>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.forecastRainfall} mm</p>
+            <p className="text-3xl font-bold text-white">{stats.forecastRainfall} mm</p>
           </div>
         </div>
 
         {/* AI Flood Prediction Panel */}
-        <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-xl p-6 mb-8 border border-orange-200">
+        <div className="bg-gradient-to-r from-orange-500/10 to-red-500/10 rounded-xl p-6 mb-8 border border-orange-500/20">
           <div className="flex items-start gap-4">
             <div className="p-3 bg-orange-500 rounded-lg">
               <Brain size={24} className="text-white" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-bold text-gray-900 mb-2">AI Flood Risk Analysis</h3>
+              <h3 className="text-lg font-bold text-white mb-2">AI Flood Risk Analysis</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-4">
                 <div className="flex items-start gap-2">
-                  <AlertTriangle size={16} className="text-orange-600 mt-0.5" />
+                  <AlertTriangle size={16} className="text-orange-400 mt-0.5" />
                   <div>
-                    <p className="font-semibold text-gray-900">High Rainfall Alert (Day 3-4)</p>
-                    <p className="text-gray-700">Expected 78mm rainfall on Day 3 with 95% probability</p>
+                    <p className="font-semibold text-white">High Rainfall Alert (Day 3-4)</p>
+                    <p className="text-slate-300">Expected 78mm rainfall on Day 3 with 95% probability</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
-                  <AlertTriangle size={16} className="text-red-600 mt-0.5" />
+                  <AlertTriangle size={16} className="text-red-400 mt-0.5" />
                   <div>
-                    <p className="font-semibold text-gray-900">Critical Drainage Blockage</p>
-                    <p className="text-gray-700">Industrial Drain at 92% blockage risk - immediate action required</p>
+                    <p className="font-semibold text-white">Critical Drainage Blockage</p>
+                    <p className="text-slate-300">Industrial Drain at 92% blockage risk - immediate action required</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
-                  <CheckCircle size={16} className="text-blue-600 mt-0.5" />
+                  <CheckCircle size={16} className="text-blue-400 mt-0.5" />
                   <div>
-                    <p className="font-semibold text-gray-900">Evacuation Routes Prepared</p>
-                    <p className="text-gray-700">Safe zones identified for Market Area and Industrial Zone</p>
+                    <p className="font-semibold text-white">Evacuation Routes Prepared</p>
+                    <p className="text-slate-300">Safe zones identified for Market Area and Industrial Zone</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
-                  <Wind size={16} className="text-blue-600 mt-0.5" />
+                  <Wind size={16} className="text-blue-400 mt-0.5" />
                   <div>
-                    <p className="font-semibold text-gray-900">Weather Pattern Analysis</p>
-                    <p className="text-gray-700">Monsoon system moving southeast - reduce risk by Day 5</p>
+                    <p className="font-semibold text-white">Weather Pattern Analysis</p>
+                    <p className="text-slate-300">Monsoon system moving southeast - reduce risk by Day 5</p>
                   </div>
                 </div>
               </div>
@@ -202,7 +202,7 @@ export default function FloodView() {
                 <button className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-all text-sm font-semibold">
                   Issue Early Warning
                 </button>
-                <button className="px-4 py-2 bg-white text-orange-700 border border-orange-300 rounded-lg hover:bg-orange-50 transition-all text-sm font-semibold">
+                <button className="px-4 py-2 bg-transparent text-orange-400 border border-orange-500/30 rounded-lg hover:bg-orange-500/10 transition-all text-sm font-semibold">
                   View Response Plan
                 </button>
               </div>
@@ -212,8 +212,8 @@ export default function FloodView() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Drainage System */}
-          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Drainage System Status</h2>
+          <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
+            <h2 className="text-xl font-bold text-white mb-6">Drainage System Status</h2>
             
             <div className="space-y-4">
               {drainagePoints.map((drain) => {
@@ -221,50 +221,50 @@ export default function FloodView() {
                 return (
                   <div
                     key={drain.id}
-                    className="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-md transition-all cursor-pointer"
+                    className="p-4 bg-slate-800/50 rounded-lg border border-white/10 hover:bg-slate-800 transition-all cursor-pointer"
                     onClick={() => setSelectedAsset({ type: 'drainage', data: drain })}
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-semibold text-gray-900">{drain.name}</h3>
+                          <h3 className="text-lg font-semibold text-white">{drain.name}</h3>
                           <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            drain.status === 'good' ? 'bg-green-50 text-green-700 border border-green-200' :
-                            drain.status === 'warning' ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' :
-                            'bg-red-50 text-red-700 border border-red-200'
+                            drain.status === 'good' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
+                            drain.status === 'warning' ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' :
+                            'bg-red-500/10 text-red-400 border border-red-500/20'
                           }`}>
                             {drain.status.toUpperCase()}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-600">{drain.location}</p>
+                        <p className="text-sm text-slate-400">{drain.location}</p>
                       </div>
 
                       <div className={`ml-4 p-3 rounded-lg ${
-                        drain.status === 'good' ? 'bg-green-50' :
-                        drain.status === 'warning' ? 'bg-yellow-50' :
-                        'bg-red-50'
+                        drain.status === 'good' ? 'bg-green-500/10' :
+                        drain.status === 'warning' ? 'bg-yellow-500/10' :
+                        'bg-red-500/10'
                       }`}>
-                        {drain.status === 'good' && <CheckCircle size={24} className="text-green-600" />}
-                        {drain.status === 'warning' && <AlertTriangle size={24} className="text-yellow-600" />}
-                        {drain.status === 'critical' && <AlertTriangle size={24} className="text-red-600" />}
+                        {drain.status === 'good' && <CheckCircle size={24} className="text-green-400" />}
+                        {drain.status === 'warning' && <AlertTriangle size={24} className="text-yellow-400" />}
+                        {drain.status === 'critical' && <AlertTriangle size={24} className="text-red-400" />}
                       </div>
                     </div>
 
                     <div className="grid grid-cols-3 gap-3 mb-3">
                       <div>
-                        <p className="text-xs text-gray-600">Capacity</p>
-                        <p className="text-sm font-semibold text-gray-900">{drain.capacity} L/min</p>
+                        <p className="text-xs text-slate-400">Capacity</p>
+                        <p className="text-sm font-semibold text-white">{drain.capacity} L/min</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-600">Current Flow</p>
-                        <p className="text-sm font-semibold text-gray-900">{drain.currentFlow} L/min</p>
+                        <p className="text-xs text-slate-400">Current Flow</p>
+                        <p className="text-sm font-semibold text-white">{drain.currentFlow} L/min</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-600">Blockage Risk</p>
+                        <p className="text-xs text-slate-400">Blockage Risk</p>
                         <p className={`text-sm font-semibold ${
-                          drain.blockageRisk > 70 ? 'text-red-600' :
-                          drain.blockageRisk > 40 ? 'text-yellow-600' :
-                          'text-green-600'
+                          drain.blockageRisk > 70 ? 'text-red-400' :
+                          drain.blockageRisk > 40 ? 'text-yellow-400' :
+                          'text-green-400'
                         }`}>
                           {drain.blockageRisk}%
                         </p>
@@ -274,10 +274,10 @@ export default function FloodView() {
                     {/* Utilization Bar */}
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-gray-600">Utilization</span>
-                        <span className="text-xs font-semibold text-gray-900">{utilizationPercent.toFixed(0)}%</span>
+                        <span className="text-xs text-slate-400">Utilization</span>
+                        <span className="text-xs font-semibold text-white">{utilizationPercent.toFixed(0)}%</span>
                       </div>
-                      <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
                         <div 
                           className={`h-full ${
                             utilizationPercent > 90 ? 'bg-red-500' :
@@ -295,37 +295,37 @@ export default function FloodView() {
           </div>
 
           {/* Rainfall Forecast */}
-          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Rainfall Forecast & Flood Risk</h2>
+          <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
+            <h2 className="text-xl font-bold text-white mb-6">Rainfall Forecast & Flood Risk</h2>
             
             <div className="space-y-3">
               {rainfallForecast.map((forecast, idx) => (
                 <div
                   key={idx}
-                  className={`p-4 rounded-lg border-2 ${
-                    forecast.floodRisk === 'high' ? 'bg-red-50 border-red-300' :
-                    forecast.floodRisk === 'medium' ? 'bg-yellow-50 border-yellow-300' :
-                    'bg-green-50 border-green-300'
+                  className={`p-4 rounded-lg border ${
+                    forecast.floodRisk === 'high' ? 'bg-red-500/10 border-red-500/30' :
+                    forecast.floodRisk === 'medium' ? 'bg-yellow-500/10 border-yellow-500/30' :
+                    'bg-green-500/10 border-green-500/30'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-3">
                       <CloudRain size={20} className={
-                        forecast.floodRisk === 'high' ? 'text-red-600' :
-                        forecast.floodRisk === 'medium' ? 'text-yellow-600' :
-                        'text-green-600'
+                        forecast.floodRisk === 'high' ? 'text-red-400' :
+                        forecast.floodRisk === 'medium' ? 'text-yellow-400' :
+                        'text-green-400'
                       } />
                       <div>
-                        <h4 className="font-semibold text-gray-900">{forecast.day}</h4>
-                        <p className="text-xs text-gray-600">{forecast.probability}% probability</p>
+                        <h4 className="font-semibold text-white">{forecast.day}</h4>
+                        <p className="text-xs text-slate-400">{forecast.probability}% probability</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-gray-900">{forecast.rainfall} mm</p>
+                      <p className="text-2xl font-bold text-white">{forecast.rainfall} mm</p>
                       <span className={`text-xs font-semibold uppercase ${
-                        forecast.floodRisk === 'high' ? 'text-red-700' :
-                        forecast.floodRisk === 'medium' ? 'text-yellow-700' :
-                        'text-green-700'
+                        forecast.floodRisk === 'high' ? 'text-red-400' :
+                        forecast.floodRisk === 'medium' ? 'text-yellow-400' :
+                        'text-green-400'
                       }`}>
                         {forecast.floodRisk} risk
                       </span>
@@ -333,7 +333,7 @@ export default function FloodView() {
                   </div>
                   
                   {/* Rainfall intensity bar */}
-                  <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden mt-2">
+                  <div className="w-full h-3 bg-slate-700 rounded-full overflow-hidden mt-2">
                     <div 
                       className={`h-full ${
                         forecast.floodRisk === 'high' ? 'bg-red-500' :
@@ -350,49 +350,49 @@ export default function FloodView() {
         </div>
 
         {/* Flood Risk Zones */}
-        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Flood Risk Zones</h2>
+        <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
+          <h2 className="text-xl font-bold text-white mb-6">Flood Risk Zones</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {floodRiskZones.map((zone) => (
               <div
                 key={zone.id}
-                className={`p-4 rounded-lg border-2 ${
-                  zone.riskLevel === 'high' ? 'bg-red-50 border-red-300' :
-                  zone.riskLevel === 'medium' ? 'bg-yellow-50 border-yellow-300' :
-                  'bg-green-50 border-green-300'
+                className={`p-4 rounded-lg border ${
+                  zone.riskLevel === 'high' ? 'bg-red-500/10 border-red-500/30' :
+                  zone.riskLevel === 'medium' ? 'bg-yellow-500/10 border-yellow-500/30' :
+                  'bg-green-500/10 border-green-500/30'
                 }`}
               >
                 <div className="flex items-center justify-between mb-3">
                   <MapPin size={20} className={
-                    zone.riskLevel === 'high' ? 'text-red-600' :
-                    zone.riskLevel === 'medium' ? 'text-yellow-600' :
-                    'text-green-600'
+                    zone.riskLevel === 'high' ? 'text-red-400' :
+                    zone.riskLevel === 'medium' ? 'text-yellow-400' :
+                    'text-green-400'
                   } />
                   <span className={`px-2 py-1 rounded-full text-xs font-semibold uppercase ${
-                    zone.riskLevel === 'high' ? 'bg-red-600 text-white' :
-                    zone.riskLevel === 'medium' ? 'bg-yellow-600 text-white' :
-                    'bg-green-600 text-white'
+                    zone.riskLevel === 'high' ? 'bg-red-500 text-white' :
+                    zone.riskLevel === 'medium' ? 'bg-yellow-500 text-white' :
+                    'bg-green-500 text-white'
                   }`}>
                     {zone.riskLevel}
                   </span>
                 </div>
-                <h3 className="font-semibold text-gray-900 mb-3">{zone.name}</h3>
+                <h3 className="font-semibold text-white mb-3">{zone.name}</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Elevation:</span>
-                    <span className="font-semibold text-gray-900">{zone.elevation}m</span>
+                    <span className="text-slate-400">Elevation:</span>
+                    <span className="font-semibold text-white">{zone.elevation}m</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Population:</span>
-                    <span className="font-semibold text-gray-900">{zone.population.toLocaleString()}</span>
+                    <span className="text-slate-400">Population:</span>
+                    <span className="font-semibold text-white">{zone.population.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Drainage:</span>
+                    <span className="text-slate-400">Drainage:</span>
                     <span className={`font-semibold capitalize ${
-                      zone.drainage === 'critical' || zone.drainage === 'poor' ? 'text-red-600' :
-                      zone.drainage === 'fair' ? 'text-yellow-600' :
-                      'text-green-600'
+                      zone.drainage === 'critical' || zone.drainage === 'poor' ? 'text-red-400' :
+                      zone.drainage === 'fair' ? 'text-yellow-400' :
+                      'text-green-400'
                     }`}>
                       {zone.drainage}
                     </span>

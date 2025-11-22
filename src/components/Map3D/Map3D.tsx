@@ -401,15 +401,15 @@ export default function Map3D() {
       <div ref={mapContainer} className="absolute inset-0" />
       
       {/* Map Info Panel */}
-      <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-3 border border-gray-200">
+      <div className="absolute top-4 left-4 bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg p-3 border border-white/10">
         <div className="space-y-1 text-sm">
           <div className="flex items-center gap-2">
-            <span className="text-gray-600">Zoom:</span>
-            <span className="font-semibold text-gray-900">{currentZoom}x</span>
+            <span className="text-slate-400">Zoom:</span>
+            <span className="font-semibold text-white">{currentZoom}x</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-gray-600">Pitch:</span>
-            <span className="font-semibold text-gray-900">{currentPitch}°</span>
+            <span className="text-slate-400">Pitch:</span>
+            <span className="font-semibold text-white">{currentPitch}°</span>
           </div>
         </div>
       </div>
@@ -428,7 +428,7 @@ export default function Map3D() {
               });
             }
           }}
-          className="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg shadow-lg border border-gray-200 text-sm font-medium transition-all"
+          className="bg-slate-900/80 hover:bg-slate-800 backdrop-blur-md text-white px-4 py-2 rounded-lg shadow-lg border border-white/10 text-sm font-medium transition-all"
           title="Reset to village center"
         >
           🏠 Reset View
@@ -443,7 +443,7 @@ export default function Map3D() {
               });
             }
           }}
-          className="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg shadow-lg border border-gray-200 text-sm font-medium transition-all"
+          className="bg-slate-900/80 hover:bg-slate-800 backdrop-blur-md text-white px-4 py-2 rounded-lg shadow-lg border border-white/10 text-sm font-medium transition-all"
           title="Toggle 3D view"
         >
           🔄 Toggle 3D
@@ -451,29 +451,29 @@ export default function Map3D() {
       </div>
       
       {/* Map Legend */}
-      <div className="absolute bottom-4 right-4 bg-white rounded-lg shadow-lg p-4 border border-gray-200 text-sm space-y-2 max-w-xs">
-        <h4 className="font-semibold text-gray-900 mb-3">Map Legend</h4>
+      <div className="absolute bottom-4 right-4 bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg p-4 border border-white/10 text-sm space-y-2 max-w-xs">
+        <h4 className="font-semibold text-white mb-3">Map Legend</h4>
         <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 rounded-full bg-green-500 border-2 border-white shadow-sm" />
-          <span className="text-gray-700">Water Tank (Good)</span>
+          <div className="w-4 h-4 rounded-full bg-green-500 border-2 border-white/20 shadow-sm" />
+          <span className="text-slate-300">Water Tank (Good)</span>
         </div>
         <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 rounded-full bg-yellow-500 border-2 border-white shadow-sm" />
-          <span className="text-gray-700">Water Tank (Warning)</span>
+          <div className="w-4 h-4 rounded-full bg-yellow-500 border-2 border-white/20 shadow-sm" />
+          <span className="text-slate-300">Water Tank (Warning)</span>
         </div>
         <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 rounded-full bg-red-500 border-2 border-white shadow-sm" />
-          <span className="text-gray-700">Water Tank (Critical)</span>
+          <div className="w-4 h-4 rounded-full bg-red-500 border-2 border-white/20 shadow-sm" />
+          <span className="text-slate-300">Water Tank (Critical)</span>
         </div>
         <div className="flex items-center space-x-2">
-          <div className="w-3 h-3 bg-green-500 border-2 border-white shadow-sm transform rotate-45" />
-          <span className="text-gray-700">Power Node</span>
+          <div className="w-3 h-3 bg-green-500 border-2 border-white/20 shadow-sm transform rotate-45" />
+          <span className="text-slate-300">Power Node</span>
         </div>
         <div className="flex items-center space-x-2">
-          <div className="w-3 h-3 rounded-full bg-cyan-500 border-2 border-white shadow-sm" />
-          <span className="text-gray-700">IoT Sensor</span>
+          <div className="w-3 h-3 rounded-full bg-cyan-500 border-2 border-white/20 shadow-sm" />
+          <span className="text-slate-300">IoT Sensor</span>
         </div>
-        <div className="pt-2 mt-2 border-t border-gray-200 text-xs text-gray-600">
+        <div className="pt-2 mt-2 border-t border-white/10 text-xs text-slate-400">
           💡 Scroll to zoom • Drag to pan • Right-click drag to rotate
         </div>
       </div>

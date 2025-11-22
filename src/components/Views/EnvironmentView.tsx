@@ -94,15 +94,15 @@ export default function EnvironmentView() {
   };
 
   const getAQIColor = (aqi: number) => {
-    if (aqi <= 50) return { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200', label: 'Good' };
-    if (aqi <= 100) return { bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-200', label: 'Moderate' };
-    if (aqi <= 150) return { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200', label: 'Unhealthy (SG)' };
-    if (aqi <= 200) return { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200', label: 'Unhealthy' };
-    return { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200', label: 'Hazardous' };
+    if (aqi <= 50) return { bg: 'bg-green-500/10', text: 'text-green-400', border: 'border-green-500/20', label: 'Good' };
+    if (aqi <= 100) return { bg: 'bg-yellow-500/10', text: 'text-yellow-400', border: 'border-yellow-500/20', label: 'Moderate' };
+    if (aqi <= 150) return { bg: 'bg-orange-500/10', text: 'text-orange-400', border: 'border-orange-500/20', label: 'Unhealthy (SG)' };
+    if (aqi <= 200) return { bg: 'bg-red-500/10', text: 'text-red-400', border: 'border-red-500/20', label: 'Unhealthy' };
+    return { bg: 'bg-purple-500/10', text: 'text-purple-400', border: 'border-purple-500/20', label: 'Hazardous' };
   };
 
   return (
-    <div className="h-full w-full overflow-auto bg-gray-50 p-6">
+    <div className="h-full w-full overflow-auto bg-transparent p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -112,14 +112,14 @@ export default function EnvironmentView() {
                 <Leaf size={24} className="text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Environmental Monitoring</h1>
-                <p className="text-gray-600">Real-time air quality, noise, and climate data with alerts</p>
+                <h1 className="text-3xl font-bold text-white">Environmental Monitoring</h1>
+                <p className="text-slate-400">Real-time air quality, noise, and climate data with alerts</p>
               </div>
             </div>
             <select
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value)}
-              className="px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-900 text-sm"
+              className="px-4 py-2 rounded-lg bg-slate-800 border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="1h">Last Hour</option>
               <option value="24h">Last 24 Hours</option>
@@ -131,80 +131,80 @@ export default function EnvironmentView() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
             <div className="flex items-center gap-3 mb-2">
-              <Wind size={20} className="text-blue-600" />
-              <h3 className="text-gray-600 text-sm">Stations</h3>
+              <Wind size={20} className="text-blue-400" />
+              <h3 className="text-slate-400 text-sm">Stations</h3>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.totalStations}</p>
+            <p className="text-3xl font-bold text-white">{stats.totalStations}</p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
             <div className="flex items-center gap-3 mb-2">
-              <Eye size={20} className="text-green-600" />
-              <h3 className="text-gray-600 text-sm">Avg AQI</h3>
+              <Eye size={20} className="text-green-400" />
+              <h3 className="text-slate-400 text-sm">Avg AQI</h3>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.avgAQI}</p>
-            <p className="text-xs text-green-600 mt-1">Moderate</p>
+            <p className="text-3xl font-bold text-white">{stats.avgAQI}</p>
+            <p className="text-xs text-green-400 mt-1">Moderate</p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
             <div className="flex items-center gap-3 mb-2">
-              <CheckCircle size={20} className="text-green-600" />
-              <h3 className="text-gray-600 text-sm">Good Air Quality</h3>
+              <CheckCircle size={20} className="text-green-400" />
+              <h3 className="text-slate-400 text-sm">Good Air Quality</h3>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.goodAir}</p>
+            <p className="text-3xl font-bold text-white">{stats.goodAir}</p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
             <div className="flex items-center gap-3 mb-2">
-              <AlertTriangle size={20} className="text-red-600" />
-              <h3 className="text-gray-600 text-sm">Active Alerts</h3>
+              <AlertTriangle size={20} className="text-red-400" />
+              <h3 className="text-slate-400 text-sm">Active Alerts</h3>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.activeAlerts}</p>
+            <p className="text-3xl font-bold text-white">{stats.activeAlerts}</p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
             <div className="flex items-center gap-3 mb-2">
-              <Thermometer size={20} className="text-orange-600" />
-              <h3 className="text-gray-600 text-sm">Avg Temp</h3>
+              <Thermometer size={20} className="text-orange-400" />
+              <h3 className="text-slate-400 text-sm">Avg Temp</h3>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.avgTemperature}°C</p>
+            <p className="text-3xl font-bold text-white">{stats.avgTemperature}°C</p>
           </div>
         </div>
 
         {/* Active Alerts */}
         {environmentalAlerts.length > 0 && (
-          <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-xl p-6 mb-8 border border-red-200">
+          <div className="bg-gradient-to-r from-red-500/10 to-orange-500/10 rounded-xl p-6 mb-8 border border-red-500/20">
             <div className="flex items-start gap-4">
               <div className="p-3 bg-red-500 rounded-lg">
                 <AlertTriangle size={24} className="text-white" />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Active Environmental Alerts</h3>
+                <h3 className="text-lg font-bold text-white mb-4">Active Environmental Alerts</h3>
                 <div className="space-y-3">
                   {environmentalAlerts.map((alert) => (
                     <div key={alert.id} className={`p-3 rounded-lg border ${
-                      alert.type === 'critical' ? 'bg-red-100 border-red-300' :
-                      alert.type === 'warning' ? 'bg-yellow-100 border-yellow-300' :
-                      'bg-blue-100 border-blue-300'
+                      alert.type === 'critical' ? 'bg-red-500/20 border-red-500/30' :
+                      alert.type === 'warning' ? 'bg-yellow-500/20 border-yellow-500/30' :
+                      'bg-blue-500/20 border-blue-500/30'
                     }`}>
                       <div className="flex items-start justify-between">
                         <div>
                           <div className="flex items-center gap-2 mb-1">
                             <span className={`px-2 py-0.5 rounded text-xs font-semibold uppercase ${
-                              alert.type === 'critical' ? 'bg-red-600 text-white' :
-                              alert.type === 'warning' ? 'bg-yellow-600 text-white' :
-                              'bg-blue-600 text-white'
+                              alert.type === 'critical' ? 'bg-red-500 text-white' :
+                              alert.type === 'warning' ? 'bg-yellow-500 text-white' :
+                              'bg-blue-500 text-white'
                             }`}>
                               {alert.type}
                             </span>
-                            <span className="font-semibold text-gray-900">{alert.param}</span>
-                            <span className="text-sm text-gray-600">• {alert.location}</span>
+                            <span className="font-semibold text-white">{alert.param}</span>
+                            <span className="text-sm text-slate-300">• {alert.location}</span>
                           </div>
-                          <p className="text-sm text-gray-800">{alert.message}</p>
+                          <p className="text-sm text-slate-200">{alert.message}</p>
                         </div>
-                        <span className="text-xs text-gray-600 whitespace-nowrap ml-4">{alert.time}</span>
+                        <span className="text-xs text-slate-400 whitespace-nowrap ml-4">{alert.time}</span>
                       </div>
                     </div>
                   ))}
@@ -217,8 +217,8 @@ export default function EnvironmentView() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Monitoring Stations */}
           <div className="space-y-6">
-            <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Monitoring Stations</h2>
+            <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
+              <h2 className="text-xl font-bold text-white mb-6">Monitoring Stations</h2>
               
               <div className="space-y-4">
                 {monitoringStations.map((station) => {
@@ -226,13 +226,13 @@ export default function EnvironmentView() {
                   return (
                     <div
                       key={station.id}
-                      className="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-md transition-all cursor-pointer"
+                      className="p-4 bg-slate-800/50 rounded-lg border border-white/10 hover:bg-slate-800 transition-all cursor-pointer"
                       onClick={() => setSelectedAsset({ type: 'envStation', data: station })}
                     >
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-1">{station.name}</h3>
-                          <p className="text-sm text-gray-600">{station.location}</p>
+                          <h3 className="text-lg font-semibold text-white mb-1">{station.name}</h3>
+                          <p className="text-sm text-slate-400">{station.location}</p>
                         </div>
                         <div className={`px-3 py-1 rounded-full text-xs font-semibold ${aqiColor.bg} ${aqiColor.text} border ${aqiColor.border}`}>
                           AQI: {station.aqi} - {aqiColor.label}
@@ -240,26 +240,26 @@ export default function EnvironmentView() {
                       </div>
 
                       <div className="grid grid-cols-3 gap-3">
-                        <div className="bg-white p-3 rounded-lg border border-gray-200">
+                        <div className="bg-slate-900/50 p-3 rounded-lg border border-white/10">
                           <div className="flex items-center gap-2 mb-1">
-                            <Wind size={14} className="text-blue-600" />
-                            <p className="text-xs text-gray-600">PM2.5</p>
+                            <Wind size={14} className="text-blue-400" />
+                            <p className="text-xs text-slate-400">PM2.5</p>
                           </div>
-                          <p className="text-sm font-semibold text-gray-900">{station.pm25} μg/m³</p>
+                          <p className="text-sm font-semibold text-white">{station.pm25} μg/m³</p>
                         </div>
-                        <div className="bg-white p-3 rounded-lg border border-gray-200">
+                        <div className="bg-slate-900/50 p-3 rounded-lg border border-white/10">
                           <div className="flex items-center gap-2 mb-1">
-                            <Thermometer size={14} className="text-orange-600" />
-                            <p className="text-xs text-gray-600">Temp</p>
+                            <Thermometer size={14} className="text-orange-400" />
+                            <p className="text-xs text-slate-400">Temp</p>
                           </div>
-                          <p className="text-sm font-semibold text-gray-900">{station.temperature}°C</p>
+                          <p className="text-sm font-semibold text-white">{station.temperature}°C</p>
                         </div>
-                        <div className="bg-white p-3 rounded-lg border border-gray-200">
+                        <div className="bg-slate-900/50 p-3 rounded-lg border border-white/10">
                           <div className="flex items-center gap-2 mb-1">
-                            <Volume2 size={14} className="text-purple-600" />
-                            <p className="text-xs text-gray-600">Noise</p>
+                            <Volume2 size={14} className="text-purple-400" />
+                            <p className="text-xs text-slate-400">Noise</p>
                           </div>
-                          <p className="text-sm font-semibold text-gray-900">{station.noise} dB</p>
+                          <p className="text-sm font-semibold text-white">{station.noise} dB</p>
                         </div>
                       </div>
                     </div>
@@ -272,99 +272,99 @@ export default function EnvironmentView() {
           {/* Detailed Parameters */}
           <div className="space-y-6">
             {/* Air Quality Details */}
-            <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Air Quality Breakdown</h2>
+            <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
+              <h2 className="text-xl font-bold text-white mb-6">Air Quality Breakdown</h2>
               
               <div className="space-y-4">
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <Wind size={16} className="text-blue-600" />
-                      <span className="text-sm font-medium text-gray-700">PM2.5 (Fine Particles)</span>
+                      <Wind size={16} className="text-blue-400" />
+                      <span className="text-sm font-medium text-slate-300">PM2.5 (Fine Particles)</span>
                     </div>
-                    <span className="text-sm font-semibold text-gray-900">32.4 μg/m³</span>
+                    <span className="text-sm font-semibold text-white">32.4 μg/m³</span>
                   </div>
-                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
                     <div className="h-full bg-yellow-500" style={{ width: '65%' }} />
                   </div>
-                  <p className="text-xs text-gray-600 mt-1">Moderate - Acceptable for most</p>
+                  <p className="text-xs text-slate-400 mt-1">Moderate - Acceptable for most</p>
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <Cloud size={16} className="text-gray-600" />
-                      <span className="text-sm font-medium text-gray-700">PM10 (Coarse Particles)</span>
+                      <Cloud size={16} className="text-slate-400" />
+                      <span className="text-sm font-medium text-slate-300">PM10 (Coarse Particles)</span>
                     </div>
-                    <span className="text-sm font-semibold text-gray-900">68.5 μg/m³</span>
+                    <span className="text-sm font-semibold text-white">68.5 μg/m³</span>
                   </div>
-                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
                     <div className="h-full bg-yellow-500" style={{ width: '55%' }} />
                   </div>
-                  <p className="text-xs text-gray-600 mt-1">Moderate levels detected</p>
+                  <p className="text-xs text-slate-400 mt-1">Moderate levels detected</p>
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <Wind size={16} className="text-green-600" />
-                      <span className="text-sm font-medium text-gray-700">CO2 (Carbon Dioxide)</span>
+                      <Wind size={16} className="text-green-400" />
+                      <span className="text-sm font-medium text-slate-300">CO2 (Carbon Dioxide)</span>
                     </div>
-                    <span className="text-sm font-semibold text-gray-900">445 ppm</span>
+                    <span className="text-sm font-semibold text-white">445 ppm</span>
                   </div>
-                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
                     <div className="h-full bg-green-500" style={{ width: '35%' }} />
                   </div>
-                  <p className="text-xs text-gray-600 mt-1">Good - Normal outdoor levels</p>
+                  <p className="text-xs text-slate-400 mt-1">Good - Normal outdoor levels</p>
                 </div>
               </div>
             </div>
 
             {/* Climate Parameters */}
-            <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Climate Parameters</h2>
+            <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
+              <h2 className="text-xl font-bold text-white mb-6">Climate Parameters</h2>
               
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-gradient-to-br from-orange-50 to-red-50 rounded-lg border border-orange-200">
+                <div className="p-4 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-lg border border-orange-500/20">
                   <div className="flex items-center gap-2 mb-2">
-                    <Thermometer size={20} className="text-orange-600" />
-                    <span className="text-sm font-medium text-gray-700">Temperature</span>
+                    <Thermometer size={20} className="text-orange-400" />
+                    <span className="text-sm font-medium text-slate-300">Temperature</span>
                   </div>
-                  <p className="text-3xl font-bold text-gray-900">28.5°C</p>
-                  <div className="flex items-center gap-1 mt-1 text-xs text-green-600">
+                  <p className="text-3xl font-bold text-white">28.5°C</p>
+                  <div className="flex items-center gap-1 mt-1 text-xs text-green-400">
                     <TrendingDown size={12} />
                     <span>-0.5°C from yesterday</span>
                   </div>
                 </div>
 
-                <div className="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg border border-blue-200">
+                <div className="p-4 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-lg border border-blue-500/20">
                   <div className="flex items-center gap-2 mb-2">
-                    <Droplets size={20} className="text-blue-600" />
-                    <span className="text-sm font-medium text-gray-700">Humidity</span>
+                    <Droplets size={20} className="text-blue-400" />
+                    <span className="text-sm font-medium text-slate-300">Humidity</span>
                   </div>
-                  <p className="text-3xl font-bold text-gray-900">65%</p>
-                  <div className="flex items-center gap-1 mt-1 text-xs text-red-600">
+                  <p className="text-3xl font-bold text-white">65%</p>
+                  <div className="flex items-center gap-1 mt-1 text-xs text-red-400">
                     <TrendingUp size={12} />
                     <span>+3% from yesterday</span>
                   </div>
                 </div>
 
-                <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg border border-purple-200">
+                <div className="p-4 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-lg border border-purple-500/20">
                   <div className="flex items-center gap-2 mb-2">
-                    <Volume2 size={20} className="text-purple-600" />
-                    <span className="text-sm font-medium text-gray-700">Avg Noise</span>
+                    <Volume2 size={20} className="text-purple-400" />
+                    <span className="text-sm font-medium text-slate-300">Avg Noise</span>
                   </div>
-                  <p className="text-3xl font-bold text-gray-900">58 dB</p>
-                  <p className="text-xs text-gray-600 mt-1">Within acceptable limits</p>
+                  <p className="text-3xl font-bold text-white">58 dB</p>
+                  <p className="text-xs text-slate-400 mt-1">Within acceptable limits</p>
                 </div>
 
-                <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                <div className="p-4 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-lg border border-green-500/20">
                   <div className="flex items-center gap-2 mb-2">
-                    <Eye size={20} className="text-green-600" />
-                    <span className="text-sm font-medium text-gray-700">Visibility</span>
+                    <Eye size={20} className="text-green-400" />
+                    <span className="text-sm font-medium text-slate-300">Visibility</span>
                   </div>
-                  <p className="text-3xl font-bold text-gray-900">8.5 km</p>
-                  <p className="text-xs text-gray-600 mt-1">Good visibility</p>
+                  <p className="text-3xl font-bold text-white">8.5 km</p>
+                  <p className="text-xs text-slate-400 mt-1">Good visibility</p>
                 </div>
               </div>
             </div>
