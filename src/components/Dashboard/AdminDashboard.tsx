@@ -2,18 +2,17 @@ import {
   Briefcase, 
   TrendingUp, 
   AlertTriangle,
-  Calendar,
   DollarSign,
   Users,
   Star,
-  MapPin,
   ArrowRight,
   CheckCircle,
   Clock,
   Target,
   Activity,
   Zap,
-  Sparkles
+  Sparkles,
+  MessageSquare
 } from 'lucide-react';
 import { useState } from 'react';
 import { useVillageStore } from '../../store/villageStore';
@@ -37,12 +36,6 @@ export default function AdminDashboard() {
   const totalFeedback = schemes.reduce((sum, s) => sum + s.feedbackCount, 0);
   const avgRating = schemes.length > 0 ? (schemes.reduce((sum, s) => sum + s.citizenRating, 0) / schemes.length).toFixed(1) : '0.0';
 
-  // Category breakdown
-  const categoryBreakdown = schemes.reduce((acc: Record<string, number>, scheme) => {
-    acc[scheme.category] = (acc[scheme.category] || 0) + 1;
-    return acc;
-  }, {});
-
   // Budget by category
   const budgetByCategory = schemes.reduce((acc: Record<string, { allocated: number; used: number }>, scheme) => {
     if (!acc[scheme.category]) {
@@ -53,11 +46,6 @@ export default function AdminDashboard() {
     return acc;
   }, {});
 
-  // High performing schemes
-  const topPerformers = schemes
-    .filter(s => s.overallProgress >= 75 && s.citizenRating >= 4.0)
-    .slice(0, 3);
-
   // Schemes needing attention
   const needsAttention = schemes
     .filter(s => s.status === 'delayed' || s.status === 'discrepant')
@@ -65,7 +53,6 @@ export default function AdminDashboard() {
 
   // Only show first 2 schemes in dashboard for preview
   const displayedSchemes = schemes.slice(0, 2);
-  const hasMoreSchemes = schemes.length > 2;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -120,466 +107,269 @@ export default function AdminDashboard() {
         </button>
       </div>
 
-      {/* Top KPI Cards - 4 columns */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-        <div className="bg-slate-900/50 border border-white/5 backdrop-blur-sm rounded-xl p-4 md:p-5 text-white hover:bg-slate-800/50 transition-colors">
-          <div className="flex items-center justify-between mb-2">
-            <Briefcase size={20} className="text-purple-400" />
-            <div className="text-xs md:text-sm text-slate-400">Total Projects</div>
-          </div>
-          <div className="text-3xl md:text-4xl font-bold mb-1">{totalSchemes}</div>
-          <div className="flex items-center space-x-2 text-xs md:text-sm text-slate-400">
-            <CheckCircle size={14} className="text-emerald-400" />
-            <span>{completedSchemes} completed</span>
-          </div>
-        </div>
-
-        <div className="bg-slate-900/50 border border-white/5 backdrop-blur-sm rounded-xl p-4 md:p-5 text-white hover:bg-slate-800/50 transition-colors">
-          <div className="flex items-center justify-between mb-2">
-            <Target size={20} className="text-emerald-400" />
-            <div className="text-xs md:text-sm text-slate-400">On Track</div>
-          </div>
-          <div className="text-3xl md:text-4xl font-bold mb-1">{onTrackSchemes}</div>
-          <div className="flex items-center space-x-2 text-xs md:text-sm text-slate-400">
-            <TrendingUp size={14} className="text-emerald-400" />
-            <span>{Math.round((onTrackSchemes / totalSchemes) * 100)}% success rate</span>
-          </div>
-        </div>
-
-        <div className="bg-slate-900/50 border border-white/5 backdrop-blur-sm rounded-xl p-4 md:p-5 text-white hover:bg-slate-800/50 transition-colors">
-          <div className="flex items-center justify-between mb-2">
-            <AlertTriangle size={20} className="text-rose-400" />
-            <div className="text-xs md:text-sm text-slate-400">Issues</div>
-          </div>
-          <div className="text-3xl md:text-4xl font-bold mb-1">{discrepantSchemes}</div>
-          <div className="flex items-center space-x-2 text-xs md:text-sm text-slate-400">
-            <Clock size={14} className="text-amber-400" />
-            <span>{delayedSchemes} delayed</span>
-          </div>
-        </div>
-
-        <div className="bg-slate-900/50 border border-white/5 backdrop-blur-sm rounded-xl p-4 md:p-5 text-white hover:bg-slate-800/50 transition-colors">
-          <div className="flex items-center justify-between mb-2">
-            <Activity size={20} className="text-blue-400" />
-            <div className="text-xs md:text-sm text-slate-400">Avg Progress</div>
-          </div>
-          <div className="text-3xl md:text-4xl font-bold mb-1">{avgProgress}%</div>
-          <div className="flex items-center space-x-2 text-xs md:text-sm text-slate-400">
-            <TrendingUp size={14} className="text-blue-400" />
-            <span>+5% from last month</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Secondary Stats Row - 3 columns */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-        {/* Budget Overview */}
-        <div className="bg-slate-900/50 border border-white/5 backdrop-blur-sm rounded-xl p-4 md:p-5">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-white text-sm md:text-base">Budget Overview</h3>
-            <DollarSign size={20} className="text-emerald-400" />
-          </div>
-          <div className="space-y-2">
-            <div>
-              <div className="flex justify-between text-xs md:text-sm text-slate-400 mb-1">
-                <span>Allocated</span>
-                <span className="font-bold text-white">₹{(totalBudget / 10000000).toFixed(1)}Cr</span>
+      {/* Main Dashboard Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Left Column (2/3) - Main Metrics & Charts */}
+        <div className="lg:col-span-2 space-y-6">
+          
+          {/* KPI Cards Row */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="bg-slate-900/40 border border-white/10 rounded-xl p-4 flex flex-col justify-between h-32 relative overflow-hidden group">
+              <div className="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                <Briefcase size={48} />
               </div>
-              <div className="flex justify-between text-xs md:text-sm text-slate-400 mb-1">
-                <span>Utilized</span>
-                <span className="font-bold text-emerald-400">₹{(budgetUtilized / 10000000).toFixed(1)}Cr</span>
+              <div className="text-slate-400 text-xs font-medium uppercase tracking-wider">Total Projects</div>
+              <div>
+                <div className="text-3xl font-bold text-white">{totalSchemes}</div>
+                <div className="text-xs text-emerald-400 mt-1 flex items-center gap-1">
+                  <CheckCircle size={12} /> {completedSchemes} Completed
+                </div>
               </div>
-              <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+            </div>
+
+            <div className="bg-slate-900/40 border border-white/10 rounded-xl p-4 flex flex-col justify-between h-32 relative overflow-hidden group">
+              <div className="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                <Target size={48} />
+              </div>
+              <div className="text-slate-400 text-xs font-medium uppercase tracking-wider">On Track</div>
+              <div>
+                <div className="text-3xl font-bold text-white">{onTrackSchemes}</div>
+                <div className="text-xs text-emerald-400 mt-1 flex items-center gap-1">
+                  <TrendingUp size={12} /> {Math.round((onTrackSchemes / totalSchemes) * 100)}% Rate
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-slate-900/40 border border-white/10 rounded-xl p-4 flex flex-col justify-between h-32 relative overflow-hidden group">
+              <div className="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                <AlertTriangle size={48} />
+              </div>
+              <div className="text-slate-400 text-xs font-medium uppercase tracking-wider">Critical</div>
+              <div>
+                <div className="text-3xl font-bold text-white">{discrepantSchemes}</div>
+                <div className="text-xs text-rose-400 mt-1 flex items-center gap-1">
+                  <Clock size={12} /> {delayedSchemes} Delayed
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-slate-900/40 border border-white/10 rounded-xl p-4 flex flex-col justify-between h-32 relative overflow-hidden group">
+              <div className="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                <Activity size={48} />
+              </div>
+              <div className="text-slate-400 text-xs font-medium uppercase tracking-wider">Avg Progress</div>
+              <div>
+                <div className="text-3xl font-bold text-white">{avgProgress}%</div>
+                <div className="text-xs text-blue-400 mt-1 flex items-center gap-1">
+                  <TrendingUp size={12} /> +5% MoM
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Financial Overview Section */}
+          <div className="bg-slate-900/40 border border-white/10 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <DollarSign size={20} className="text-emerald-400" />
+                Financial Overview
+              </h3>
+              <div className="text-sm text-slate-400">
+                Total Budget: <span className="text-white font-mono">₹{(totalBudget / 10000000).toFixed(2)} Cr</span>
+              </div>
+            </div>
+
+            {/* Budget Progress Bar */}
+            <div className="mb-8">
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-slate-400">Utilization</span>
+                <span className="text-white font-bold">{Math.round((budgetUtilized / totalBudget) * 100)}%</span>
+              </div>
+              <div className="h-4 bg-slate-800 rounded-full overflow-hidden relative">
                 <div 
-                  className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all"
+                  className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 rounded-full"
                   style={{ width: `${Math.round((budgetUtilized / totalBudget) * 100)}%` }}
                 />
+                {/* Markers */}
+                <div className="absolute top-0 bottom-0 w-0.5 bg-white/20 left-[25%]"></div>
+                <div className="absolute top-0 bottom-0 w-0.5 bg-white/20 left-[50%]"></div>
+                <div className="absolute top-0 bottom-0 w-0.5 bg-white/20 left-[75%]"></div>
+              </div>
+              <div className="flex justify-between text-xs text-slate-500 mt-1">
+                <span>0%</span>
+                <span>25%</span>
+                <span>50%</span>
+                <span>75%</span>
+                <span>100%</span>
               </div>
             </div>
-            <div className="pt-2 border-t border-white/5">
-              <div className="flex justify-between items-center">
-                <span className="text-xs md:text-sm text-slate-400">Remaining</span>
-                <span className="text-sm md:text-base font-bold text-white">₹{((totalBudget - budgetUtilized) / 10000000).toFixed(1)}Cr</span>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Citizen Feedback */}
-        <div className="bg-slate-900/50 border border-white/5 backdrop-blur-sm rounded-xl p-4 md:p-5">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-white text-sm md:text-base">Citizen Feedback</h3>
-            <Users size={20} className="text-purple-400" />
-          </div>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-2xl md:text-3xl font-bold text-white">{totalFeedback}</div>
-                <div className="text-xs md:text-sm text-slate-400">Total Reviews</div>
-              </div>
-              <div className="text-right">
-                <div className="flex items-center space-x-1">
-                  <Star size={20} className="text-yellow-400 fill-yellow-400" />
-                  <span className="text-2xl md:text-3xl font-bold text-white">{avgRating}</span>
-                </div>
-                <div className="text-xs md:text-sm text-slate-400 ml-1">Avg Rating</div>
-              </div>
-            </div>
-            <div className="pt-2 border-t border-white/5">
-              <div className="text-xs md:text-sm text-slate-400">
-                <span className="text-emerald-400 font-semibold">{Math.round((schemes.filter(s => s.citizenRating >= 4).length / schemes.length) * 100)}%</span> schemes rated 4+ stars
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="bg-slate-900/50 border border-white/5 backdrop-blur-sm rounded-xl p-4 md:p-5">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-white text-sm md:text-base">Quick Actions</h3>
-            <Zap size={20} className="text-orange-400" />
-          </div>
-          <div className="space-y-2">
-            <button 
-              onClick={() => setActiveView('schemes')}
-              className="w-full text-left px-3 py-2 bg-purple-500/10 hover:bg-purple-500/20 rounded-lg transition-colors text-xs md:text-sm text-purple-300 font-medium border border-purple-500/20"
-            >
-              📊 View All Schemes
-            </button>
-            <button 
-              onClick={() => setActiveView('analytics')}
-              className="w-full text-left px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 rounded-lg transition-colors text-xs md:text-sm text-blue-300 font-medium border border-blue-500/20"
-            >
-              📈 Analytics Dashboard
-            </button>
-            <button 
-              onClick={() => setActiveView('reports')}
-              className="w-full text-left px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 rounded-lg transition-colors text-xs md:text-sm text-emerald-300 font-medium border border-emerald-500/20"
-            >
-              💬 Citizen Reports
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Category Breakdown & Alerts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
-        {/* Category Distribution */}
-        <div className="bg-slate-900/50 border border-white/5 backdrop-blur-sm rounded-xl p-4 md:p-5">
-          <h3 className="font-semibold text-white mb-3 text-sm md:text-base">Schemes by Category</h3>
-          <div className="space-y-2">
-            {Object.entries(categoryBreakdown).map(([category, count]) => {
-              const percentage = Math.round((count / totalSchemes) * 100);
-              const budget = budgetByCategory[category];
-              // Removed the unused budgetUsed variable calculation
-              return (
-                <div key={category} className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-lg md:text-xl">{categoryIcons[category] || '📋'}</span>
-                      <span className="text-xs md:text-sm font-medium text-slate-300">{category}</span>
+            {/* Category Budget Breakdown */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {Object.entries(budgetByCategory).slice(0, 4).map(([category, data]) => (
+                <div key={category} className="bg-slate-800/30 rounded-lg p-3 border border-white/5">
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">{categoryIcons[category]}</span>
+                      <span className="text-sm font-medium text-slate-300">{category}</span>
                     </div>
-                    <div className="text-right">
-                      <span className="text-xs md:text-sm font-bold text-white">{count}</span>
-                      <span className="text-xs text-slate-500 ml-1">({percentage}%)</span>
-                    </div>
+                    <span className="text-xs font-mono text-slate-400">₹{(data.allocated / 100000).toFixed(0)}L</span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full ${categoryColors[category] || 'bg-slate-500'} transition-all`}
-                        style={{ width: `${percentage}%` }}
-                      />
-                    </div>
-                    <span className="text-xs text-slate-500 w-12 text-right">₹{budget ? (budget.used / 100000).toFixed(0) : 0}L</span>
+                  <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full ${categoryColors[category] || 'bg-blue-500'}`}
+                      style={{ width: `${(data.used / data.allocated) * 100}%` }}
+                    />
                   </div>
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Priority Alerts */}
-        <div className="bg-slate-900/50 border border-white/5 backdrop-blur-sm rounded-xl p-4 md:p-5">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-white text-sm md:text-base">⚠️ Priority Alerts</h3>
-            <span className="px-2 py-1 bg-red-500/20 text-red-300 text-xs font-bold rounded-full border border-red-500/20">
-              {needsAttention.length}
-            </span>
-          </div>
-          <div className="space-y-2">
-            {needsAttention.length > 0 ? (
-              needsAttention.map((scheme) => (
-                <div 
-                  key={scheme.id}
-                  onClick={() => setActiveView('schemes')}
-                  className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg hover:bg-red-500/20 transition-colors cursor-pointer"
-                >
-                  <div className="flex items-start justify-between mb-1">
-                    <div className="flex items-center space-x-2 flex-1">
-                      <span className="text-base md:text-lg">{categoryIcons[scheme.category]}</span>
-                      <span className="text-xs md:text-sm font-medium text-white line-clamp-1">{scheme.name}</span>
+          {/* Recent Schemes Table Preview */}
+          <div className="bg-slate-900/40 border border-white/10 rounded-xl overflow-hidden">
+            <div className="p-4 border-b border-white/10 flex justify-between items-center">
+              <h3 className="font-bold text-white">Recent Projects</h3>
+              <button 
+                onClick={() => setActiveView('schemes')}
+                className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1"
+              >
+                View All <ArrowRight size={12} />
+              </button>
+            </div>
+            <div className="divide-y divide-white/5">
+              {displayedSchemes.map((scheme) => (
+                <div key={scheme.id} className="p-4 hover:bg-white/5 transition-colors flex items-center justify-between group cursor-pointer" onClick={() => setActiveView('schemes')}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center text-xl border border-white/5">
+                      {categoryIcons[scheme.category]}
+                    </div>
+                    <div>
+                      <div className="font-medium text-white group-hover:text-purple-400 transition-colors">{scheme.name}</div>
+                      <div className="text-xs text-slate-500">{scheme.village} • ID: {scheme.id}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right hidden sm:block">
+                      <div className="text-xs text-slate-400">Progress</div>
+                      <div className="font-bold text-white">{scheme.overallProgress}%</div>
                     </div>
                     <StatusBadge status={scheme.status} />
                   </div>
-                  <div className="flex items-center justify-between text-xs text-slate-400 ml-6">
-                    <span>{scheme.village}</span>
-                    <span className="text-red-400 font-medium">{scheme.discrepancies.length} issues</span>
-                  </div>
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-8 text-slate-500">
-                <CheckCircle size={32} className="mx-auto mb-2 text-emerald-500" />
-                <p className="text-xs md:text-sm">No critical issues! 🎉</p>
-              </div>
-            )}
+              ))}
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* Top Performers */}
-      {topPerformers.length > 0 && (
-        <div className="bg-gradient-to-br from-emerald-900/20 to-emerald-800/20 rounded-xl shadow-sm border border-emerald-500/20 p-4 md:p-5 backdrop-blur-sm">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-white text-sm md:text-base">🏆 Top Performing Schemes</h3>
-            <span className="text-xs md:text-sm text-emerald-400 font-medium">Progress ≥75% • Rating ≥4.0</span>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {topPerformers.map((scheme) => (
-              <div 
-                key={scheme.id}
-                onClick={() => setActiveView('schemes')}
-                className="bg-slate-900/60 rounded-lg p-3 border border-emerald-500/20 hover:bg-slate-800/60 hover:border-emerald-500/40 transition-all cursor-pointer"
-              >
-                <div className="flex items-center space-x-2 mb-2">
-                  <span className="text-xl md:text-2xl">{categoryIcons[scheme.category]}</span>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-xs md:text-sm font-bold text-white line-clamp-1">{scheme.name}</h4>
-                    <p className="text-xs text-slate-400">{scheme.village}</p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-1">
-                    <div className="text-lg md:text-xl font-bold text-emerald-400">{scheme.overallProgress}%</div>
-                    <TrendingUp size={14} className="text-emerald-400" />
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <Star size={14} className="text-yellow-400 fill-yellow-400" />
-                    <span className="text-xs md:text-sm font-bold text-white">{scheme.citizenRating.toFixed(1)}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Recent Schemes Preview */}
-      <div className="bg-slate-900/50 border border-white/5 backdrop-blur-sm rounded-xl p-4 md:p-6">
-        <div className="flex items-center justify-between mb-4 md:mb-6">
-          <div>
-            <h2 className="text-lg md:text-xl font-bold text-white">Recent Schemes</h2>
-            <p className="text-xs md:text-sm text-slate-400 mt-1">
-              Showing {displayedSchemes.length} of {schemes.length} schemes
-            </p>
-          </div>
-          {hasMoreSchemes && (
-            <button
-              onClick={() => setActiveView('schemes')}
-              className="px-3 md:px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-500 hover:to-indigo-500 transition-all flex items-center space-x-2 shadow-lg shadow-purple-500/20 text-xs md:text-sm"
-            >
-              <span>View All {schemes.length}</span>
-              <ArrowRight size={16} />
-            </button>
-          )}
         </div>
 
-        <div className="grid grid-cols-1 gap-3 md:gap-4">
-          {displayedSchemes.map((scheme) => (
-            <div
-              key={scheme.id}
-              onClick={() => setActiveView('schemes')}
-              className="bg-slate-800/40 rounded-xl md:rounded-2xl border border-white/5 hover:bg-slate-800/60 hover:border-white/10 transition-all duration-300 cursor-pointer overflow-hidden group"
-            >
-              {/* Header Section with Gradient */}
-              <div className="bg-gradient-to-r from-purple-900/20 via-blue-900/20 to-indigo-900/20 p-3 md:p-6 border-b border-white/5">
-                <div className="flex items-start justify-between gap-3 md:gap-4">
-                  <div className="flex items-start space-x-2 md:space-x-4 flex-1">
-                    {/* Category Icon */}
-                    <div className="flex-shrink-0 w-10 h-10 md:w-14 md:h-14 bg-slate-800 rounded-lg md:rounded-xl shadow-sm flex items-center justify-center text-xl md:text-3xl border border-white/5">
-                      {categoryIcons[scheme.category] || '📋'}
+        {/* Right Column (1/3) - Alerts & Actions */}
+        <div className="space-y-6">
+          
+          {/* Priority Alerts Panel */}
+          <div className="bg-slate-900/40 border border-white/10 rounded-xl p-5 h-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-white flex items-center gap-2">
+                <AlertTriangle size={18} className="text-rose-500" />
+                Critical Alerts
+              </h3>
+              <span className="bg-rose-500/20 text-rose-400 text-xs font-bold px-2 py-1 rounded-full">
+                {needsAttention.length}
+              </span>
+            </div>
+            
+            <div className="space-y-3">
+              {needsAttention.length > 0 ? (
+                needsAttention.map((scheme) => (
+                  <div key={scheme.id} className="bg-rose-500/5 border border-rose-500/10 rounded-lg p-3 hover:bg-rose-500/10 transition-colors cursor-pointer" onClick={() => setActiveView('schemes')}>
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="text-xs font-bold text-rose-300 uppercase tracking-wider">Action Required</span>
+                      <span className="text-[10px] text-slate-500">{new Date(scheme.lastUpdated).toLocaleDateString()}</span>
                     </div>
-                    
-                    {/* Title and Meta */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-base md:text-xl font-bold text-white mb-1 md:mb-2 line-clamp-2 group-hover:text-blue-400 transition-colors">
-                        {scheme.name}
-                      </h3>
-                      
-                      <div className="flex flex-wrap items-center gap-1.5 md:gap-3 mb-2 md:mb-3">
-                        <StatusBadge status={scheme.status} />
-                        <span className="px-2 py-0.5 md:px-2.5 md:py-1 bg-slate-700/50 rounded-full text-xs font-medium text-slate-300 border border-white/10">
-                          {scheme.category}
-                        </span>
-                      </div>
-                      
-                      <div className="flex flex-wrap items-center gap-x-2 md:gap-x-4 gap-y-1 text-xs text-slate-400">
-                        <div className="flex items-center space-x-1">
-                          <MapPin size={12} className="md:hidden flex-shrink-0 text-slate-500" />
-                          <MapPin size={14} className="hidden md:block flex-shrink-0 text-slate-500" />
-                          <span className="truncate">{scheme.village}, {scheme.district}</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <Calendar size={12} className="md:hidden flex-shrink-0 text-slate-500" />
-                          <Calendar size={14} className="hidden md:block flex-shrink-0 text-slate-500" />
-                          <span className="font-mono">{scheme.id}</span>
-                        </div>
-                      </div>
+                    <div className="text-sm font-medium text-white mb-1 line-clamp-1">{scheme.name}</div>
+                    <div className="text-xs text-slate-400">
+                      {scheme.discrepancies.length > 0 ? `${scheme.discrepancies.length} discrepancies detected` : 'Project delayed significantly'}
                     </div>
                   </div>
-                  
-                  {/* Progress Circle */}
-                  <div className="flex-shrink-0">
-                    <div className="relative w-14 h-14 md:w-20 md:h-20">
-                      <svg className="transform -rotate-90 w-full h-full">
-                        <circle
-                          cx="50%"
-                          cy="50%"
-                          r="30%"
-                          stroke="#334155"
-                          strokeWidth="8"
-                          fill="none"
-                        />
-                        <circle
-                          cx="50%"
-                          cy="50%"
-                          r="30%"
-                          stroke={
-                            scheme.status === 'on-track' ? '#10b981' :
-                            scheme.status === 'delayed' ? '#f59e0b' :
-                            scheme.status === 'discrepant' ? '#ef4444' :
-                            '#3b82f6'
-                          }
-                          strokeWidth="8"
-                          fill="none"
-                          strokeDasharray={`${scheme.overallProgress * 1.88} 188`}
-                          strokeLinecap="round"
-                          className="transition-all duration-500"
-                        />
-                      </svg>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-base md:text-xl font-bold text-white">{scheme.overallProgress}%</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Stats Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 p-3 md:p-6 bg-slate-900/30">
-                <div className="text-center p-2 md:p-3 bg-slate-800/50 rounded-lg md:rounded-xl border border-white/5">
-                  <div className="text-xs text-slate-500 mb-1">Budget</div>
-                  <div className="text-sm md:text-base font-bold text-white">
-                    ₹{(scheme.totalBudget / 100000).toFixed(1)}L
-                  </div>
-                  <div className="text-[10px] text-slate-500 mt-0.5">
-                    {Math.round((scheme.budgetUtilized / scheme.totalBudget) * 100)}% used
-                  </div>
-                </div>
-                
-                <div className="text-center p-2 md:p-3 bg-slate-800/50 rounded-lg md:rounded-xl border border-white/5">
-                  <div className="text-xs text-slate-500 mb-1">Utilized</div>
-                  <div className="text-sm md:text-base font-bold text-emerald-400">
-                    ₹{(scheme.budgetUtilized / 100000).toFixed(1)}L
-                  </div>
-                  <div className="text-[10px] text-slate-500 mt-0.5">
-                    ₹{((scheme.totalBudget - scheme.budgetUtilized) / 100000).toFixed(1)}L left
-                  </div>
-                </div>
-                
-                <div className="text-center p-2 md:p-3 bg-slate-800/50 rounded-lg md:rounded-xl border border-white/5">
-                  <div className="text-xs text-slate-500 mb-1">Rating</div>
-                  <div className="flex items-center justify-center space-x-1">
-                    <Star size={14} className="text-yellow-400 fill-yellow-400" />
-                    <span className="text-sm md:text-base font-bold text-white">{scheme.citizenRating.toFixed(1)}</span>
-                  </div>
-                  <div className="text-[10px] text-slate-500 mt-0.5">
-                    {scheme.feedbackCount} reviews
-                  </div>
-                </div>
-                
-                <div className="text-center p-2 md:p-3 bg-slate-800/50 rounded-lg md:rounded-xl border border-white/5">
-                  <div className="text-xs text-slate-500 mb-1">Timeline</div>
-                  <div className="text-sm md:text-base font-bold text-white">
-                    {(() => {
-                      const end = new Date(scheme.endDate);
-                      const now = new Date();
-                      const daysLeft = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-                      return daysLeft > 0 ? `${daysLeft}d` : 'Complete';
-                    })()}
-                  </div>
-                  <div className="text-[10px] text-slate-500 mt-0.5">
-                    {new Date(scheme.endDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-                  </div>
-                </div>
-              </div>
-
-              {/* Alerts Section - Only show if there are issues */}
-              {(scheme.discrepancies.length > 0 || 
-                (scheme.vendorReports && scheme.vendorReports.length > 0 && 
-                 (() => {
-                   const latestReport = scheme.vendorReports[scheme.vendorReports.length - 1];
-                   return (latestReport.complianceAnalysis?.discrepancies?.length ?? 0) > 0 ||
-                          (latestReport.complianceAnalysis?.overdueWork?.length ?? 0) > 0;
-                 })())) && (
-                <div className="px-3 md:px-6 pb-3 md:pb-4 space-y-2 bg-slate-900/30">
-                  {/* Vendor Report Issues */}
-                  {scheme.vendorReports && scheme.vendorReports.length > 0 && (() => {
-                    const latestReport = scheme.vendorReports[scheme.vendorReports.length - 1];
-                    const discCount = latestReport.complianceAnalysis?.discrepancies?.length ?? 0;
-                    const overdueCount = latestReport.complianceAnalysis?.overdueWork?.length ?? 0;
-                    
-                    return (discCount > 0 || overdueCount > 0) ? (
-                      <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-2 md:p-3 flex items-center space-x-2">
-                        <AlertTriangle size={14} className="md:hidden text-red-400 flex-shrink-0" />
-                        <AlertTriangle size={16} className="hidden md:block text-red-400 flex-shrink-0" />
-                        <div className="flex-1">
-                          <div className="text-xs font-semibold text-red-300">
-                            {discCount > 0 && `${discCount} Discrepancies`}
-                            {discCount > 0 && overdueCount > 0 && ' • '}
-                            {overdueCount > 0 && `${overdueCount} Overdue Tasks`}
-                          </div>
-                        </div>
-                        <span className="text-[10px] text-red-200 px-2 py-1 bg-red-500/20 rounded-full font-medium">
-                          Action Needed
-                        </span>
-                      </div>
-                    ) : null;
-                  })()}
-                  
-                  {/* Legacy Discrepancies */}
-                  {scheme.discrepancies.length > 0 && (
-                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-2 md:p-3 flex items-center space-x-2">
-                      <AlertTriangle size={14} className="md:hidden text-orange-400 flex-shrink-0" />
-                      <AlertTriangle size={16} className="hidden md:block text-orange-400 flex-shrink-0" />
-                      <span className="text-xs font-semibold text-orange-300 flex-1">
-                        {scheme.discrepancies.length} Issue{scheme.discrepancies.length > 1 ? 's' : ''} Detected
-                      </span>
-                    </div>
-                  )}
+                ))
+              ) : (
+                <div className="text-center py-8 text-slate-500">
+                  <CheckCircle size={32} className="mx-auto mb-2 text-emerald-500/50" />
+                  <p className="text-sm">All systems operational</p>
                 </div>
               )}
             </div>
-          ))}
-        </div>
-
-        {schemes.length === 0 && (
-          <div className="text-center py-12 text-slate-500">
-            <Briefcase size={48} className="mx-auto mb-4 text-slate-700" />
-            <p>No schemes available. Start monitoring government projects.</p>
           </div>
-        )}
+
+          {/* Quick Actions Panel */}
+          <div className="bg-slate-900/40 border border-white/10 rounded-xl p-5">
+            <h3 className="font-bold text-white mb-4 flex items-center gap-2">
+              <Zap size={18} className="text-yellow-500" />
+              Quick Actions
+            </h3>
+            <div className="grid grid-cols-1 gap-2">
+              <button 
+                onClick={() => setActiveView('schemes')}
+                className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/50 hover:bg-purple-600/20 border border-white/5 hover:border-purple-500/30 transition-all group text-left"
+              >
+                <div className="p-2 rounded-md bg-purple-500/20 text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-colors">
+                  <Briefcase size={16} />
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-white">Manage Schemes</div>
+                  <div className="text-xs text-slate-500">Add or edit projects</div>
+                </div>
+              </button>
+
+              <button 
+                onClick={() => setActiveView('reports')}
+                className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/50 hover:bg-blue-600/20 border border-white/5 hover:border-blue-500/30 transition-all group text-left"
+              >
+                <div className="p-2 rounded-md bg-blue-500/20 text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                  <MessageSquare size={16} />
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-white">Citizen Feedback</div>
+                  <div className="text-xs text-slate-500">Review community input</div>
+                </div>
+              </button>
+
+              <button 
+                onClick={() => setShowRagModal(true)}
+                className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/50 hover:bg-emerald-600/20 border border-white/5 hover:border-emerald-500/30 transition-all group text-left"
+              >
+                <div className="p-2 rounded-md bg-emerald-500/20 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                  <Sparkles size={16} />
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-white">AI Insights</div>
+                  <div className="text-xs text-slate-500">Ask questions about data</div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Citizen Sentiment Mini-Card */}
+          <div className="bg-gradient-to-br from-indigo-900/40 to-purple-900/40 border border-white/10 rounded-xl p-5">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-bold text-white text-sm">Citizen Sentiment</h3>
+              <Users size={16} className="text-indigo-300" />
+            </div>
+            <div className="flex items-end gap-2 mb-2">
+              <span className="text-3xl font-bold text-white">{avgRating}</span>
+              <div className="flex mb-1.5">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star key={star} size={12} className={`${star <= Math.round(parseFloat(avgRating)) ? 'text-yellow-400 fill-yellow-400' : 'text-slate-600'}`} />
+                ))}
+              </div>
+            </div>
+            <div className="text-xs text-indigo-200">
+              Based on {totalFeedback} verified reviews
+            </div>
+          </div>
+
+        </div>
       </div>
 
       {/* RAG Query Modal */}
