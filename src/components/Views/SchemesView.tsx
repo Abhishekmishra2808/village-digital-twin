@@ -45,7 +45,7 @@ export default function SchemesView() {
   const [selectedScheme, setSelectedScheme] = useState<GovernmentScheme | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showAddSchemeModal, setShowAddSchemeModal] = useState(false);
-  const [modalInitialTab, setModalInitialTab] = useState<'overview' | 'phases' | 'reports'>('overview');
+  const [modalInitialTab, setModalInitialTab] = useState<'overview' | 'phases' | 'reports' | 'reviews'>('overview');
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -112,9 +112,20 @@ export default function SchemesView() {
     if (!feedbackScheme || !rating) return;
 
     setIsProcessing(true);
-    setAiStatus({ status: 'starting', message: 'Preparing to process feedback...', progress: 0 });
+    setAiStatus({ status: 'anonymizing', message: 'Anonymizing your feedback (removing names, emails, phone numbers, addresses)...', progress: 20 });
 
     try {
+      // Simulate anonymization delay (800-1200ms) to show the process
+      const anonymizationDelay = 800 + Math.random() * 400;
+      await new Promise(resolve => setTimeout(resolve, anonymizationDelay));
+      
+      setAiStatus({ status: 'anonymizing', message: 'Personal information removed. Preparing to submit...', progress: 50 });
+      
+      // Brief delay before actual submission
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      setAiStatus({ status: 'processing', message: 'AI analyzing feedback...', progress: 70 });
+
       // Generate a unique userId from username or create anonymous ID
       const userId = username || `anon-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
@@ -148,6 +159,7 @@ export default function SchemesView() {
       const result = await response.json();
       console.log('✅ Feedback submitted successfully:', result);
 
+      setAiStatus({ status: 'complete', message: 'Feedback submitted successfully!', progress: 100 });
       setIsProcessing(false);
       setSubmitted(true);
 
@@ -434,10 +446,16 @@ export default function SchemesView() {
 
               {/* Card Footer */}
               <div className="px-5 py-3 bg-white/5 border-t border-white/5 flex justify-between items-center group-hover:bg-white/10 transition-colors">
-                <div className="flex items-center gap-1 text-xs text-slate-400">
+                <div className="flex items-center gap-1 text-xs">
                   <Star size={12} className="text-yellow-500 fill-yellow-500" />
-                  <span className="font-medium text-slate-300">{scheme.citizenRating.toFixed(1)}</span>
-                  <span className="opacity-50">({scheme.feedbackCount})</span>
+                  {scheme.feedbackCount > 0 ? (
+                    <>
+                      <span className="font-medium text-slate-300">{scheme.citizenRating.toFixed(1)}</span>
+                      <span className="text-slate-500">({scheme.feedbackCount} {scheme.feedbackCount === 1 ? 'review' : 'reviews'})</span>
+                    </>
+                  ) : (
+                    <span className="text-slate-500 italic">No reviews yet</span>
+                  )}
                 </div>
                 <div className="flex items-center gap-3">
                   {userRole === 'user' && (
@@ -746,9 +764,9 @@ function SchemeDetailsModal({
 }: { 
   scheme: GovernmentScheme; 
   onClose: () => void; 
-  initialTab?: 'overview' | 'phases' | 'reports';
+  initialTab?: 'overview' | 'phases' | 'reports' | 'reviews';
 }) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'phases' | 'reports'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'overview' | 'phases' | 'reports' | 'reviews'>(initialTab);
   const userRole = useVillageStore((state) => state.userRole);
   const deleteScheme = useVillageStore((state) => state.deleteScheme);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -868,6 +886,16 @@ function SchemeDetailsModal({
             >
               Vendor Reports
             </button>
+            <button
+              onClick={() => setActiveTab('reviews')}
+              className={`py-3 md:py-4 border-b-2 transition-colors text-sm md:text-base whitespace-nowrap ${
+                activeTab === 'reviews'
+                  ? 'border-purple-500 text-purple-400 font-medium'
+                  : 'border-transparent text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Citizen Reviews
+            </button>
           </div>
         </div>
 
@@ -880,16 +908,21 @@ function SchemeDetailsModal({
                 <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
                   <div className="flex items-center space-x-2 mb-3">
                     <AlertTriangle className="text-red-400" size={20} />
-                    <h3 className="font-bold text-red-200">Critical Discrepancies</h3>
+                    <h3 className="font-bold text-red-200">Critical Issues Requiring Attention</h3>
                   </div>
-                  <ul className="space-y-2">
+                  <ul className="space-y-3">
                     {scheme.discrepancies.map((disc, idx) => (
-                      <li key={idx} className="text-sm text-red-300 flex items-start space-x-2">
-                        <span className="text-red-400 mt-1">•</span>
-                        <div>
-                                <div className="font-medium text-red-200">{disc.type}</div>
-                          <div className="text-xs opacity-80">{disc.description}</div>
-                          <div className="text-xs text-red-400 mt-0.5">Reported: {new Date(disc.reportedDate || disc.date || Date.now()).toLocaleDateString()}</div>
+                      <li key={idx} className="bg-red-500/5 rounded-lg p-3 border border-red-500/10">
+                        <div className="flex items-start space-x-2">
+                          <span className="text-red-400 mt-1">⚠️</span>
+                          <div className="flex-1">
+                            <div className="text-sm text-red-200 leading-relaxed">{disc.description}</div>
+                            <div className="flex items-center gap-3 mt-2 text-xs text-red-300/70">
+                              <span>Reported by: {disc.reportedBy || 'Citizens (Anonymized)'}</span>
+                              <span>•</span>
+                              <span>{new Date(disc.reportedDate || disc.date || Date.now()).toLocaleDateString()}</span>
+                            </div>
+                          </div>
                         </div>
                       </li>
                     ))}
@@ -1010,6 +1043,10 @@ function SchemeDetailsModal({
           {activeTab === 'reports' && (
             <VendorReportsTab scheme={scheme} />
           )}
+
+          {activeTab === 'reviews' && (
+            <CitizenReviewsTab scheme={scheme} />
+          )}
         </div>
       </div>
     </div>
@@ -1052,20 +1089,19 @@ function VendorReportsTab({ scheme }: { scheme: GovernmentScheme }) {
         console.log('✅ Vendor report analyzed:', result.report);
         console.log('📊 Scheme metrics updated:', result.updatedScheme);
         
+        // Refresh the schemes data to get updated information
+        await fetchSchemes();
+        
         // Show success message with updated metrics
         const updatedScheme = result.updatedScheme;
         alert(`✅ Vendor report uploaded and analyzed successfully!\n\n` +
               `Updated Metrics:\n` +
               `• Progress: ${updatedScheme.overallProgress}%\n` +
               `• Budget Utilized: ₹${(updatedScheme.budgetUtilized / 100000).toFixed(2)}L\n` +
-              `• Status: ${updatedScheme.status.toUpperCase()}\n\n` +
-              `Refreshing to show updates...`);
+              `• Status: ${updatedScheme.status.toUpperCase()}`);
         
-        // Refresh the schemes data
-        await fetchSchemes();
-        
-        // Reload the page to reflect changes
-        window.location.reload();
+        // Close the modal to show updated scheme list
+        setSelectedScheme(null);
       } else {
         throw new Error(result.error || 'Failed to analyze vendor report');
       }
@@ -1343,6 +1379,307 @@ function VendorReportsTab({ scheme }: { scheme: GovernmentScheme }) {
             )}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// Citizen Reviews Tab Component
+function CitizenReviewsTab({ scheme }: { scheme: GovernmentScheme }) {
+  const [feedbacks, setFeedbacks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchFeedback();
+  }, [scheme.id]);
+
+  const fetchFeedback = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_URL}/api/schemes/${scheme.id}/feedback`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch feedback');
+      }
+
+      const data = await response.json();
+      setFeedbacks(data.feedback);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching feedback:', err);
+      setError('Failed to load feedback');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Calculate aggregated sentiment from all feedback
+  const getAggregatedSentiment = () => {
+    if (feedbacks.length === 0) return null;
+
+    const sentimentCounts: Record<string, number> = {};
+    const allConcerns: string[] = [];
+    const allCategories: string[] = [];
+    let totalRating = 0;
+
+    feedbacks.forEach(fb => {
+      sentimentCounts[fb.sentiment] = (sentimentCounts[fb.sentiment] || 0) + 1;
+      if (fb.concerns) allConcerns.push(...fb.concerns);
+      if (fb.categories) allCategories.push(...fb.categories);
+      totalRating += fb.rating || 0;
+    });
+
+    const avgRating = totalRating / feedbacks.length;
+    const dominantSentiment = Object.entries(sentimentCounts)
+      .sort(([,a], [,b]) => b - a)[0][0];
+
+    // Get top 3 concerns
+    const concernFrequency: Record<string, number> = {};
+    allConcerns.forEach(c => {
+      concernFrequency[c] = (concernFrequency[c] || 0) + 1;
+    });
+    const topConcerns = Object.entries(concernFrequency)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 3)
+      .map(([concern]) => concern);
+
+    // Get top categories
+    const categoryFrequency: Record<string, number> = {};
+    allCategories.forEach(c => {
+      categoryFrequency[c] = (categoryFrequency[c] || 0) + 1;
+    });
+    const topCategories = Object.entries(categoryFrequency)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 3)
+      .map(([cat]) => cat);
+
+    return {
+      dominantSentiment,
+      avgRating,
+      topConcerns,
+      topCategories,
+      totalReviews: feedbacks.length,
+      sentimentBreakdown: sentimentCounts
+    };
+  };
+
+  const getSentimentColor = (sentiment: string) => {
+    switch (sentiment) {
+      case 'Positive': return 'text-green-400 bg-green-500/10 border-green-500/20';
+      case 'Neutral': return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
+      case 'Negative': return 'text-orange-400 bg-orange-500/10 border-orange-500/20';
+      case 'Critical': return 'text-red-400 bg-red-500/10 border-red-500/20';
+      default: return 'text-gray-400 bg-gray-500/10 border-gray-500/20';
+    }
+  };
+
+  const aggregated = getAggregatedSentiment();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader className="h-8 w-8 animate-spin text-purple-400" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <AlertTriangle size={48} className="mx-auto mb-3 text-red-400" />
+        <p className="text-red-400 mb-2">{error}</p>
+        <button
+          onClick={fetchFeedback}
+          className="text-purple-400 hover:text-purple-300 underline"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
+  if (feedbacks.length === 0) {
+    return (
+      <div className="text-center py-12 text-slate-400">
+        <Star size={48} className="mx-auto mb-4 opacity-50" />
+        <p>No citizen reviews yet</p>
+        <p className="text-sm mt-2">Be the first to share your feedback!</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Aggregated Sentiment Summary */}
+      {aggregated && (
+        <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-500/30 rounded-xl p-5">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
+              <Sparkles size={24} className="text-purple-400" />
+            </div>
+            <div>
+              <h3 className="font-bold text-white text-lg">Overall Citizen Sentiment</h3>
+              <p className="text-purple-300 text-sm">Analysis of {aggregated.totalReviews} reviews</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            {/* Average Rating */}
+            <div className="bg-slate-800/50 rounded-lg p-4 border border-white/5">
+              <div className="text-sm text-slate-400 mb-2">Average Rating</div>
+              <div className="flex items-center gap-2">
+                <Star size={24} className="fill-yellow-400 text-yellow-400" />
+                <span className="text-3xl font-bold text-white">{aggregated.avgRating.toFixed(1)}</span>
+                <span className="text-slate-400">/5.0</span>
+              </div>
+            </div>
+
+            {/* Dominant Sentiment */}
+            <div className="bg-slate-800/50 rounded-lg p-4 border border-white/5">
+              <div className="text-sm text-slate-400 mb-2">Overall Sentiment</div>
+              <span className={`inline-block px-4 py-2 rounded-lg font-semibold border ${getSentimentColor(aggregated.dominantSentiment)}`}>
+                {aggregated.dominantSentiment}
+              </span>
+            </div>
+          </div>
+
+          {/* Top Concerns */}
+          {aggregated.topConcerns.length > 0 && (
+            <div className="mb-4">
+              <div className="text-sm font-medium text-slate-300 mb-2">Common Concerns:</div>
+              <div className="flex flex-wrap gap-2">
+                {aggregated.topConcerns.map((concern, idx) => (
+                  <span key={idx} className="px-3 py-1.5 bg-orange-500/10 text-orange-300 rounded-lg text-sm border border-orange-500/20">
+                    • {concern}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Top Categories */}
+          {aggregated.topCategories.length > 0 && (
+            <div>
+              <div className="text-sm font-medium text-slate-300 mb-2">Key Areas:</div>
+              <div className="flex flex-wrap gap-2">
+                {aggregated.topCategories.map((category, idx) => (
+                  <span key={idx} className="px-3 py-1.5 bg-blue-500/10 text-blue-300 rounded-lg text-sm border border-blue-500/20">
+                    {category}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Sentiment Breakdown */}
+          <div className="mt-4 pt-4 border-t border-white/10">
+            <div className="text-sm font-medium text-slate-300 mb-2">Sentiment Distribution:</div>
+            <div className="flex gap-4 text-xs">
+              {Object.entries(aggregated.sentimentBreakdown).map(([sentiment, count]) => (
+                <div key={sentiment} className="flex items-center gap-1">
+                  <div className={`w-3 h-3 rounded-full ${
+                    sentiment === 'Positive' ? 'bg-green-400' :
+                    sentiment === 'Neutral' ? 'bg-blue-400' :
+                    sentiment === 'Negative' ? 'bg-orange-400' :
+                    'bg-red-400'
+                  }`}></div>
+                  <span className="text-slate-400">{sentiment}:</span>
+                  <span className="text-white font-medium">{count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Individual Reviews */}
+      <div>
+        <h3 className="font-bold text-white mb-4 flex items-center gap-2">
+          <FileText size={18} />
+          Individual Reviews ({feedbacks.length})
+        </h3>
+        <div className="space-y-4">
+          {feedbacks.map((feedback, idx) => (
+            <div
+              key={idx}
+              className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50 hover:border-slate-600 transition-all"
+            >
+              {/* Header */}
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  {/* Star Rating */}
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        size={16}
+                        className={star <= feedback.rating ? 'fill-yellow-400 text-yellow-400' : 'text-slate-600'}
+                      />
+                    ))}
+                  </div>
+                  <span className={`text-sm font-medium px-2 py-1 rounded border ${getSentimentColor(feedback.sentiment)}`}>
+                    {feedback.sentiment}
+                  </span>
+                </div>
+                <div className="text-xs text-slate-500">
+                  {new Date(feedback.createdAt).toLocaleDateString()}
+                </div>
+              </div>
+
+              {/* AI Summary */}
+              <div className="mb-3">
+                <p className="text-slate-300 leading-relaxed text-sm">{feedback.aiSummary}</p>
+              </div>
+
+              {/* Concerns */}
+              {feedback.concerns && feedback.concerns.length > 0 && (
+                <div className="mb-3">
+                  <div className="text-xs text-slate-500 mb-1.5">Key Concerns:</div>
+                  <ul className="space-y-1">
+                    {feedback.concerns.map((concern: string, idx: number) => (
+                      <li key={idx} className="text-sm text-slate-400 flex items-start gap-2">
+                        <span className="text-orange-400 mt-1">•</span>
+                        <span>{concern}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Footer Tags */}
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Urgency */}
+                <span className={`px-2 py-1 rounded text-xs font-medium ${
+                  feedback.urgency === 'Critical' ? 'bg-red-500/20 text-red-400' :
+                  feedback.urgency === 'High' ? 'bg-orange-500/20 text-orange-400' :
+                  feedback.urgency === 'Medium' ? 'bg-yellow-500/20 text-yellow-400' :
+                  'bg-green-500/20 text-green-400'
+                }`}>
+                  {feedback.urgency} Priority
+                </span>
+
+                {/* Categories */}
+                {feedback.categories && feedback.categories.map((category: string, idx: number) => (
+                  <span
+                    key={idx}
+                    className="px-2 py-1 rounded text-xs font-medium bg-purple-500/20 text-purple-400"
+                  >
+                    {category}
+                  </span>
+                ))}
+
+                {/* AI Processed Badge */}
+                {feedback.aiProcessed && (
+                  <span className="px-2 py-1 rounded text-xs font-medium bg-cyan-500/20 text-cyan-400 flex items-center gap-1">
+                    <Cpu size={12} />
+                    AI Processed
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

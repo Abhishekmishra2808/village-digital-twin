@@ -27,6 +27,7 @@ interface UseRagQueryResult {
   loading: boolean;
   error: string | null;
   data: RagQueryResponse | null;
+  loadingStage: 'idle' | 'anonymizing' | 'processing' | 'complete';
   runQuery: (params: RagQueryRequest) => Promise<void>;
   reset: () => void;
 }
@@ -39,13 +40,21 @@ export default function useRagQuery(): UseRagQueryResult {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<RagQueryResponse | null>(null);
+  const [loadingStage, setLoadingStage] = useState<'idle' | 'anonymizing' | 'processing' | 'complete'>('idle');
 
   const runQuery = async (params: RagQueryRequest) => {
     setLoading(true);
     setError(null);
     setData(null);
+    setLoadingStage('anonymizing');
 
     try {
+      // Simulate anonymization process (800-1200ms)
+      const anonymizationDelay = 800 + Math.random() * 400;
+      await new Promise(resolve => setTimeout(resolve, anonymizationDelay));
+      
+      setLoadingStage('processing');
+
       const response = await fetch('http://192.168.29.179:3001/api/rag-query', {
         method: 'POST',
         headers: {
@@ -76,11 +85,13 @@ export default function useRagQuery(): UseRagQueryResult {
       }
 
       const result: RagQueryResponse = await response.json();
+      setLoadingStage('complete');
       setData(result);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to process query';
       setError(errorMessage);
       console.error('RAG query error:', err);
+      setLoadingStage('idle');
     } finally {
       setLoading(false);
     }
@@ -90,12 +101,14 @@ export default function useRagQuery(): UseRagQueryResult {
     setLoading(false);
     setError(null);
     setData(null);
+    setLoadingStage('idle');
   };
 
   return {
     loading,
     error,
     data,
+    loadingStage,
     runQuery,
     reset
   };

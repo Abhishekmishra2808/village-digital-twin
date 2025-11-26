@@ -2,40 +2,76 @@ import pdfParse from 'pdf-parse-new';
 import { extractSchemeWithLLM, analyzeVendorReport as analyzeWithHF } from './huggingfaceService.js';
 
 /**
- * Extract structured data using regex patterns
+ * Extract structured data using improved regex patterns
  */
 function extractWithRegex(text) {
   const extracted = {};
 
-  // Scheme Name - look for common patterns
+  // Preprocess text: normalize whitespace but keep line breaks
+  text = text.replace(/\r\n/g, '\n').replace(/\t/g, ' ');
+
+  // Scheme Name - multiple enhanced patterns
   const namePatterns = [
-    /(?:scheme|project|program|mission|yojana|abhiyan)\s*[:\-]?\s*([^\n]{10,100})/i,
-    /(?:name|title)\s*[:\-]\s*([^\n]{10,100})/i,
-    /^([A-Z][^\n]{10,100}(?:Scheme|Project|Mission|Yojana|Abhiyan))/im,
+    // Pattern 1: Scheme/Project/Yojana followed by name
+    /(?:scheme|project|program|mission|yojana|abhiyan)(?:\s+name)?\s*[:\-]?\s*([A-Z][^\n]{10,120})/i,
+    // Pattern 2: Title or Name field
+    /(?:^|\n)(?:name|title|scheme|project)\s*[:\-]\s*([A-Z][^\n]{10,120})/im,
+    // Pattern 3: All caps title at start (like "PRADHAN MANTRI AWAS YOJANA")
+    /^([A-Z][A-Z\s]{10,100}(?:SCHEME|PROJECT|MISSION|YOJANA|ABHIYAN|PROGRAM))/m,
+    // Pattern 4: Mixed case with scheme keywords
+    /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\s+(?:Scheme|Project|Mission|Yojana|Abhiyan|Programme))/,
+    // Pattern 5: First substantial line with caps
+    /^\s*([A-Z][A-Za-z\s]{15,100})$/m
   ];
+  
   for (const pattern of namePatterns) {
     const match = text.match(pattern);
     if (match) {
-      extracted.name = match[1].trim();
-      break;
+      let name = match[1].trim();
+      // Clean up extracted name
+      name = name.replace(/[\n\r]+/g, ' ').replace(/\s+/g, ' ').trim();
+      // Skip if it looks like a header or generic text
+      if (name.length >= 10 && !name.match(/^(page|chapter|section|document|report)/i)) {
+        extracted.name = name;
+        break;
+      }
     }
   }
 
-  // Budget - look for currency amounts
+  // Budget - enhanced currency extraction with better unit handling
   const budgetPatterns = [
-    /(?:budget|cost|outlay|allocation|fund)\s*[:\-]?\s*(?:Rs\.?|₹|INR)?\s*([0-9,]+(?:\.[0-9]+)?)\s*(?:crore|cr|lakh|lakhs)?/i,
-    /₹\s*([0-9,]+(?:\.[0-9]+)?)\s*(?:crore|cr|lakh|lakhs)/i,
-    /(?:total|project)\s+(?:budget|cost)\s*[:\-]?\s*([0-9,]+)/i,
+    // Pattern 1: Explicit budget with amount and unit
+    /(?:budget|cost|outlay|allocation|fund|amount)\s*[:\-]?\s*(?:Rs\.?|₹|INR)?\s*([0-9,]+(?:\.[0-9]+)?)\s*(crore|crores|cr|lakh|lakhs|million|billion)?/i,
+    // Pattern 2: Currency symbol with amount
+    /₹\s*([0-9,]+(?:\.[0-9]+)?)\s*(crore|crores|cr|lakh|lakhs)?/i,
+    // Pattern 3: Total/Project cost
+    /(?:total|project|scheme)\s+(?:budget|cost|amount|outlay)\s*[:\-]?\s*(?:Rs\.?|₹|INR)?\s*([0-9,]+(?:\.[0-9]+)?)\s*(crore|crores|cr|lakh|lakhs)?/i,
+    // Pattern 4: Amount in words
+    /(?:Rs\.?|₹|INR)?\s*([0-9,]+(?:\.[0-9]+)?)\s*(crore|crores|lakh|lakhs)\s*(?:rupees)?/i
   ];
+  
   for (const pattern of budgetPatterns) {
     const match = text.match(pattern);
     if (match) {
       let amount = parseFloat(match[1].replace(/,/g, ''));
-      // Convert to rupees if in crores/lakhs
-      if (text.toLowerCase().includes('crore')) amount *= 10000000;
-      else if (text.toLowerCase().includes('lakh')) amount *= 100000;
-      extracted.totalBudget = Math.floor(amount);
-      break;
+      const unit = match[2] ? match[2].toLowerCase() : '';
+      
+      // Convert to rupees based on unit
+      if (unit.includes('crore') || unit.includes('cr')) {
+        amount *= 10000000;  // 1 crore = 10 million
+      } else if (unit.includes('lakh')) {
+        amount *= 100000;    // 1 lakh = 100 thousand
+      } else if (unit.includes('million')) {
+        amount *= 1000000;
+      } else if (unit.includes('billion')) {
+        amount *= 1000000000;
+      }
+      
+      // Only accept reasonable amounts (> 1000 rupees)
+      if (amount > 1000) {
+        extracted.totalBudget = Math.floor(amount);
+        break;
+      }
     }
   }
 
@@ -67,36 +103,82 @@ function extractWithRegex(text) {
     extracted.district = districtMatch[1].trim();
   }
 
-  // Category detection
+  // Category detection with keyword frequency scoring
   const categories = {
-    'Sanitation': /(?:swachh|clean|sanitation|toilet|waste|garbage)/i,
-    'Water Supply': /(?:water|jal|supply|pipeline|tank|drinking)/i,
-    'Housing': /(?:housing|awas|shelter|home|dwelling)/i,
-    'Employment': /(?:employment|rozgar|job|work|livelihood|mgnrega)/i,
-    'Power': /(?:power|electricity|bijli|solar|energy)/i,
-    'Roads': /(?:road|path|marg|highway|pmgsy)/i,
-    'Healthcare': /(?:health|medical|hospital|clinic|ayushman)/i,
-    'Education': /(?:education|school|shiksha|college|study)/i,
-    'Agriculture': /(?:agriculture|farming|krishi|crop|irrigation)/i,
+    'Sanitation': ['swachh', 'sanitation', 'toilet', 'waste', 'garbage', 'sewage', 'hygiene', 'cleanliness'],
+    'Water Supply': ['water', 'jal', 'supply', 'pipeline', 'tank', 'drinking', 'tap', 'handpump', 'bore'],
+    'Housing': ['housing', 'awas', 'shelter', 'home', 'dwelling', 'construction', 'residence'],
+    'Employment': ['employment', 'rozgar', 'job', 'work', 'livelihood', 'mgnrega', 'wages', 'skill'],
+    'Power': ['power', 'electricity', 'bijli', 'solar', 'energy', 'grid', 'electrification'],
+    'Roads': ['road', 'path', 'marg', 'highway', 'pmgsy', 'street', 'connectivity', 'infrastructure'],
+    'Healthcare': ['health', 'medical', 'hospital', 'clinic', 'ayushman', 'doctor', 'medicine', 'treatment'],
+    'Education': ['education', 'school', 'shiksha', 'college', 'study', 'student', 'learning', 'teacher'],
+    'Agriculture': ['agriculture', 'farming', 'krishi', 'crop', 'irrigation', 'farmer', 'cultivation', 'seed'],
+    'Infrastructure': ['infrastructure', 'development', 'construction', 'building', 'project'],
+    'Welfare': ['welfare', 'social', 'pension', 'benefit', 'assistance', 'subsidy']
   };
 
-  for (const [category, pattern] of Object.entries(categories)) {
-    if (pattern.test(text)) {
-      extracted.category = category;
+  // Score each category based on keyword frequency
+  const categoryScores = {};
+  const lowerText = text.toLowerCase();
+  
+  for (const [category, keywords] of Object.entries(categories)) {
+    let score = 0;
+    for (const keyword of keywords) {
+      const regex = new RegExp(`\\b${keyword}`, 'gi');
+      const matches = lowerText.match(regex);
+      if (matches) score += matches.length;
+    }
+    categoryScores[category] = score;
+  }
+
+  // Select category with highest score
+  const maxScore = Math.max(...Object.values(categoryScores));
+  if (maxScore > 0) {
+    extracted.category = Object.keys(categoryScores).find(cat => categoryScores[cat] === maxScore);
+  }
+
+  // Description - multiple extraction strategies
+  let description = null;
+  
+  // Strategy 1: Look for explicit description/objective fields
+  const descPatterns = [
+    /(?:description|objective|purpose|about|aim|goal)\s*[:\-]\s*([^\n]{50,600})/i,
+    /(?:scheme|project)\s+(?:aims|objectives?)\s*[:\-]?\s*([^\n]{50,600})/i,
+    /(?:this|the)\s+(?:scheme|project|program)\s+(?:aims|provides|ensures|focuses)\s+([^.]{50,600})/i
+  ];
+  
+  for (const pattern of descPatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      description = match[1].trim();
       break;
     }
   }
-
-  // Description - first substantial paragraph
-  const descMatch = text.match(/(?:description|objective|purpose|about)\s*[:\-]?\s*([^\n]{50,500})/i);
-  if (descMatch) {
-    extracted.description = descMatch[1].trim();
-  } else {
-    // Fallback: get first long paragraph
-    const paragraphs = text.split('\n').filter(p => p.trim().length > 50);
-    if (paragraphs.length > 0) {
-      extracted.description = paragraphs[0].trim().substring(0, 500);
+  
+  // Strategy 2: Extract from first few meaningful sentences
+  if (!description) {
+    const sentences = text.split(/[.!?]\n/).filter(s => s.trim().length > 40);
+    if (sentences.length > 0) {
+      // Take first 2-3 sentences that aren't headers
+      const meaningful = sentences.filter(s => 
+        !s.match(/^(chapter|section|page|table of contents|index)/i) &&
+        s.split(' ').length > 8  // At least 8 words
+      );
+      if (meaningful.length > 0) {
+        description = meaningful.slice(0, 2).join('. ').trim();
+      }
     }
+  }
+  
+  if (description) {
+    // Clean up and limit length
+    description = description
+      .replace(/\s+/g, ' ')
+      .replace(/[\n\r]+/g, ' ')
+      .substring(0, 500)
+      .trim();
+    extracted.description = description;
   }
 
   // Extract phases
@@ -106,6 +188,74 @@ function extractWithRegex(text) {
   }
 
   return extracted;
+}
+
+/**
+ * Validate and merge LLM and regex results
+ */
+function validateAndMerge(field, llmValue, regexValue, fallback) {
+  // For name and description, prefer longer, more detailed values
+  if (field === 'name' || field === 'description') {
+    if (llmValue && llmValue.length > 10 && !llmValue.includes('null')) return llmValue;
+    if (regexValue && regexValue.length > 10) return regexValue;
+    return fallback;
+  }
+  
+  // For other fields, prefer LLM if valid, otherwise regex
+  if (llmValue && llmValue !== 'NA' && llmValue !== 'null' && llmValue !== null) return llmValue;
+  if (regexValue && regexValue !== 'NA') return regexValue;
+  return fallback;
+}
+
+/**
+ * Validate budget values
+ */
+function validateBudget(llmBudget, regexBudget) {
+  const llm = parseFloat(llmBudget) || 0;
+  const regex = parseFloat(regexBudget) || 0;
+  
+  // Both valid: prefer the more reasonable value (10k to 10000 crores)
+  if (llm > 10000 && llm < 100000000000 && regex > 10000 && regex < 100000000000) {
+    // If values are close (within 20%), average them
+    if (Math.abs(llm - regex) / Math.max(llm, regex) < 0.2) {
+      return Math.floor((llm + regex) / 2);
+    }
+    // Otherwise prefer LLM
+    return llm;
+  }
+  
+  // Return whichever is valid
+  if (llm > 10000 && llm < 100000000000) return llm;
+  if (regex > 10000 && regex < 100000000000) return regex;
+  return 0;
+}
+
+/**
+ * Validate date format
+ */
+function validateDate(llmDate, regexDate) {
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (llmDate && dateRegex.test(llmDate)) return llmDate;
+  if (regexDate && dateRegex.test(regexDate)) return regexDate;
+  return null;
+}
+
+/**
+ * Calculate extraction confidence
+ */
+function calculateConfidence(llmData, regexData) {
+  let score = 0;
+  
+  // Score based on key fields
+  if (llmData.name && llmData.name.length > 10) score += 25;
+  if (llmData.totalBudget > 10000) score += 25;
+  if (llmData.description && llmData.description.length > 50) score += 20;
+  if (llmData.category && llmData.category !== 'null') score += 15;
+  if (llmData.startDate || llmData.endDate) score += 15;
+  
+  if (score >= 80) return 'High';
+  if (score >= 50) return 'Medium';
+  return 'Low';
 }
 
 /**
@@ -198,29 +348,38 @@ export async function extractSchemeFromPDF(pdfBuffer) {
 
     console.log('📄 PDF Text Length:', pdfText.length, 'characters');
 
-    // Use LLM as PRIMARY method for accurate extraction
+    // Always run both extraction methods for best results
     console.log('🤖 Using LLM (Hugging Face Llama 3.1-8B) for comprehensive extraction...');
-    const llmData = await extractSchemeWithLLM(pdfText);
-
-    // Fallback: Use regex only if LLM fails
-    let finalData = llmData;
-    if (!llmData.name || !llmData.totalBudget) {
-      console.log('⚠️ LLM extraction incomplete, using regex fallback...');
-      const regexData = extractWithRegex(pdfText);
-      
-      finalData = {
-        name: llmData.name || regexData.name || 'Unnamed Scheme',
-        category: llmData.category || regexData.category || 'Other',
-        description: llmData.description || regexData.description || 'No description available',
-        village: llmData.village || regexData.village || 'NA',
-        district: llmData.district || regexData.district || 'NA',
-        totalBudget: llmData.totalBudget || regexData.totalBudget || 0,
-        startDate: llmData.startDate || regexData.startDate || new Date().toISOString().split('T')[0],
-        endDate: llmData.endDate || regexData.endDate || new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0],
-        phases: llmData.phases || regexData.phases || [],
-        extractionConfidence: llmData.name ? 'High' : 'Medium'
-      };
+    let llmData = {};
+    try {
+      llmData = await extractSchemeWithLLM(pdfText);
+    } catch (llmError) {
+      console.warn('⚠️ LLM extraction failed:', llmError.message);
+      llmData = {}; // Empty object for fallback
     }
+    
+    console.log('🔍 Running regex extraction for validation/fallback...');
+    const regexData = extractWithRegex(pdfText);
+
+    // Smart merge: combine LLM and regex results with validation
+    const finalData = {
+      name: validateAndMerge('name', llmData.name, regexData.name, 'Unnamed Scheme'),
+      category: validateAndMerge('category', llmData.category, regexData.category, 'Infrastructure'),
+      description: validateAndMerge('description', llmData.description, regexData.description, 'Government scheme details to be updated'),
+      village: validateAndMerge('village', llmData.village, regexData.village, 'NA'),
+      district: validateAndMerge('district', llmData.district, regexData.district, 'NA'),
+      totalBudget: validateBudget(llmData.totalBudget, regexData.totalBudget),
+      targetBeneficiaries: llmData.targetBeneficiaries || regexData.targetBeneficiaries || 'Citizens',
+      implementationArea: llmData.implementationArea || regexData.implementationArea || 'District',
+      startDate: validateDate(llmData.startDate, regexData.startDate) || new Date().toISOString().split('T')[0],
+      endDate: validateDate(llmData.endDate, regexData.endDate) || new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0],
+      phases: regexData.phases || [],
+      extractionConfidence: calculateConfidence(llmData, regexData)
+    };
+    
+    const llmFields = Object.keys(llmData).filter(k => llmData[k]).length;
+    const regexFields = Object.keys(regexData).filter(k => regexData[k]).length;
+    console.log(`📊 Extraction stats - LLM: ${llmFields} fields, Regex: ${regexFields} fields, Confidence: ${finalData.extractionConfidence}`);
 
     return {
       success: true,
