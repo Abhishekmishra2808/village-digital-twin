@@ -24,6 +24,7 @@ import {
 import { useVillageStore, type GovernmentScheme } from '../../store/villageStore';
 import { API_URL } from '../../config/api';
 import RagQueryModal from '../Rag/RagQueryModal';
+import FeedbackView from './FeedbackView';
 import type { Citation } from '../../hooks/useRagQuery';
 import { Capacitor } from '@capacitor/core';
 
@@ -52,6 +53,7 @@ export default function SchemesView() {
 
   // Feedback State
   const [feedbackScheme, setFeedbackScheme] = useState<GovernmentScheme | null>(null);
+  const [viewFeedbackScheme, setViewFeedbackScheme] = useState<GovernmentScheme | null>(null);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [isUrgent, setIsUrgent] = useState(false);
@@ -446,6 +448,17 @@ export default function SchemesView() {
                       <Star size={12} /> Rate
                     </button>
                   )}
+                  {userRole === 'admin' && scheme.feedbackCount > 0 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setViewFeedbackScheme(scheme);
+                      }}
+                      className="flex items-center gap-1 text-xs font-medium text-cyan-400 hover:text-cyan-300 transition-colors"
+                    >
+                      <FileText size={12} /> View Feedback
+                    </button>
+                  )}
                   <div className="flex items-center gap-1 text-xs font-medium text-purple-400 group-hover:translate-x-1 transition-transform">
                     View Details <ChevronRight size={14} />
                   </div>
@@ -513,6 +526,12 @@ export default function SchemesView() {
                   {/* Comment Area */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-300">Your Feedback (Optional)</label>
+                    <div className="flex items-start gap-2 mb-2 text-xs text-slate-400 bg-slate-800/50 border border-slate-700/50 rounded-lg p-2.5">
+                      <svg className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      <span>Write freely about the scheme - your identity is protected through anonymization by <span className="font-medium text-green-400">RUNANYWHERE SDK</span></span>
+                    </div>
                     <textarea
                       value={comment}
                       onChange={(e) => setComment(e.target.value)}
@@ -628,6 +647,14 @@ export default function SchemesView() {
             // For now, just show an alert
             alert(`📍 Citation Location:\n\nType: ${citation.type}\nSnippet: ${citation.snippet}\nCoordinates: ${citation.geo?.lat}, ${citation.geo?.lon}`);
           }}
+        />
+      )}
+
+      {/* Feedback View Modal (Admin Only) */}
+      {viewFeedbackScheme && (
+        <FeedbackView
+          scheme={viewFeedbackScheme}
+          onClose={() => setViewFeedbackScheme(null)}
         />
       )}
     </div>
@@ -1974,3 +2001,12 @@ function AddSchemeModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
     </div>
   );
 }
+
+// Render Feedback View Modal at the end of the main return statement
+// Add before the closing </> tag:
+// {viewFeedbackScheme && (
+//   <FeedbackView
+//     scheme={viewFeedbackScheme}
+//     onClose={() => setViewFeedbackScheme(null)}
+//   />
+// )}

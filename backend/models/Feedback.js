@@ -17,6 +17,7 @@ const feedbackSchema = new mongoose.Schema({
     required: true,
     min: 1,
     max: 5
+    // Rating is visible to admin (anonymized)
   },
   rawComment: {
     type: String,

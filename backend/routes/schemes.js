@@ -274,15 +274,31 @@ router.post('/:id/feedback', async (req, res) => {
   }
 });
 
-// Get feedback for a scheme (admin only - no raw comments)
+// Get feedback for a scheme (admin only - anonymized with rating visible)
 router.get('/:id/feedback', async (req, res) => {
   try {
     const feedback = await Feedback.find({ schemeId: req.params.id })
-      .select('-rawComment') // Never expose raw comments
+      .select('-rawComment -userHash') // Never expose raw comments or user identity
       .sort({ createdAt: -1 })
       .limit(50);
 
-    res.json({ feedback });
+    // Return anonymized feedback with rating visible
+    const anonymizedFeedback = feedback.map(f => ({
+      id: f._id,
+      schemeId: f.schemeId,
+      rating: f.rating, // Rating is visible to admin
+      aiSummary: f.aiSummary,
+      concerns: f.concerns,
+      sentiment: f.sentiment,
+      categories: f.categories,
+      urgency: f.urgency,
+      isUrgent: f.isUrgent,
+      aiProcessed: f.aiProcessed,
+      createdAt: f.createdAt,
+      // userHash is never exposed - anonymity preserved
+    }));
+
+    res.json({ feedback: anonymizedFeedback });
   } catch (error) {
     console.error('Error fetching feedback:', error);
     res.status(500).json({ error: 'Failed to fetch feedback' });
