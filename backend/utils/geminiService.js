@@ -1,9 +1,23 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// Initialize lazily to ensure environment variables are loaded
+let genAI = null;
 
 export async function processFeedbackWithAI(rawComment, rating, schemeName) {
   try {
+    // Debug API key (masked)
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error('GEMINI_API_KEY is missing in environment variables');
+    }
+    
+    // Initialize client if not already done
+    if (!genAI) {
+      console.log(`🔑 Gemini API Key loaded: ${apiKey.substring(0, 4)}...${apiKey.substring(apiKey.length - 4)}`);
+      genAI = new GoogleGenerativeAI(apiKey);
+    }
+
+    // Use current production model (gemini-2.5-flash) - Nov 2025
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const prompt = `You are analyzing citizen feedback for a government scheme. The citizen has rated the scheme ${rating}/5 stars and provided this comment:

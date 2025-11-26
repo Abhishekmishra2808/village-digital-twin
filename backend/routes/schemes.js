@@ -3,7 +3,8 @@ import crypto from 'crypto';
 import multer from 'multer';
 import Scheme from '../models/Scheme.js';
 import Feedback from '../models/Feedback.js';
-import { processFeedbackWithLocalLLM } from '../utils/localLLMService.js';
+// Switched from Gemini to Hugging Face Llama 3.1-8B-Instruct
+import { processFeedbackWithAI } from '../utils/huggingfaceService.js';
 import { extractSchemeFromPDF, analyzeVendorReport } from '../utils/pdfService.js';
 
 const router = express.Router();
@@ -184,10 +185,10 @@ router.post('/:id/feedback', async (req, res) => {
       });
     }
 
-    console.log(`🤖 Processing feedback with local LLM for: ${scheme.name}`);
+    console.log(`🤖 Processing feedback with Hugging Face Llama 3.1-8B for: ${scheme.name}`);
 
-    // Process with local LLM
-    const aiResult = await processFeedbackWithLocalLLM(
+    // Process with Hugging Face Llama 3.1-8B
+    const aiResult = await processFeedbackWithAI(
       comment || 'No comment provided',
       rating,
       scheme.name

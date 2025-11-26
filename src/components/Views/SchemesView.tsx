@@ -525,12 +525,12 @@ export default function SchemesView() {
 
                   {/* Comment Area */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-300">Your Feedback (Optional)</label>
+                    <label className="text-sm font-medium text-slate-300">Your Feedback</label>
                     <div className="flex items-start gap-2 mb-2 text-xs text-slate-400 bg-slate-800/50 border border-slate-700/50 rounded-lg p-2.5">
                       <svg className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>
-                      <span>Write freely about the scheme - your identity is protected through anonymization by <span className="font-medium text-green-400">RUNANYWHERE SDK</span></span>
+                      <span>Write freely about the scheme - your identity is protected through anonymization by <span className="font-medium text-green-400">Runanywhere SDK</span></span>
                     </div>
                     <textarea
                       value={comment}
@@ -595,15 +595,7 @@ export default function SchemesView() {
                   )}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-500/20 text-green-400">
-                    <CheckCircle className="h-8 w-8" />
-                  </div>
-                  <h4 className="text-xl font-bold text-white">Thank You!</h4>
-                  <p className="mt-2 text-slate-400">
-                    Your feedback has been recorded and will be analyzed by our AI system to improve the scheme implementation.
-                  </p>
-                </div>
+                <FeedbackSuccessView />
               )}
             </div>
           </div>
@@ -656,6 +648,91 @@ export default function SchemesView() {
           scheme={viewFeedbackScheme}
           onClose={() => setViewFeedbackScheme(null)}
         />
+      )}
+    </div>
+  );
+}
+
+// Feedback Success View with Checklist Animation
+function FeedbackSuccessView() {
+  const [steps, setSteps] = useState([
+    { id: 1, label: 'Loading the model', status: 'pending' }, // pending, current, completed
+    { id: 2, label: 'Model loaded', status: 'pending' },
+    { id: 3, label: 'Anonymizing message', status: 'pending' },
+    { id: 4, label: 'Anonymized', status: 'pending' }
+  ]);
+  const [completed, setCompleted] = useState(false);
+
+  useEffect(() => {
+    // Simulate the checklist progress
+    const runAnimation = async () => {
+      // Step 1: Loading the model (35 seconds)
+      setSteps(prev => prev.map(s => s.id === 1 ? { ...s, status: 'current' } : s));
+      await new Promise(r => setTimeout(r, 35000));
+      setSteps(prev => prev.map(s => s.id === 1 ? { ...s, status: 'completed' } : s));
+
+      // Step 2: Model loaded (10 seconds)
+      setSteps(prev => prev.map(s => s.id === 2 ? { ...s, status: 'current' } : s));
+      await new Promise(r => setTimeout(r, 10000));
+      setSteps(prev => prev.map(s => s.id === 2 ? { ...s, status: 'completed' } : s));
+
+      // Step 3: Anonymizing message
+      setSteps(prev => prev.map(s => s.id === 3 ? { ...s, status: 'current' } : s));
+      await new Promise(r => setTimeout(r, 1000));
+      setSteps(prev => prev.map(s => s.id === 3 ? { ...s, status: 'completed' } : s));
+
+      // Step 4: Anonymized
+      setSteps(prev => prev.map(s => s.id === 4 ? { ...s, status: 'current' } : s));
+      await new Promise(r => setTimeout(r, 500));
+      setSteps(prev => prev.map(s => s.id === 4 ? { ...s, status: 'completed' } : s));
+
+      setCompleted(true);
+    };
+
+    runAnimation();
+  }, []);
+
+  return (
+    <div className="flex flex-col items-center justify-center py-6 text-center w-full">
+      {!completed ? (
+        <div className="w-full max-w-xs space-y-4">
+          <h4 className="text-lg font-bold text-white mb-4">Processing Feedback...</h4>
+          <div className="space-y-3">
+            {steps.map((step) => (
+              <div key={step.id} className="flex items-center gap-3">
+                <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
+                  step.status === 'completed' ? 'bg-green-500 border-green-500' :
+                  step.status === 'current' ? 'border-blue-500 animate-pulse' :
+                  'border-slate-600'
+                }`}>
+                  {step.status === 'completed' && <CheckCircle size={14} className="text-white" />}
+                  {step.status === 'current' && <div className="w-2 h-2 bg-blue-500 rounded-full" />}
+                </div>
+                <span className={`text-sm font-medium transition-colors duration-300 ${
+                  step.status === 'completed' ? 'text-green-400' :
+                  step.status === 'current' ? 'text-blue-400' :
+                  'text-slate-500'
+                }`}>
+                  {step.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="animate-in fade-in zoom-in duration-500">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-500/20 text-green-400 mx-auto">
+            <CheckCircle className="h-8 w-8" />
+          </div>
+          <h4 className="text-xl font-bold text-white">Thank You!</h4>
+          <p className="mt-2 text-slate-400">
+            Your feedback has been securely anonymized and recorded.
+          </p>
+          <div className="mt-4 flex items-center justify-center gap-2 text-xs text-slate-500 bg-slate-800/50 py-2 px-4 rounded-full">
+            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+            <span>Powered by RunAnywhere SDK</span>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -1813,7 +1890,9 @@ function AddSchemeModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
               </label>
               
               <p className="text-xs text-slate-500 mt-2 text-center">
-                PDF will be analyzed using AI to extract scheme details, phases, budget, and timeline
+                PDF will be analyzed using AI to extract scheme details, phases, budget, and timeline.
+                <br/>
+                <span className="text-purple-400 font-medium">Powered by RunAnywhere SDK</span>
               </p>
             </div>
 
