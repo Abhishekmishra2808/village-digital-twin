@@ -4,7 +4,7 @@ import pathwayClient, { PathwayClientError } from '../utils/pathwayClient.js';
 import { sanitizePII, normalizeCacheKey, containsPII } from '../utils/piiSanitizer.js';
 import ragCache from '../utils/ragCache.js';
 import Scheme from '../models/Scheme.js';
-import CitizenReport from '../models/CitizenReport.js';
+import AnonymousReport from '../models/AnonymousReport.js';
 
 const router = express.Router();
 
@@ -255,19 +255,19 @@ async function enrichScheme(citation) {
 }
 
 /**
- * Enrich citizen report citation
+ * Enrich citizen report citation (now uses AnonymousReport)
  */
 async function enrichCitizenReport(citation) {
-  const report = await CitizenReport.findOne({ id: citation.doc_id });
+  const report = await AnonymousReport.findOne({ id: citation.doc_id });
 
   if (report) {
     citation.type = 'citizen-report';
     citation.timestamp = report.createdAt;
     
-    if (report.coords && report.coords.length === 2) {
+    if (report.location?.approximateCoords && report.location.approximateCoords.length === 2) {
       citation.geo = {
-        lat: report.coords[1], // [lon, lat] -> lat
-        lon: report.coords[0]
+        lat: report.location.approximateCoords[1], // [lon, lat] -> lat
+        lon: report.location.approximateCoords[0]
       };
     }
   }
@@ -290,21 +290,21 @@ async function fallbackToSchemeGeo(citation, scheme_id) {
  * Fallback to nearest item in bbox
  */
 async function fallbackToBboxGeo(citation, bbox) {
-  // Try to find any geo-tagged item in bbox (citizen reports)
+  // Try to find any geo-tagged item in bbox (anonymous reports)
   const [minLon, minLat, maxLon, maxLat] = bbox;
   
-  const report = await CitizenReport.findOne({
-    coords: {
+  const report = await AnonymousReport.findOne({
+    'location.approximateCoords': {
       $geoWithin: {
         $box: [[minLon, minLat], [maxLon, maxLat]]
       }
     }
   }).limit(1);
 
-  if (report && report.coords && report.coords.length === 2) {
+  if (report && report.location?.approximateCoords && report.location.approximateCoords.length === 2) {
     citation.geo = {
-      lat: report.coords[1],
-      lon: report.coords[0]
+      lat: report.location.approximateCoords[1],
+      lon: report.location.approximateCoords[0]
     };
   }
 }
