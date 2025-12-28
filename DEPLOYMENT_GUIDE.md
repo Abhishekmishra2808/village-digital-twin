@@ -85,14 +85,14 @@ Click **Advanced** → **Add Environment Variable**
 2. Wait 3-5 minutes for deployment
 3. Once deployed, note your backend URL:
    ```
-   https://sundarpur-backend.onrender.com
+   https://village-digital-twin.onrender.com
    ```
 
 ### 2.4 Get WebSocket URL
 
 Your WebSocket URL will be:
 ```
-wss://sundarpur-backend.onrender.com
+wss://village-digital-twin.onrender.com
 ```
 
 **Important**: Note this URL - you'll need it for frontend!
@@ -106,8 +106,8 @@ wss://sundarpur-backend.onrender.com
 Before deploying frontend, update `.env.production`:
 
 ```bash
-VITE_WS_URL=wss://sundarpur-backend.onrender.com
-VITE_API_URL=https://sundarpur-backend.onrender.com
+VITE_WS_URL=wss://village-digital-twin.onrender.com
+VITE_API_URL=https://village-digital-twin.onrender.com
 ```
 
 **Commit and push changes:**
@@ -138,8 +138,8 @@ Click **Advanced** → **Add Environment Variable**
 
 | Key | Value |
 |-----|-------|
-| `VITE_WS_URL` | `wss://sundarpur-backend.onrender.com` |
-| `VITE_API_URL` | `https://sundarpur-backend.onrender.com` |
+| `VITE_WS_URL` | `wss://village-digital-twin.onrender.com` |
+| `VITE_API_URL` | `https://village-digital-twin.onrender.com` |
 
 ### 3.4 Deploy Frontend
 
@@ -167,7 +167,7 @@ ws = new WebSocket('ws://localhost:3001');
 **Replace with:**
 
 ```javascript
-ws = new WebSocket('wss://sundarpur-backend.onrender.com');
+ws = new WebSocket('wss://village-digital-twin.onrender.com');
 ```
 
 ### 4.2 Host Sensor Simulator
@@ -194,7 +194,7 @@ ws = new WebSocket('wss://sundarpur-backend.onrender.com');
 
 Open browser and go to:
 ```
-https://sundarpur-backend.onrender.com
+https://village-digital-twin.onrender.com
 ```
 
 You should see: "Sundarpur Digital Twin Server"
@@ -331,10 +331,10 @@ Your Sundarpur Digital Twin is now:
 
 Save these for easy access:
 
-- **Live App**: https://sundarpur-frontend.onrender.com
-- **Backend**: https://sundarpur-backend.onrender.com
+- **Live App**: https://sundarpur-frontend.onrender.com (or your custom URL)
+- **Backend**: https://village-digital-twin.onrender.com
 - **Render Dashboard**: https://dashboard.render.com
-- **GitHub Repo**: https://github.com/YOUR_USERNAME/sundarpur-digital-twin
+- **GitHub Repo**: https://github.com/Abhishekmishra2808/village-digital-twin
 
 ---
 
