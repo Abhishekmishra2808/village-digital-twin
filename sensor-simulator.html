@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sundarpur Village - Sensor Simulator Control Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            color: #e2e8f0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(16px);
+            padding: 40px;
+            border-radius: 24px;
+            margin-bottom: 30px;
+            text-align: center;
+            border: 1px solid rgba(148, 163, 184, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #cbd5e1;
+            font-size: 1.1rem;
+            font-weight: 300;
+        }
+
+        .status-bar {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(16px);
+            padding: 20px 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(148, 163, 184, 0.15);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse-soft 2s infinite;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+        }
+
+        .status-dot.disconnected {
+            background: #ef4444;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+        }
+
+        @keyframes pulse-soft {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .control-card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            padding: 28px;
+            border-radius: 20px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .control-card:hover {
+            transform: translateY(-5px);
+            background: rgba(30, 41, 59, 0.8);
+            border-color: rgba(148, 163, 184, 0.2);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .control-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .control-icon {
+            font-size: 2.5rem;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        }
+
+        .control-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #f1f5f9;
+            margin-bottom: 8px;
+        }
+
+        .control-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            color: #fff;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .slider-container {
+            margin: 20px 0;
+        }
+
+        .slider {
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+            background: rgba(71, 85, 105, 0.5);
+            outline: none;
+            -webkit-appearance: none;
+            transition: background 0.3s;
+        }
+
+        .slider:hover {
+            background: rgba(71, 85, 105, 0.7);
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+            transition: all 0.2s;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.6);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .slider::-moz-range-thumb:hover {
+            transform: scale(1.15);
+            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.6);
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-good { 
+            background: rgba(16, 185, 129, 0.2); 
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .status-warning { 
+            background: rgba(245, 158, 11, 0.2); 
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+        .status-critical { 
+            background: rgba(239, 68, 68, 0.2); 
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .scenario-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .scenario-btn {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            color: #e2e8f0;
+            padding: 24px;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .scenario-btn:hover {
+            transform: translateY(-3px);
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.15);
+            box-shadow: 0 8px 30px rgba(59, 130, 246, 0.3);
+        }
+
+        .scenario-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .btn-icon {
+            font-size: 2rem;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        }
+
+        .reset-btn {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.4);
+        }
+
+        .reset-btn:hover {
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.25);
+            box-shadow: 0 8px 30px rgba(239, 68, 68, 0.3);
+        }
+
+        .info-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(16px);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid rgba(148, 163, 184, 0.15);
+            margin-top: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .info-panel h3 {
+            color: #f1f5f9;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .info-item {
+            text-align: center;
+            padding: 20px;
+            background: rgba(51, 65, 85, 0.5);
+            border-radius: 16px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            transition: all 0.3s;
+        }
+
+        .info-item:hover {
+            background: rgba(51, 65, 85, 0.7);
+            transform: translateY(-2px);
+        }
+
+        .info-label {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .info-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        h2 {
+            color: #f1f5f9;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            margin-top: 40px;
+        }
+
+        h2:first-of-type {
+            margin-top: 0;
+        }
+
+        .status-bar > div {
+            font-size: 0.95rem;
+            color: #cbd5e1;
+        }
+
+        .status-bar strong {
+            color: #f1f5f9;
+            font-weight: 600;
+        }
+
+        #statusText {
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏘️ Sundarpur Village Sensor Simulator</h1>
+            <p class="subtitle">Real-time Infrastructure Control Panel for Hackathon Demo</p>
+        </header>
+
+        <div class="status-bar">
+            <div class="status-indicator">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">Connecting to server...</span>
+            </div>
+            <div>
+                <strong>WebSocket:</strong> <span id="wsUrl">ws://localhost:3001</span>
+            </div>
+            <div>
+                <strong>Last Update:</strong> <span id="lastUpdate">Never</span>
+            </div>
+        </div>
+
+        <!-- Scenario Simulation Buttons -->
+        <h2 style="margin-bottom: 15px;">🎬 Quick Scenarios</h2>
+        <div class="scenario-buttons">
+            <button class="scenario-btn" onclick="simulateScenario('water_crisis')">
+                <span class="btn-icon">💧</span>
+                <span>Water Crisis</span>
+            </button>
+            <button class="scenario-btn" onclick="simulateScenario('power_outage')">
+                <span class="btn-icon">⚡</span>
+                <span>Power Outage</span>
+            </button>
+            <button class="scenario-btn" onclick="simulateScenario('heavy_rain')">
+                <span class="btn-icon">🌧️</span>
+                <span>Heavy Rainfall</span>
+            </button>
+            <button class="scenario-btn reset-btn" onclick="resetToNormal()">
+                <span class="btn-icon">🔄</span>
+                <span>Reset to Normal</span>
+            </button>
+        </div>
+
+        <!-- Water Tanks -->
+        <h2 style="margin-bottom: 15px;">💧 Water Tank Controls</h2>
+        <div class="controls-grid" id="waterTanks"></div>
+
+        <!-- Power Transformers -->
+        <h2 style="margin-bottom: 15px; margin-top: 30px;">⚡ Power Transformer Controls</h2>
+        <div class="controls-grid" id="powerNodes"></div>
+
+        <!-- Sensors -->
+        <h2 style="margin-bottom: 15px; margin-top: 30px;">📡 IoT Sensor Controls</h2>
+        <div class="controls-grid" id="sensors"></div>
+
+        <!-- System Info -->
+        <div class="info-panel">
+            <h3>📊 System Statistics</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Total Water Tanks</div>
+                    <div class="info-value" id="totalTanks">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Power Transformers</div>
+                    <div class="info-value" id="totalPower">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Active Sensors</div>
+                    <div class="info-value" id="totalSensors">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Avg Water Level</div>
+                    <div class="info-value" id="avgWater">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let villageData = null;
+        let reconnectInterval = null;
+
+        // Connect to WebSocket
+        function connectWebSocket() {
+            ws = new WebSocket('ws://localhost:3001');
+
+            ws.onopen = () => {
+                console.log('✅ Connected to Sundarpur Digital Twin');
+                document.getElementById('statusDot').classList.remove('disconnected');
+                document.getElementById('statusText').textContent = 'Connected to Sundarpur Server';
+                if (reconnectInterval) {
+                    clearInterval(reconnectInterval);
+                    reconnectInterval = null;
+                }
+            };
+
+            ws.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                if (message.data) {
+                    villageData = message.data;
+                    renderControls();
+                    updateStats();
+                    document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+                }
+            };
+
+            ws.onerror = (error) => {
+                console.error('❌ WebSocket error:', error);
+            };
+
+            ws.onclose = () => {
+                console.log('❌ Disconnected from server');
+                document.getElementById('statusDot').classList.add('disconnected');
+                document.getElementById('statusText').textContent = 'Disconnected - Reconnecting...';
+                
+                if (!reconnectInterval) {
+                    reconnectInterval = setInterval(() => {
+                        console.log('🔄 Attempting to reconnect...');
+                        connectWebSocket();
+                    }, 5000);
+                }
+            };
+        }
+
+        // Send manual update
+        function sendUpdate(category, id, field, value) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'manual_update',
+                    payload: { category, id, field, value }
+                }));
+            }
+        }
+
+        // Simulate scenario
+        function simulateScenario(scenario) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'simulate_scenario',
+                    scenario: scenario
+                }));
+            }
+        }
+
+        // Reset to normal values
+        function resetToNormal() {
+            if (!villageData) return;
+            
+            // Reset water tanks
+            villageData.waterTanks.forEach(tank => {
+                sendUpdate('waterTanks', tank.id, 'currentLevel', 75);
+            });
+
+            // Reset power nodes
+            villageData.powerNodes.forEach(node => {
+                sendUpdate('powerNodes', node.id, 'currentLoad', node.capacity * 0.6);
+            });
+
+            alert('✅ All values reset to normal operating levels');
+        }
+
+        // Render all controls
+        function renderControls() {
+            if (!villageData) return;
+
+            // Render water tanks
+            const waterContainer = document.getElementById('waterTanks');
+            waterContainer.innerHTML = villageData.waterTanks.map(tank => {
+                const status = tank.currentLevel > 50 ? 'good' : tank.currentLevel > 30 ? 'warning' : 'critical';
+                return `
+                    <div class="control-card">
+                        <div class="control-header">
+                            <div>
+                                <div class="control-title">${tank.name}</div>
+                                <span class="status-badge status-${status}">${status}</span>
+                            </div>
+                            <div class="control-icon">💧</div>
+                        </div>
+                        <div class="control-value">${tank.currentLevel.toFixed(1)}%</div>
+                        <div class="slider-container">
+                            <input type="range" class="slider" min="0" max="100" step="0.1" 
+                                   value="${tank.currentLevel}" 
+                                   oninput="updateTankLevel('${tank.id}', this.value)">
+                            <div class="slider-labels">
+                                <span>0%</span>
+                                <span>50%</span>
+                                <span>100%</span>
+                            </div>
+                        </div>
+                        <div style="margin-top: 10px; font-size: 0.9rem; opacity: 0.8;">
+                            Capacity: ${tank.capacity.toLocaleString()} L
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Render power nodes
+            const powerContainer = document.getElementById('powerNodes');
+            powerContainer.innerHTML = villageData.powerNodes.map(node => {
+                const loadPercent = (node.currentLoad / node.capacity) * 100;
+                const status = loadPercent > 95 ? 'critical' : loadPercent > 80 ? 'warning' : 'good';
+                return `
+                    <div class="control-card">
+                        <div class="control-header">
+                            <div>
+                                <div class="control-title">${node.name}</div>
+                                <span class="status-badge status-${status}">${status}</span>
+                            </div>
+                            <div class="control-icon">⚡</div>
+                        </div>
+                        <div class="control-value">${node.currentLoad} kW</div>
+                        <div class="slider-container">
+                            <input type="range" class="slider" min="0" max="${node.capacity}" step="1" 
+                                   value="${node.currentLoad}" 
+                                   oninput="updatePowerLoad('${node.id}', this.value)">
+                            <div class="slider-labels">
+                                <span>0 kW</span>
+                                <span>${Math.round(node.capacity / 2)} kW</span>
+                                <span>${node.capacity} kW</span>
+                            </div>
+                        </div>
+                        <div style="margin-top: 10px; font-size: 0.9rem; opacity: 0.8;">
+                            Load: ${loadPercent.toFixed(1)}% | Temp: ${node.temperature.toFixed(1)}°C
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Render key sensors
+            const sensorContainer = document.getElementById('sensors');
+            const displayLimit = 12; // Show first 12 diverse sensors
+            const keySensors = [];
+            
+            // Prioritize diverse sensor types
+            const seenTypes = new Set();
+            for (const sensor of villageData.sensors) {
+                if (!seenTypes.has(sensor.type) || keySensors.length < displayLimit) {
+                    keySensors.push(sensor);
+                    seenTypes.add(sensor.type);
+                }
+                if (keySensors.length >= displayLimit) break;
+            }
+            
+            sensorContainer.innerHTML = keySensors.map(sensor => {
+                const sensorIcons = {
+                    soil_moisture: '🌱',
+                    air_quality: '💨',
+                    weather: '🌡️',
+                    water_quality: '💧',
+                    traffic: '🚗',
+                    noise: '🔊',
+                    rainfall: '🌧️',
+                    flood: '🌊',
+                    temperature: '🌡️',
+                    parking: '🅿️',
+                    street_light: '💡',
+                    energy: '☀️',
+                    vibration: '〰️',
+                    pressure: '🔧',
+                    waste: '🗑️',
+                    radiation: '☢️',
+                };
+                const icon = sensorIcons[sensor.type] || '📡';
+                const maxValue = sensor.type === 'weather' || sensor.type === 'temperature' ? 45 : 
+                                sensor.type === 'air_quality' ? 200 :
+                                sensor.type === 'energy' ? 20 :
+                                sensor.type === 'vibration' ? 10 :
+                                sensor.type === 'pressure' ? 5 :
+                                sensor.type === 'radiation' ? 11 :
+                                100;
+                return `
+                    <div class="control-card">
+                        <div class="control-header">
+                            <div>
+                                <div class="control-title">${sensor.name}</div>
+                                <span class="status-badge status-good">${sensor.status}</span>
+                            </div>
+                            <div class="control-icon">${icon}</div>
+                        </div>
+                        <div class="control-value">${sensor.value.toFixed(1)} ${sensor.unit}</div>
+                        <div class="slider-container">
+                            <input type="range" class="slider" min="0" max="${maxValue}" step="0.1" 
+                                   value="${sensor.value}" 
+                                   oninput="updateSensorValue('${sensor.id}', this.value)">
+                            <div class="slider-labels">
+                                <span>0</span>
+                                <span>${maxValue / 2}</span>
+                                <span>${maxValue}</span>
+                            </div>
+                        </div>
+                        <div style="margin-top: 10px; font-size: 0.9rem; opacity: 0.8; text-transform: capitalize;">
+                            ${sensor.type.replace(/_/g, ' ')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Update functions
+        function updateTankLevel(id, value) {
+            sendUpdate('waterTanks', id, 'currentLevel', parseFloat(value));
+        }
+
+        function updatePowerLoad(id, value) {
+            sendUpdate('powerNodes', id, 'currentLoad', parseInt(value));
+        }
+
+        function updateSensorValue(id, value) {
+            sendUpdate('sensors', id, 'value', parseFloat(value));
+        }
+
+        // Update statistics
+        function updateStats() {
+            if (!villageData) return;
+
+            document.getElementById('totalTanks').textContent = villageData.waterTanks.length;
+            document.getElementById('totalPower').textContent = villageData.powerNodes.length;
+            document.getElementById('totalSensors').textContent = villageData.sensors.length;
+
+            const avgWater = villageData.waterTanks.reduce((sum, t) => sum + t.currentLevel, 0) / villageData.waterTanks.length;
+            document.getElementById('avgWater').textContent = avgWater.toFixed(1) + '%';
+        }
+
+        // Initialize on page load
+        window.onload = () => {
+            connectWebSocket();
+        };
+    </script>
+</body>
+</html>
