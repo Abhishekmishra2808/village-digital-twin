@@ -1,7 +1,7 @@
 {
-  "name": "sundarpur-backend",
+  "name": "ruralens-backend",
   "version": "1.0.0",
-  "description": "WebSocket server for Sundarpur Digital Twin real-time data",
+  "description": "WebSocket server for RuraLens real-time data",
   "type": "module",
   "main": "server.js",
   "scripts": {

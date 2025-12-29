@@ -1,4 +1,4 @@
-# Sundarpur Digital Twin - Backend
+# RuraLens - Backend
 
 WebSocket server for real-time village infrastructure monitoring.
 

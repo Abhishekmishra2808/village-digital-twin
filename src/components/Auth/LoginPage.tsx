@@ -44,7 +44,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         {/* Hero Section */}
         <div className="text-center mb-20 animate-fadeIn">
           <h1 className="text-7xl font-semibold text-gray-900 mb-6 tracking-tight">
-            Sundarpur
+            RuraLens
           </h1>
           <p className="text-xl text-gray-500 font-light max-w-2xl mx-auto">
             A complete digital twin for smarter village management. Real-time insights, predictive analytics, and seamless control.

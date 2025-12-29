@@ -3,7 +3,6 @@ import LoginPage from './components/Auth/LoginPage';
 import TopNav from './components/Layout/TopNav';
 import Sidebar from './components/Sidebar/Sidebar';
 import StatusBar from './components/Layout/StatusBar';
-import Map3D from './components/Map3D/Map3D';
 import InfoPanel from './components/InfoPanel/InfoPanel';
 import Dashboard from './components/Dashboard/Dashboard';
 import WaterView from './components/Views/WaterView';
@@ -14,6 +13,12 @@ import SettingsView from './components/Views/SettingsView';
 import AnalyticsView from './components/Views/AnalyticsView';
 import CitizenReportsView from './components/Views/CitizenReportsView';
 import FieldWorkerView from './components/Views/FieldWorkerView';
+import RoadsView from './components/Views/RoadsView';
+import WasteView from './components/Views/WasteView';
+import MapView from './components/Views/MapView';
+import TrafficView from './components/Views/TrafficView';
+import EnvironmentView from './components/Views/EnvironmentView';
+import FloodView from './components/Views/FloodView';
 import AdminControls from './components/ControlPanel/AdminControls';
 import useWebSocket from './hooks/useWebSocket';
 
@@ -36,30 +41,39 @@ function App() {
     switch (activeView) {
       case 'dashboard':
         return <Dashboard />;
+      case 'map':
+        return <MapView />;
       case 'water':
         return <WaterView />;
       case 'power':
         return <PowerView />;
+      case 'roads':
+        return <RoadsView />;
+      case 'waste':
+        return <WasteView />;
       case 'agriculture':
         return <AgricultureView />;
+      case 'traffic':
+        return <TrafficView />;
+      case 'environment':
+        return <EnvironmentView />;
+      case 'flood':
+        return <FloodView />;
       case 'alerts':
         return <AlertsView />;
       case 'reports':
         return <CitizenReportsView />;
       case 'analytics':
-        return userRole === 'admin' ? <AnalyticsView /> : <Map3D />;
+        return userRole === 'admin' ? <AnalyticsView /> : <Dashboard />;
       case 'settings':
         return <SettingsView />;
-      case 'roads':
-      case 'waste':
-        return <Map3D />;
       default:
         return <Dashboard />;
     }
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden bg-dashboard">
+    <div className="h-screen w-screen flex flex-col overflow-hidden bg-gray-50">
       <TopNav />
       
       <div className="flex-1 flex overflow-hidden">

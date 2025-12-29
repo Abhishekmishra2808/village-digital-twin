@@ -35,7 +35,7 @@ export default function CitizenReportsView() {
   const handleSubmitReport = (e: React.FormEvent) => {
     e.preventDefault();
     // In real app, this would send to backend
-    alert('Report submitted successfully! Thank you for helping improve Sundarpur.');
+    alert('Report submitted successfully! Thank you for your contribution.');
     setShowReportForm(false);
     setNewReport({
       category: 'road',
@@ -47,15 +47,15 @@ export default function CitizenReportsView() {
   };
 
   return (
-    <div className="h-full w-full overflow-auto bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-6">
+    <div className="h-full w-full overflow-auto bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
               {userRole === 'user' ? 'Report a Problem' : 'Citizen Reports'}
             </h1>
-            <p className="text-gray-400">
+            <p className="text-gray-600">
               {userRole === 'user' 
                 ? 'Help improve village infrastructure by reporting issues'
                 : 'View and manage citizen-submitted infrastructure issues'}
@@ -65,7 +65,7 @@ export default function CitizenReportsView() {
           {userRole === 'user' && (
             <button
               onClick={() => setShowReportForm(true)}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all"
+              className="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white font-semibold rounded-lg hover:bg-gray-800 transition-all"
             >
               <Send size={20} />
               New Report
@@ -76,12 +76,12 @@ export default function CitizenReportsView() {
         {/* Report Form Modal */}
         {showReportForm && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-6">
-            <div className="glass-dark rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-auto">
-              <h2 className="text-2xl font-bold text-white mb-6">Submit New Report</h2>
+            <div className="bg-white rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-auto">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Submit New Report</h2>
               
               <form onSubmit={handleSubmitReport} className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Category
                   </label>
                   <div className="grid grid-cols-2 gap-3">
@@ -92,19 +92,19 @@ export default function CitizenReportsView() {
                         onClick={() => setNewReport({ ...newReport, category: cat.id })}
                         className={`p-4 rounded-lg border-2 transition-all ${
                           newReport.category === cat.id
-                            ? 'border-blue-500 bg-blue-500/20'
-                            : 'border-gray-600 bg-white/5 hover:bg-white/10'
+                            ? 'border-gray-900 bg-gray-50'
+                            : 'border-gray-200 bg-white hover:bg-gray-50'
                         }`}
                       >
                         <span className="text-2xl mb-2 block">{cat.icon}</span>
-                        <span className="text-white text-sm">{cat.label}</span>
+                        <span className="text-gray-900 text-sm">{cat.label}</span>
                       </button>
                     ))}
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Title
                   </label>
                   <input
@@ -112,13 +112,13 @@ export default function CitizenReportsView() {
                     value={newReport.title}
                     onChange={(e) => setNewReport({ ...newReport, title: e.target.value })}
                     placeholder="Brief description of the issue"
-                    className="w-full px-4 py-3 rounded-lg bg-white/5 border border-gray-600 text-white placeholder-gray-500"
+                    className="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Detailed Description
                   </label>
                   <textarea
@@ -126,13 +126,13 @@ export default function CitizenReportsView() {
                     onChange={(e) => setNewReport({ ...newReport, description: e.target.value })}
                     placeholder="Provide detailed information about the problem"
                     rows={4}
-                    className="w-full px-4 py-3 rounded-lg bg-white/5 border border-gray-600 text-white placeholder-gray-500"
+                    className="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Location
                   </label>
                   <input
@@ -140,19 +140,19 @@ export default function CitizenReportsView() {
                     value={newReport.location}
                     onChange={(e) => setNewReport({ ...newReport, location: e.target.value })}
                     placeholder="Exact location or landmark"
-                    className="w-full px-4 py-3 rounded-lg bg-white/5 border border-gray-600 text-white placeholder-gray-500"
+                    className="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Priority
                   </label>
                   <select
                     value={newReport.priority}
                     onChange={(e) => setNewReport({ ...newReport, priority: e.target.value })}
-                    className="w-full px-4 py-3 rounded-lg bg-white/5 border border-gray-600 text-white"
+                    className="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                   >
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
@@ -160,12 +160,12 @@ export default function CitizenReportsView() {
                   </select>
                 </div>
 
-                <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50">
                   <Camera size={40} className="mx-auto text-gray-400 mb-2" />
-                  <p className="text-gray-400 mb-2">Upload Photos (Optional)</p>
+                  <p className="text-gray-600 mb-2">Upload Photos (Optional)</p>
                   <button
                     type="button"
-                    className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-all"
+                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all"
                   >
                     Choose Files
                   </button>
@@ -174,14 +174,14 @@ export default function CitizenReportsView() {
                 <div className="flex gap-4">
                   <button
                     type="submit"
-                    className="flex-1 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all"
+                    className="flex-1 py-3 bg-gray-900 text-white font-semibold rounded-lg hover:bg-gray-800 transition-all"
                   >
                     Submit Report
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowReportForm(false)}
-                    className="px-6 py-3 border border-gray-600 text-gray-300 rounded-lg hover:bg-white/10 transition-all"
+                    className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all"
                   >
                     Cancel
                   </button>
@@ -197,15 +197,15 @@ export default function CitizenReportsView() {
             const categoryData = categories.find(c => c.id === report.category);
             
             return (
-              <div key={report.id} className="glass-dark rounded-xl p-6 hover:bg-white/10 transition-all">
+              <div key={report.id} className="bg-white rounded-xl p-6 hover:shadow-md transition-all border border-gray-200">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center text-2xl">
+                    <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center text-2xl">
                       {categoryData?.icon}
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-xl font-semibold text-white mb-1">{report.title}</h3>
-                      <p className="text-gray-400 text-sm mb-2">{report.description}</p>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-1">{report.title}</h3>
+                      <p className="text-gray-600 text-sm mb-2">{report.description}</p>
                       <div className="flex items-center gap-4 text-sm text-gray-500">
                         <span className="flex items-center gap-1">
                           <MapPin size={14} />
@@ -227,17 +227,17 @@ export default function CitizenReportsView() {
 
                   <div className="flex items-center gap-3">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase ${
-                      report.priority === 'high' ? 'bg-red-500/20 text-red-400' :
-                      report.priority === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
-                      'bg-gray-500/20 text-gray-400'
+                      report.priority === 'high' ? 'bg-red-100 text-red-700' :
+                      report.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-gray-100 text-gray-700'
                     }`}>
                       {report.priority}
                     </span>
 
                     <span className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold ${
-                      report.status === 'completed' ? 'bg-green-500/20 text-green-400' :
-                      report.status === 'in_progress' ? 'bg-yellow-500/20 text-yellow-400' :
-                      'bg-gray-500/20 text-gray-400'
+                      report.status === 'completed' ? 'bg-green-100 text-green-700' :
+                      report.status === 'in_progress' ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-gray-100 text-gray-700'
                     }`}>
                       {report.status === 'completed' && <CheckCircle size={16} />}
                       {report.status === 'in_progress' && <Clock size={16} />}
@@ -248,9 +248,9 @@ export default function CitizenReportsView() {
                 </div>
 
                 {report.assignedTo && (
-                  <div className="flex items-center gap-2 text-sm text-gray-400 bg-white/5 rounded-lg p-3">
+                  <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 rounded-lg p-3">
                     <User size={16} />
-                    <span>Assigned to: <strong className="text-white">{report.assignedTo}</strong></span>
+                    <span>Assigned to: <strong className="text-gray-900">{report.assignedTo}</strong></span>
                   </div>
                 )}
               </div>
@@ -260,14 +260,14 @@ export default function CitizenReportsView() {
 
         {/* Empty State */}
         {citizenReports.length === 0 && (
-          <div className="glass-dark rounded-xl p-12 text-center">
-            <AlertCircle size={48} className="mx-auto text-gray-500 mb-4" />
-            <h3 className="text-xl font-semibold text-white mb-2">No Reports Yet</h3>
-            <p className="text-gray-400 mb-6">Be the first to report an infrastructure issue</p>
+          <div className="bg-white rounded-xl p-12 text-center border border-gray-200">
+            <AlertCircle size={48} className="mx-auto text-gray-400 mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Reports Yet</h3>
+            <p className="text-gray-600 mb-6">Be the first to report an infrastructure issue</p>
             {userRole === 'user' && (
               <button
                 onClick={() => setShowReportForm(true)}
-                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all"
+                className="px-6 py-3 bg-gray-900 text-white font-semibold rounded-lg hover:bg-gray-800 transition-all"
               >
                 Submit First Report
               </button>

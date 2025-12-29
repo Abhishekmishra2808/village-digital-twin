@@ -1,6 +1,6 @@
-# Sundarpur Digital Twin - Village Infrastructure Management System
+# RuraLens - Smart Village Infrastructure Management System
 
-A comprehensive 3D digital replica of Sundarpur Village, Maharashtra, featuring real-time monitoring, predictive analytics, and interactive visualization for village infrastructure management.
+A comprehensive 3D digital replica featuring real-time monitoring, predictive analytics, and interactive visualization for village infrastructure management.
 
 ![Dashboard Preview](docs/dashboard-preview.png)
 ![3D Map Preview](docs/map-preview.png)
@@ -62,7 +62,7 @@ The application will open at `http://localhost:3000`
 ## 📁 Project Structure
 
 ```
-sundarpur-digital-twin/
+ruralens/
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
@@ -263,7 +263,5 @@ For questions or support, please open an issue on GitHub.
 
 ---
 
-**Coordinates**: 18.5204°N, 73.8567°E  
-**Village**: Sundarpur, Maharashtra, India  
-**Population**: ~5,000 residents  
-**Elevation**: 650-680m above sea level
+**RuraLens** - Smart Village Infrastructure Management  
+Built with ❤️ for rural development initiatives

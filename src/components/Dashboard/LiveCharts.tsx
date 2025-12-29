@@ -54,41 +54,41 @@ export default function LiveCharts() {
       legend: {
         display: true,
         labels: {
-          color: '#e5e7eb',
+          color: '#374151',
           font: { size: 12 },
         },
       },
       tooltip: {
-        backgroundColor: 'rgba(31, 41, 55, 0.9)',
+        backgroundColor: 'rgba(17, 24, 39, 0.95)',
         titleColor: '#fff',
         bodyColor: '#e5e7eb',
-        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderColor: 'rgba(156, 163, 175, 0.2)',
         borderWidth: 1,
       },
     },
     scales: {
       x: {
-        ticks: { color: '#9ca3af', font: { size: 11 } },
-        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+        ticks: { color: '#6b7280', font: { size: 11 } },
+        grid: { color: 'rgba(0, 0, 0, 0.05)' },
       },
       y: {
-        ticks: { color: '#9ca3af', font: { size: 11 } },
-        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+        ticks: { color: '#6b7280', font: { size: 11 } },
+        grid: { color: 'rgba(0, 0, 0, 0.05)' },
       },
     },
   };
 
   return (
     <div className="space-y-4">
-      <div className="glass-dark p-5 rounded-xl">
-        <h3 className="text-lg font-semibold mb-4">Water Infrastructure Status</h3>
+      <div className="bg-white p-5 rounded-xl border border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Water Infrastructure Status</h3>
         <div style={{ height: '280px' }}>
           <Bar data={waterChartData} options={chartOptions} />
         </div>
       </div>
 
-      <div className="glass-dark p-5 rounded-xl">
-        <h3 className="text-lg font-semibold mb-4">Power Grid Load Distribution</h3>
+      <div className="bg-white p-5 rounded-xl border border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Power Grid Load Distribution</h3>
         <div style={{ height: '280px' }}>
           <Line data={powerChartData} options={chartOptions} />
         </div>

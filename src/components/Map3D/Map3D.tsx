@@ -10,6 +10,10 @@ export default function Map3D() {
   const map = useRef<maplibregl.Map | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const markersRef = useRef<maplibregl.Marker[]>([]);
+  const userInteractedRef = useRef(false);
+  const lastViewRef = useRef<string>('');
+  const [currentZoom, setCurrentZoom] = useState(15);
+  const [currentPitch, setCurrentPitch] = useState(45);
   
   const { 
     waterTanks, 
@@ -41,22 +45,84 @@ export default function Map3D() {
           type: 'raster',
           source: 'osm',
           minzoom: 0,
-          maxzoom: 19,
+          maxzoom: 22,
         }],
       },
       center: VILLAGE_CENTER,
       zoom: 15,
+      minZoom: 12,
+      maxZoom: 20,
       pitch: 45,
       bearing: 0,
+      antialias: true,
+      // Better performance and smoother animations
+      refreshExpiredTiles: false,
+      fadeDuration: 200,
     });
 
     map.current.on('load', () => {
       setMapLoaded(true);
     });
+    
+    // Update zoom and pitch state
+    map.current.on('zoom', () => {
+      if (map.current) {
+        setCurrentZoom(Math.round(map.current.getZoom() * 10) / 10);
+      }
+    });
+    
+    map.current.on('pitch', () => {
+      if (map.current) {
+        setCurrentPitch(Math.round(map.current.getPitch()));
+      }
+    });
 
-    // Add navigation controls
-    map.current.addControl(new maplibregl.NavigationControl(), 'top-right');
+    // Add navigation controls with zoom buttons
+    map.current.addControl(
+      new maplibregl.NavigationControl({
+        showCompass: true,
+        showZoom: true,
+        visualizePitch: true,
+      }), 
+      'top-right'
+    );
+    
+    // Add scale control
     map.current.addControl(new maplibregl.ScaleControl(), 'bottom-left');
+    
+    // Add fullscreen control
+    map.current.addControl(new maplibregl.FullscreenControl(), 'top-right');
+    
+    // Prevent zoom conflicts - disable double-click zoom to avoid interference
+    map.current.doubleClickZoom.disable();
+    
+    // Add custom double-click handler for smoother zoom
+    map.current.on('dblclick', (e) => {
+      e.preventDefault();
+      const currentZoom = map.current!.getZoom();
+      map.current!.easeTo({
+        zoom: currentZoom + 1,
+        duration: 300,
+        easing: (t) => t,
+      });
+    });
+    
+    // Track user interactions to prevent auto-fly interference
+    map.current.on('mousedown', () => {
+      userInteractedRef.current = true;
+    });
+    
+    map.current.on('touchstart', () => {
+      userInteractedRef.current = true;
+    });
+    
+    map.current.on('wheel', () => {
+      userInteractedRef.current = true;
+    });
+    
+    map.current.on('dragstart', () => {
+      userInteractedRef.current = true;
+    });
 
     return () => {
       // Clean up markers
@@ -278,17 +344,27 @@ export default function Map3D() {
     });
   }, [mapLoaded, sensors, setSelectedAsset]);
 
-  // Fly to different views based on activeView
+  // Fly to different views based on activeView - only if user hasn't interacted
   useEffect(() => {
-    if (!map.current) return;
+    if (!map.current || !mapLoaded) return;
+    
+    // Don't auto-fly if user has manually interacted with the map
+    if (userInteractedRef.current) return;
+    
+    // Don't fly if we're already on this view
+    if (lastViewRef.current === activeView) return;
+    
+    lastViewRef.current = activeView;
 
     switch (activeView) {
       case 'water':
         if (waterTanks.length > 0) {
           map.current.flyTo({
             center: waterTanks[0].coords,
-            zoom: 15.5,
+            zoom: 16,
             pitch: 60,
+            duration: 1500,
+            essential: true,
           });
         }
         break;
@@ -296,46 +372,110 @@ export default function Map3D() {
         if (powerNodes.length > 0) {
           map.current.flyTo({
             center: powerNodes[0].coords,
-            zoom: 15.5,
+            zoom: 16,
             pitch: 50,
+            duration: 1500,
+            essential: true,
           });
         }
         break;
-      default:
+      case 'map':
+        // Reset to overview when switching to map view
         map.current.flyTo({
           center: VILLAGE_CENTER,
           zoom: 15,
           pitch: 45,
+          duration: 1500,
+          essential: true,
         });
+        // Reset interaction flag when returning to map view
+        userInteractedRef.current = false;
+        break;
+      default:
+        // Don't auto-fly for other views
+        break;
     }
-  }, [activeView, waterTanks, powerNodes]);
+  }, [activeView, waterTanks, powerNodes, mapLoaded]);
 
   return (
     <div className="relative w-full h-full">
       <div ref={mapContainer} className="absolute inset-0" />
       
-      {/* Map legend */}
-      <div className="absolute bottom-4 right-4 glass-dark p-4 rounded-lg text-sm space-y-2">
-        <h4 className="font-semibold mb-2">Legend</h4>
+      {/* Map Info Panel */}
+      <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-3 border border-gray-200">
+        <div className="space-y-1 text-sm">
+          <div className="flex items-center gap-2">
+            <span className="text-gray-600">Zoom:</span>
+            <span className="font-semibold text-gray-900">{currentZoom}x</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-gray-600">Pitch:</span>
+            <span className="font-semibold text-gray-900">{currentPitch}°</span>
+          </div>
+        </div>
+      </div>
+      
+      {/* Quick Action Buttons */}
+      <div className="absolute top-4 right-20 flex flex-col gap-2">
+        <button
+          onClick={() => {
+            if (map.current) {
+              map.current.flyTo({
+                center: VILLAGE_CENTER,
+                zoom: 15,
+                pitch: 45,
+                bearing: 0,
+                duration: 1000,
+              });
+            }
+          }}
+          className="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg shadow-lg border border-gray-200 text-sm font-medium transition-all"
+          title="Reset to village center"
+        >
+          🏠 Reset View
+        </button>
+        <button
+          onClick={() => {
+            if (map.current) {
+              const currentPitch = map.current.getPitch();
+              map.current.easeTo({
+                pitch: currentPitch === 0 ? 60 : 0,
+                duration: 500,
+              });
+            }
+          }}
+          className="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg shadow-lg border border-gray-200 text-sm font-medium transition-all"
+          title="Toggle 3D view"
+        >
+          🔄 Toggle 3D
+        </button>
+      </div>
+      
+      {/* Map Legend */}
+      <div className="absolute bottom-4 right-4 bg-white rounded-lg shadow-lg p-4 border border-gray-200 text-sm space-y-2 max-w-xs">
+        <h4 className="font-semibold text-gray-900 mb-3">Map Legend</h4>
         <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 rounded-full bg-success border-2 border-white" />
-          <span>Water Tank (Good)</span>
+          <div className="w-4 h-4 rounded-full bg-green-500 border-2 border-white shadow-sm" />
+          <span className="text-gray-700">Water Tank (Good)</span>
         </div>
         <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 rounded-full bg-warning border-2 border-white" />
-          <span>Water Tank (Warning)</span>
+          <div className="w-4 h-4 rounded-full bg-yellow-500 border-2 border-white shadow-sm" />
+          <span className="text-gray-700">Water Tank (Warning)</span>
         </div>
         <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 rounded-full bg-danger border-2 border-white" />
-          <span>Water Tank (Critical)</span>
+          <div className="w-4 h-4 rounded-full bg-red-500 border-2 border-white shadow-sm" />
+          <span className="text-gray-700">Water Tank (Critical)</span>
         </div>
         <div className="flex items-center space-x-2">
-          <div className="w-3 h-3 bg-success border-2 border-white transform rotate-45" />
-          <span>Power Node</span>
+          <div className="w-3 h-3 bg-green-500 border-2 border-white shadow-sm transform rotate-45" />
+          <span className="text-gray-700">Power Node</span>
         </div>
         <div className="flex items-center space-x-2">
-          <div className="w-3 h-3 rounded-full bg-cyan-400 border-2 border-white" />
-          <span>IoT Sensor</span>
+          <div className="w-3 h-3 rounded-full bg-cyan-500 border-2 border-white shadow-sm" />
+          <span className="text-gray-700">IoT Sensor</span>
+        </div>
+        <div className="pt-2 mt-2 border-t border-gray-200 text-xs text-gray-600">
+          💡 Scroll to zoom • Drag to pan • Right-click drag to rotate
         </div>
       </div>
     </div>

@@ -23,70 +23,62 @@ export default function AlertsView() {
     }
   };
 
-  const getAlertColor = (type: string) => {
-    switch (type) {
-      case 'critical': return 'bg-danger/20 border-danger text-danger';
-      case 'warning': return 'bg-warning/20 border-warning text-warning';
-      default: return 'bg-blue-500/20 border-blue-500 text-blue-400';
-    }
-  };
-
   return (
-    <div className="h-full overflow-y-auto p-6 space-y-6 bg-gradient-to-br from-background to-gray-800">
+    <div className="h-full overflow-y-auto p-6 space-y-6 bg-gray-50">
       {/* Alert Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="glass-dark p-5 rounded-xl border-2 border-danger">
+        <div className="bg-white p-5 rounded-xl border-2 border-red-200">
           <div className="flex items-center space-x-3 mb-2">
-            <AlertCircle className="text-danger" size={24} />
-            <h3 className="text-sm text-gray-400">Critical Alerts</h3>
+            <AlertCircle className="text-red-600" size={24} />
+            <h3 className="text-sm text-gray-600">Critical Alerts</h3>
           </div>
-          <p className="text-3xl font-bold text-danger">{criticalAlerts.length + criticalTanks.length + criticalPower.length}</p>
+          <p className="text-3xl font-bold text-red-600">{criticalAlerts.length + criticalTanks.length + criticalPower.length}</p>
         </div>
         
-        <div className="glass-dark p-5 rounded-xl border-2 border-warning">
+        <div className="bg-white p-5 rounded-xl border-2 border-yellow-200">
           <div className="flex items-center space-x-3 mb-2">
-            <AlertTriangle className="text-warning" size={24} />
-            <h3 className="text-sm text-gray-400">Warnings</h3>
+            <AlertTriangle className="text-yellow-600" size={24} />
+            <h3 className="text-sm text-gray-600">Warnings</h3>
           </div>
-          <p className="text-3xl font-bold text-warning">{warningAlerts.length + warningTanks.length}</p>
+          <p className="text-3xl font-bold text-yellow-600">{warningAlerts.length + warningTanks.length}</p>
         </div>
         
-        <div className="glass-dark p-5 rounded-xl border-2 border-blue-500">
+        <div className="bg-white p-5 rounded-xl border-2 border-blue-200">
           <div className="flex items-center space-x-3 mb-2">
-            <Info className="text-blue-400" size={24} />
-            <h3 className="text-sm text-gray-400">Info</h3>
+            <Info className="text-blue-600" size={24} />
+            <h3 className="text-sm text-gray-600">Info</h3>
           </div>
-          <p className="text-3xl font-bold text-blue-400">{infoAlerts.length}</p>
+          <p className="text-3xl font-bold text-blue-600">{infoAlerts.length}</p>
         </div>
       </div>
 
       {/* Critical Infrastructure Alerts */}
       {(criticalTanks.length > 0 || criticalPower.length > 0) && (
-        <div className="glass-dark p-5 rounded-xl border-2 border-danger">
-          <h3 className="text-lg font-semibold mb-4 text-danger flex items-center">
+        <div className="bg-white p-5 rounded-xl border-2 border-red-300">
+          <h3 className="text-lg font-semibold mb-4 text-red-600 flex items-center">
             <AlertCircle className="mr-2" size={20} />
             Critical Infrastructure Issues
           </h3>
           <div className="space-y-3">
             {criticalTanks.map(tank => (
-              <div key={tank.id} className="p-3 bg-danger/10 rounded-lg border border-danger/30">
+              <div key={tank.id} className="p-3 bg-red-50 rounded-lg border border-red-200">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="font-semibold">💧 {tank.name}</p>
-                    <p className="text-sm text-gray-300">Water level critically low: {tank.currentLevel.toFixed(1)}%</p>
+                    <p className="font-semibold text-gray-900">💧 {tank.name}</p>
+                    <p className="text-sm text-gray-700">Water level critically low: {tank.currentLevel.toFixed(1)}%</p>
                   </div>
-                  <span className="text-xs text-gray-400">Now</span>
+                  <span className="text-xs text-gray-500">Now</span>
                 </div>
               </div>
             ))}
             {criticalPower.map(node => (
-              <div key={node.id} className="p-3 bg-danger/10 rounded-lg border border-danger/30">
+              <div key={node.id} className="p-3 bg-red-50 rounded-lg border border-red-200">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="font-semibold">⚡ {node.name}</p>
-                    <p className="text-sm text-gray-300">Overload: {((node.currentLoad / node.capacity) * 100).toFixed(1)}% capacity</p>
+                    <p className="font-semibold text-gray-900">⚡ {node.name}</p>
+                    <p className="text-sm text-gray-700">Overload: {((node.currentLoad / node.capacity) * 100).toFixed(1)}% capacity</p>
                   </div>
-                  <span className="text-xs text-gray-400">Now</span>
+                  <span className="text-xs text-gray-500">Now</span>
                 </div>
               </div>
             ))}
@@ -95,8 +87,8 @@ export default function AlertsView() {
       )}
 
       {/* All Alerts Timeline */}
-      <div className="glass-dark p-5 rounded-xl">
-        <h3 className="text-lg font-semibold mb-4 flex items-center">
+      <div className="bg-white p-5 rounded-xl border border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
           <Bell className="mr-2" size={20} />
           Alert Timeline
         </h3>
@@ -109,12 +101,14 @@ export default function AlertsView() {
           ) : (
             alerts.slice().reverse().map((alert) => {
               const Icon = getAlertIcon(alert.type);
-              const colorClass = getAlertColor(alert.type);
+              const colorClass = alert.type === 'critical' ? 'bg-red-50 border-red-300 text-red-700' :
+                                alert.type === 'warning' ? 'bg-yellow-50 border-yellow-300 text-yellow-700' :
+                                'bg-blue-50 border-blue-300 text-blue-700';
 
               return (
                 <div 
                   key={alert.id}
-                  className={`p-4 rounded-lg border-2 ${colorClass} transition-all hover:scale-102`}
+                  className={`p-4 rounded-lg border-2 ${colorClass} transition-all hover:shadow-md`}
                 >
                   <div className="flex items-start space-x-3">
                     <Icon size={20} className="mt-0.5 flex-shrink-0" />

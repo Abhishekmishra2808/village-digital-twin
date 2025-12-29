@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 
 const server = app.listen(PORT, () => {
-  console.log(`🚀 Sundarpur Digital Twin Server running on port ${PORT}`);
+  console.log(`🚀 RuraLens Server running on port ${PORT}`);
 });
 
 const wss = new WebSocketServer({ server });

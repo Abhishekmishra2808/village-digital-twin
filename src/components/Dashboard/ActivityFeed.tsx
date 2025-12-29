@@ -15,9 +15,9 @@ export default function ActivityFeed() {
 
   const getActivityColor = (type: string) => {
     switch (type) {
-      case 'critical': return 'text-danger';
-      case 'warning': return 'text-warning';
-      case 'info': return 'text-blue-400';
+      case 'critical': return 'text-red-600';
+      case 'warning': return 'text-yellow-600';
+      case 'info': return 'text-blue-600';
       default: return 'text-gray-400';
     }
   };
@@ -37,8 +37,8 @@ export default function ActivityFeed() {
   ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
   return (
-    <div className="glass-dark p-5 rounded-xl h-[600px]">
-      <h3 className="text-lg font-semibold mb-4">Live Activity Feed</h3>
+    <div className="bg-white p-5 rounded-xl border border-gray-200 h-[600px]">
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">Live Activity Feed</h3>
       
       <div className="space-y-3 overflow-y-auto h-[520px] pr-2">
         {activities.length === 0 ? (
@@ -54,20 +54,20 @@ export default function ActivityFeed() {
             return (
               <div 
                 key={activity.id} 
-                className="flex items-start space-x-3 p-3 rounded-lg glass hover:bg-white/10 transition-colors"
+                className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
               >
                 <Icon size={18} className={`mt-0.5 flex-shrink-0 ${colorClass}`} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium mb-0.5">{activity.title}</p>
-                  <p className="text-xs text-gray-400 mb-1">{activity.message}</p>
+                  <p className="text-sm font-medium text-gray-900 mb-0.5">{activity.title}</p>
+                  <p className="text-xs text-gray-600 mb-1">{activity.message}</p>
                   <p className="text-xs text-gray-500">
                     {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}
                   </p>
                 </div>
                 <div className={`w-2 h-2 rounded-full flex-shrink-0 mt-1.5 ${
-                  activity.type === 'critical' ? 'bg-danger pulse-critical' :
-                  activity.type === 'warning' ? 'bg-warning' :
-                  'bg-blue-400'
+                  activity.type === 'critical' ? 'bg-red-500' :
+                  activity.type === 'warning' ? 'bg-yellow-500' :
+                  'bg-blue-500'
                 }`} />
               </div>
             );

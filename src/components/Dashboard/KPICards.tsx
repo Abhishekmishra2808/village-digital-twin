@@ -44,25 +44,34 @@ export default function KPICards() {
         const TrendIcon = card.trend === 'up' ? TrendingUp : TrendingDown;
         
         return (
-          <div key={index} className="bg-card hover:bg-card-hover p-6 rounded-2xl smooth-transition shadow-modern border border-slate-700/30">
+          <div key={index} className="bg-white hover:shadow-md p-6 rounded-xl transition-shadow border border-gray-200">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <p className="text-sm text-slate-400 mb-2 font-medium">{card.title}</p>
-                <p className="text-3xl font-bold mb-3 text-white">{card.value}</p>
+                <p className="text-sm text-gray-500 mb-2 font-medium">{card.title}</p>
+                <p className="text-3xl font-bold mb-3 text-gray-900">{card.value}</p>
                 {card.change && (
-                  <div className={`flex items-center text-sm ${card.color}`}>
+                  <div className={`flex items-center text-sm ${
+                    card.color === 'text-success' ? 'text-green-600' : 
+                    card.color === 'text-warning' ? 'text-yellow-600' : 'text-red-600'
+                  }`}>
                     <TrendIcon size={16} className="mr-1" />
                     <span className="font-medium">{card.change} vs last week</span>
                   </div>
                 )}
                 {card.subtext && (
-                  <p className={`text-sm ${card.color} font-medium`}>
+                  <p className={`text-sm font-medium ${
+                    card.color === 'text-success' ? 'text-green-600' : 
+                    card.color === 'text-warning' ? 'text-yellow-600' : 'text-red-600'
+                  }`}>
                     ⚠ {card.subtext}
                   </p>
                 )}
               </div>
-              <div className={`w-12 h-12 rounded-xl ${card.color === 'text-success' ? 'bg-green-500/20' : card.color === 'text-warning' ? 'bg-yellow-500/20' : 'bg-red-500/20'} flex items-center justify-center`}>
-                <Icon size={24} className={card.color} />
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                card.color === 'text-success' ? 'bg-green-50 text-green-600' : 
+                card.color === 'text-warning' ? 'bg-yellow-50 text-yellow-600' : 'bg-red-50 text-red-600'
+              }`}>
+                <Icon size={24} />
               </div>
             </div>
           </div>
