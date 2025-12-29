@@ -29,8 +29,10 @@
 6. **Click "Create Web Service"**
 7. **Wait for deployment** (2-5 minutes)
 8. **Copy your backend URL**: e.g., `https://ruralens-backend.onrender.com`
+   
+   **YOUR BACKEND URL**: `https://village-digital-twin.onrender.com` ✅
 
-✅ Backend Status: [ ] Deployed
+✅ Backend Status: [✅] Deployed
 
 ---
 
@@ -38,12 +40,12 @@
 
 ### Option A: Create .env.production file
 
-1. **Create file**: `.env.production`
+1. **Create file**: `.env.production` (already created ✅)
 2. **Add your backend URL**:
    ```env
-   VITE_WS_URL=wss://YOUR-BACKEND-URL.onrender.com
+   VITE_WS_URL=wss://village-digital-twin.onrender.com
    ```
-   Example: `VITE_WS_URL=wss://ruralens-backend.onrender.com`
+   **This is already configured!** ✅
 
 3. **Commit and push**:
    ```bash
@@ -69,7 +71,7 @@
    Publish Directory: dist
    ```
 4. **Add Environment Variable**:
-   - `VITE_WS_URL` = `wss://YOUR-BACKEND-URL.onrender.com`
+   - `VITE_WS_URL` = `wss://village-digital-twin.onrender.com`
    
 5. **Click "Create Static Site"**
 6. **Wait for deployment** (3-7 minutes)
@@ -81,24 +83,22 @@
 
 ## Step 4: Update Sensor Simulator (IMPORTANT!)
 
-The sensor-simulator.html is already configured to auto-detect the environment, but you need to update the production URL:
+The sensor-simulator.html is already configured with your backend URL!
 
-1. **Edit `sensor-simulator.html`**
-2. **Find line ~664** (in `connectWebSocket()` function)
-3. **Replace this line**:
-   ```javascript
-   : 'wss://ruralens-backend.onrender.com';  // Replace with your Render backend URL
-   ```
-   With your actual backend URL from Step 1
+**Production URL**: `wss://village-digital-twin.onrender.com` ✅
 
-4. **Commit and push**:
-   ```bash
-   git add sensor-simulator.html
-   git commit -m "Update sensor simulator production URL"
-   git push origin main
-   ```
+The simulator will automatically:
+- Use `ws://localhost:3001` when running locally
+- Use `wss://village-digital-twin.onrender.com` when deployed
 
-✅ Simulator Updated: [ ] Yes
+**No changes needed!** Just commit and push:
+```bash
+git add .
+git commit -m "Configure production deployment"
+git push origin main
+```
+
+✅ Simulator Updated: [✅] Yes
 
 ---
 
@@ -160,16 +160,16 @@ The sensor-simulator.html is already configured to auto-detect the environment, 
 
 After successful deployment, save these URLs:
 
-1. **Backend (API/WebSocket)**:
-   - URL: `https://_____________________________.onrender.com`
-   - WebSocket: `wss://_____________________________.onrender.com`
+1. **Backend (API/WebSocket)**: ✅
+   - URL: `https://village-digital-twin.onrender.com`
+   - WebSocket: `wss://village-digital-twin.onrender.com`
 
-2. **Frontend (Main App)**:
-   - URL: `https://_____________________________.onrender.com`
+2. **Frontend (Main App)**: 
+   - URL: `https://_____________________________.onrender.com` (Deploy this next!)
 
 3. **Sensor Simulator**:
-   - URL: `https://_____________________________.onrender.com/sensor-simulator.html`
-   - (or separate deployment)
+   - Will be available at: `https://your-frontend.onrender.com/sensor-simulator.html`
+   - (or deploy separately to any static host)
 
 ---
 

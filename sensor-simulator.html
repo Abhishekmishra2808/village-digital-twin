@@ -664,7 +664,7 @@
             // Auto-detect environment: use WSS for production, WS for localhost
             const WS_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
                 ? 'ws://localhost:3001'
-                : 'wss://ruralens-backend.onrender.com';  // Replace with your Render backend URL
+                : 'wss://village-digital-twin.onrender.com';
             
             console.log('🔌 Connecting to:', WS_URL);
             ws = new WebSocket(WS_URL);
