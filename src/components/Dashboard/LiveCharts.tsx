@@ -1,4 +1,3 @@
-import { useEffect, useRef } from 'react';
 import { useVillageStore } from '../../store/villageStore';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import { Line, Bar } from 'react-chartjs-2';

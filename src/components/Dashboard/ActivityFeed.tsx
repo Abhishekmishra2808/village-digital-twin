@@ -3,7 +3,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Droplet, Zap, AlertCircle, CheckCircle } from 'lucide-react';
 
 export default function ActivityFeed() {
-  const { alerts, waterTanks, powerNodes } = useVillageStore();
+  const { alerts, waterTanks } = useVillageStore();
 
   const getActivityIcon = (category: string) => {
     switch (category) {

@@ -7,7 +7,6 @@ import {
   Clock,
   AlertCircle,
   Camera,
-  MessageSquare,
   ArrowRight,
   Filter
 } from 'lucide-react';

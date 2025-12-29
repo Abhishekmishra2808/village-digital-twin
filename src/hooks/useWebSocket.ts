@@ -6,8 +6,8 @@ const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:3001';
 
 export default function useWebSocket() {
   const ws = useRef<WebSocket | null>(null);
-  const reconnectTimeout = useRef<NodeJS.Timeout>();
-  const { setVillageData, setWsConnected, setLastUpdate, addAlert } = useVillageStore();
+  const reconnectTimeout = useRef<number>();
+  const { setVillageData, setWsConnected, setLastUpdate } = useVillageStore();
 
   const connect = () => {
     try {

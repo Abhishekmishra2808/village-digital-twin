@@ -370,7 +370,7 @@
                 <span id="statusText">Connecting to server...</span>
             </div>
             <div>
-                <strong>WebSocket:</strong> <span id="wsUrl">ws://localhost:3001</span>
+                <strong>WebSocket:</strong> <span id="wsUrl">wss://village-digital-twin.onrender.com</span>
             </div>
             <div>
                 <strong>Last Update:</strong> <span id="lastUpdate">Never</span>
@@ -441,7 +441,7 @@
 
         // Connect to WebSocket
         function connectWebSocket() {
-            ws = new WebSocket('ws://localhost:3001');
+            ws = new WebSocket('wss://village-digital-twin.onrender.com');
 
             ws.onopen = () => {
                 console.log('✅ Connected to Sundarpur Digital Twin');

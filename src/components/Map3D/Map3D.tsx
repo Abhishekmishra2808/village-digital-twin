@@ -15,7 +15,6 @@ export default function Map3D() {
     waterTanks, 
     buildings, 
     powerNodes, 
-    roads, 
     sensors, 
     setSelectedAsset,
     activeView 

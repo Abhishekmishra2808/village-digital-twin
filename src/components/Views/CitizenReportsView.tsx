@@ -14,7 +14,7 @@ import { useVillageStore } from '../../store/villageStore';
 import { format } from 'date-fns';
 
 export default function CitizenReportsView() {
-  const { citizenReports, userRole, username } = useVillageStore();
+  const { citizenReports, userRole } = useVillageStore();
   const [showReportForm, setShowReportForm] = useState(false);
   const [newReport, setNewReport] = useState({
     category: 'road',

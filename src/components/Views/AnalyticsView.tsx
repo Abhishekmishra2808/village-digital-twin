@@ -1,18 +1,14 @@
 import { useState } from 'react';
 import { 
-  BarChart3, 
   TrendingUp, 
   TrendingDown,
   Activity,
   Zap,
   Droplet,
-  AlertTriangle,
   Users,
-  Calendar,
   Download
 } from 'lucide-react';
 import { useVillageStore } from '../../store/villageStore';
-import { format } from 'date-fns';
 
 export default function AnalyticsView() {
   const { waterTanks, powerNodes, sensors, citizenReports } = useVillageStore();
