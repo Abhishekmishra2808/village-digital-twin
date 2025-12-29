@@ -661,12 +661,20 @@
 
         // Connect to WebSocket
         function connectWebSocket() {
-            ws = new WebSocket('ws://localhost:3001');
+            // Auto-detect environment: use WSS for production, WS for localhost
+            const WS_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                ? 'ws://localhost:3001'
+                : 'wss://ruralens-backend.onrender.com';  // Replace with your Render backend URL
+            
+            console.log('🔌 Connecting to:', WS_URL);
+            ws = new WebSocket(WS_URL);
 
             ws.onopen = () => {
                 console.log('✅ Connected to RuralLens Digital Twin');
                 document.getElementById('statusDot').classList.remove('disconnected');
-                document.getElementById('statusText').textContent = 'Connected to Local Server';
+                const serverType = WS_URL.includes('localhost') ? 'Local Server' : 'Production Server';
+                document.getElementById('statusText').textContent = `Connected to ${serverType}`;
+                document.getElementById('wsUrl').textContent = WS_URL;
                 if (reconnectInterval) {
                     clearInterval(reconnectInterval);
                     reconnectInterval = null;

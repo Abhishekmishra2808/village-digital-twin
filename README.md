@@ -155,24 +155,41 @@ All updates broadcast via WebSocket every 5 seconds.
 
 ## 🌐 Deployment
 
-### Frontend (Vercel)
+Deploy your RuralLens Digital Twin to Render (free tier available) in under 15 minutes!
 
-1. Push code to GitHub
-2. Import project in Vercel
-3. Set build command: `npm run build`
-4. Set output directory: `dist`
-5. Deploy!
+### Quick Deploy Guide
 
-### Backend (Render.com)
+**📋 Step-by-Step Checklist**: See [`DEPLOYMENT_CHECKLIST.md`](DEPLOYMENT_CHECKLIST.md) for a quick checklist
 
-1. Create new Web Service
-2. Connect GitHub repository
-3. Set build command: `cd backend && npm install`
-4. Set start command: `node backend/server.js`
-5. Add environment variable: `PORT=3001`
-6. Deploy!
+**📖 Detailed Guide**: See [`RENDER_DEPLOYMENT.md`](RENDER_DEPLOYMENT.md) for complete instructions
 
-**Important**: Update `WS_URL` in frontend to your deployed backend URL.
+### Quick Start (3 Steps)
+
+1. **Deploy Backend** (Render Web Service)
+   - Connect GitHub repository
+   - Root directory: `backend`
+   - Build: `npm install`
+   - Start: `node server.js`
+   - Get your backend URL: `https://ruralens-backend.onrender.com`
+
+2. **Update Frontend Configuration**
+   - Create `.env.production` file
+   - Add: `VITE_WS_URL=wss://your-backend-url.onrender.com`
+
+3. **Deploy Frontend** (Render Static Site)
+   - Connect same GitHub repository
+   - Build: `npm install && npm run build`
+   - Publish directory: `dist`
+   - Done! Your app is live! 🎉
+
+### Features
+- ✅ Auto-deploy on git push
+- ✅ Free HTTPS with SSL
+- ✅ Auto-scaling
+- ✅ WebSocket support
+- ✅ Free tier: 750 hours/month per service
+
+**Your deployed app will be accessible at**: `https://your-app.onrender.com`
 
 ## 🛠️ Technology Stack
 

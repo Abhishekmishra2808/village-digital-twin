@@ -1,7 +1,7 @@
 services:
   # Backend WebSocket Server
   - type: web
-    name: sundarpur-backend
+    name: ruralens-backend
     env: node
     region: singapore
     plan: free
