@@ -54,7 +54,7 @@ class InfrastructureGraph {
     }
   }
 
-  addEdge(sourceId, targetId, weight = 1.0, edgeType = 'connection', relationship = 'connected') {
+  addEdge(sourceId, targetId, weight = 1.0, edgeType = 'connection', relationship = 'connected', directional = false) {
     if (!this.edges.has(sourceId)) {
       this.edges.set(sourceId, []);
     }
@@ -65,7 +65,8 @@ class InfrastructureGraph {
         target: targetId, 
         weight, 
         type: edgeType,
-        relationship
+        relationship,
+        directional // For water flow, power supply direction
       });
     }
   }
@@ -313,15 +314,24 @@ class GNNLayer {
     this.outputDim = outputDim;
     this.weights = this.initializeWeights(inputDim, outputDim);
     this.bias = new Array(outputDim).fill(0.1);
+    this.attentionWeights = new Array(inputDim).fill(0).map(() => Math.random() * 0.2 + 0.9);
   }
 
   initializeWeights(inputDim, outputDim) {
-    const limit = Math.sqrt(6 / (inputDim + outputDim));
-    return Array(inputDim).fill(null).map(() =>
-      Array(outputDim).fill(null).map(() => 
-        (Math.random() * 2 - 1) * limit
-      )
-    );
+    // Heuristic-based initialization prioritizing criticality dimensions
+    const weights = Array(inputDim).fill(null).map(() => Array(outputDim).fill(0));
+    
+    for (let i = 0; i < inputDim; i++) {
+      for (let j = 0; j < outputDim; j++) {
+        // Criticality dimensions (type encoding 0-11, status 12-16) get higher weights
+        let baseWeight = (i < 12 || (i >= 12 && i <= 16)) ? 0.5 : 0.3;
+        
+        // Add small random variation
+        const variance = (Math.random() * 2 - 1) * 0.15;
+        weights[i][j] = baseWeight + variance;
+      }
+    }
+    return weights;
   }
 
   relu(x) {
@@ -332,12 +342,18 @@ class GNNLayer {
     return 1 / (1 + Math.exp(-Math.max(-500, Math.min(500, x))));
   }
 
-  forward(nodeFeatures, neighborFeatures, adjacencyWeights) {
+  forward(nodeFeatures, neighborFeatures, adjacencyWeights, relationshipGates = null) {
     const aggregated = new Array(this.inputDim).fill(0);
     let totalWeight = 0;
     
     for (let i = 0; i < neighborFeatures.length; i++) {
-      const weight = adjacencyWeights[i] || 0;
+      let weight = adjacencyWeights[i] || 0;
+      
+      // Apply relationship gating if provided
+      if (relationshipGates && relationshipGates[i] !== undefined) {
+        weight *= relationshipGates[i];
+      }
+      
       if (weight > 0) {
         totalWeight += weight;
         for (let j = 0; j < this.inputDim; j++) {
@@ -352,7 +368,11 @@ class GNNLayer {
       }
     }
     
-    const combined = nodeFeatures.map((f, i) => (f + aggregated[i]) / 2);
+    // Gated aggregation: reduce influence of irrelevant features
+    const combined = nodeFeatures.map((f, i) => {
+      const gate = this.attentionWeights[i] || 0.5;
+      return f * gate + aggregated[i] * (1 - gate);
+    });
     
     const output = new Array(this.outputDim).fill(0);
     for (let i = 0; i < this.outputDim; i++) {
@@ -385,57 +405,167 @@ class ImpactPredictionGNN {
     
     let embeddings = nodeIds.map(id => [...graph.nodes.get(id).embedding]);
     
-    // Inject failure signal
+    // Inject failure signal with severity encoding
     const failedIdx = nodeIndex.get(failedNodeId);
+    const failedNode = graph.nodes.get(failedNodeId);
     if (failedIdx !== undefined) {
-      // Zero out status indicators and set failure flag
+      // Encode severity: low=0.3, medium=0.5, high=0.75, critical=1.0
+      const severityMap = { low: 0.3, medium: 0.5, high: 0.75, critical: 1.0 };
+      const severityValue = severityMap[failureSeverity] || 0.5;
+      
+      // Zero out status and inject failure with severity
       for (let i = 12; i <= 16; i++) {
         embeddings[failedIdx][i] = 0;
       }
-      embeddings[failedIdx][23] = 1; // Failure indicator
+      embeddings[failedIdx][23] = severityValue; // Severity-aware failure indicator
+      
+      // Amplify failure signal based on node criticality
+      const criticality = failedNode.properties.criticalityLevel || this.calculateCriticalityForType(failedNode.type);
+      embeddings[failedIdx][17] = Math.min(1, criticality * 1.2);
     }
     
-    // GNN forward passes
+    // Compute relationship gating for each node
+    const relationshipGates = nodeIds.map((targetId, i) => {
+      return nodeIds.map((sourceId, j) => {
+        if (i === j) return 1.0;
+        const targetNode = graph.nodes.get(targetId);
+        const sourceNode = graph.nodes.get(sourceId);
+        return this.computeRelationshipGate(failedNode?.type, sourceNode?.type, targetNode?.type, failureType);
+      });
+    });
+    
+    // GNN forward passes with relationship gating
     let hidden1 = embeddings.map((emb, i) => {
       const neighborEmbs = nodeIds.map((_, j) => embeddings[j]);
-      return this.layer1.forward(emb, neighborEmbs, adjacencyMatrix[i]);
+      return this.layer1.forward(emb, neighborEmbs, adjacencyMatrix[i], relationshipGates[i]);
     });
     
     let hidden2 = hidden1.map((emb, i) => {
-      return this.layer2.forward(emb, hidden1, adjacencyMatrix[i]);
+      return this.layer2.forward(emb, hidden1, adjacencyMatrix[i], relationshipGates[i]);
     });
     
-    const failedNode = graph.nodes.get(failedNodeId);
     const impactScores = hidden2.map((emb, i) => {
-      const output = this.layer3.forward(emb, hidden2, adjacencyMatrix[i]);
+      const output = this.layer3.forward(emb, hidden2, adjacencyMatrix[i], relationshipGates[i]);
       return this.interpretImpactOutput(output, graph.nodes.get(nodeIds[i]).type, failedNode?.type);
     });
     
     return this.analyzeImpact(graph, failedNodeId, failureType, failureSeverity, impactScores, nodeIds);
   }
 
+  // Relationship gating: determine how much one type affects another
+  computeRelationshipGate(failedType, sourceType, targetType, failureType) {
+    // Define infrastructure dependency matrix
+    const dependencyMatrix = {
+      // Water failures
+      tank: { pump: 0.9, pipe: 0.9, cluster: 0.8, building: 0.6, hospital: 0.7, school: 0.6, power: 0.0, road: 0.2 },
+      pump: { tank: 0.3, pipe: 0.9, cluster: 0.7, building: 0.5, hospital: 0.6, school: 0.5, power: 0.0, road: 0.1 },
+      pipe: { tank: 0.1, pump: 0.2, cluster: 0.8, building: 0.5, hospital: 0.6, school: 0.5, power: 0.0, road: 0.3 },
+      
+      // Power failures
+      power: { pump: 0.9, tank: 0.3, building: 0.8, hospital: 0.9, school: 0.8, market: 0.7, road: 0.4, sensor: 0.9, cluster: 0.7, pipe: 0.0 },
+      
+      // Road failures
+      road: { building: 0.7, hospital: 0.9, school: 0.8, market: 0.8, road: 0.6, cluster: 0.5, power: 0.1, tank: 0.2, pump: 0.2 },
+      
+      // Building failures
+      hospital: { cluster: 0.6, building: 0.4, road: 0.5, school: 0.3, power: 0.0, tank: 0.0 },
+      school: { cluster: 0.5, building: 0.3, road: 0.4, power: 0.0, tank: 0.0 },
+      market: { cluster: 0.6, building: 0.4, road: 0.6, power: 0.2, tank: 0.0 },
+      building: { cluster: 0.4, building: 0.3, road: 0.4, power: 0.0, tank: 0.0 },
+      
+      // Sensors and clusters (monitoring/consumption)
+      sensor: { tank: 0.2, pump: 0.2, pipe: 0.2, cluster: 0.3, power: 0.0, road: 0.0 },
+      cluster: { building: 0.3, hospital: 0.4, school: 0.3, market: 0.3, power: 0.0, road: 0.2, tank: 0.0 }
+    };
+    
+    // Get base gating value
+    let gate = 1.0;
+    if (failedType && dependencyMatrix[failedType] && dependencyMatrix[failedType][targetType]) {
+      gate = dependencyMatrix[failedType][targetType];
+    } else if (failedType === targetType) {
+      gate = 0.8; // Same type has moderate impact
+    } else {
+      gate = 0.3; // Default weak connection
+    }
+    
+    // Failure-type specific modifiers
+    if (failureType === 'leak' || failureType === 'contamination') {
+      // Water issues don't affect power at all
+      if (targetType === 'power') gate = 0.0;
+    } else if (failureType === 'power_outage' || failureType === 'overload') {
+      // Power issues heavily affect pumps and sensors
+      if (targetType === 'pump' || targetType === 'sensor') gate *= 1.3;
+      if (targetType === 'tank' || targetType === 'pipe') gate = 0.0; // Gravity-fed unaffected
+    } else if (failureType === 'road_damage' || failureType === 'road_flood' || failureType === 'road_blockage') {
+      // Road issues affect accessibility
+      if (targetType === 'hospital' || targetType === 'school') gate *= 1.2;
+      if (targetType === 'power' || targetType === 'tank') gate *= 0.5; // Infrastructure less affected
+    }
+    
+    return Math.max(0, Math.min(1, gate));
+  }
+
   interpretImpactOutput(output, nodeType, sourceType) {
+    // Normalize output values to 0-1 range first (they come from ReLU, can be large)
+    const maxOutput = Math.max(...output.map(Math.abs), 1);
+    const normalizedOutput = output.map(v => v / maxOutput);
+    
+    // Apply type-specific scaling factors (but keep them moderate)
+    const typeMultiplier = this.getTypeImpactMultiplier(nodeType, sourceType);
+    
+    // Use normalized values with gentle scaling - sigmoid will map to 0-1
+    // Keep multipliers small (0.5-1.5 range) to avoid saturation
+    const probInput = normalizedOutput[0] * (0.5 + typeMultiplier * 0.3);
+    const probValue = this.sigmoid(probInput);
+    
     const baseImpact = {
-      impactProbability: this.sigmoid(output[0]),
-      severityScore: this.sigmoid(output[1]),
-      timeToImpact: Math.max(0, output[2] * 48), // Hours
-      accessDisruption: this.sigmoid(output[3]),      // Road/transport impact
-      serviceDisruption: this.sigmoid(output[4]),     // Utilities impact
-      economicImpact: this.sigmoid(output[5]),        // Economic consequences
-      safetyRisk: this.sigmoid(output[6]),            // Safety concerns
-      populationAffected: this.sigmoid(output[7]),    // People impacted
-      cascadeRisk: this.sigmoid(output[8]),           // Chain reaction risk
-      recoveryDifficulty: this.sigmoid(output[9]),    // How hard to fix
-      alternativeAvailable: this.sigmoid(output[10]), // Backup options
-      urgencyScore: this.sigmoid(output[11])          // How urgent
+      impactProbability: probValue,
+      severityScore: this.sigmoid(normalizedOutput[1] * (0.45 + typeMultiplier * 0.27)),
+      timeToImpact: Math.max(0.5, Math.abs(normalizedOutput[2]) * 30), // Minutes
+      accessDisruption: this.sigmoid(normalizedOutput[3] * 1.2),
+      serviceDisruption: this.sigmoid(normalizedOutput[4] * 1.1),
+      economicImpact: this.sigmoid(normalizedOutput[5] * 0.95),
+      safetyRisk: this.sigmoid(normalizedOutput[6] * 1.15),
+      populationAffected: this.sigmoid(normalizedOutput[7] * 1.0),
+      cascadeRisk: this.sigmoid(normalizedOutput[8] * 1.1),
+      recoveryDifficulty: this.sigmoid(normalizedOutput[9] * 0.9),
+      alternativeAvailable: this.sigmoid(normalizedOutput[10] * 1.0),
+      urgencyScore: this.sigmoid(normalizedOutput[11] * 1.05)
     };
     
     return baseImpact;
   }
 
+  getTypeImpactMultiplier(nodeType, sourceType) {
+    // Infrastructure types have different susceptibility to different failures
+    const impactMatrix = {
+      road: { road: 1.3, building: 0.8, power: 0.6, tank: 0.7, pump: 0.7 },
+      building: { road: 1.2, building: 1.4, power: 1.0, tank: 0.8, pump: 0.7 },
+      school: { road: 1.3, building: 1.2, power: 1.1, tank: 0.9, pump: 0.8 },
+      hospital: { road: 1.4, building: 1.3, power: 1.3, tank: 1.0, pump: 1.0 },
+      market: { road: 1.2, building: 1.1, power: 1.0, tank: 0.8, pump: 0.7 },
+      power: { road: 0.7, building: 0.8, power: 1.5, tank: 0.9, pump: 1.2 },
+      tank: { road: 0.6, building: 0.7, power: 1.0, tank: 1.3, pump: 1.2 },
+      pump: { road: 0.7, building: 0.8, power: 1.3, tank: 1.1, pump: 1.4 },
+      cluster: { road: 1.1, building: 1.0, power: 1.2, tank: 1.1, pump: 1.0 }
+    };
+    
+    return impactMatrix[nodeType]?.[sourceType] || 1.0;
+  }
+
+  calculateCriticalityForType(type) {
+    const criticalityMap = {
+      hospital: 1.0, school: 0.9, market: 0.75,
+      power: 0.85, road: 0.7, building: 0.6,
+      tank: 0.75, pump: 0.8, cluster: 0.65
+    };
+    return criticalityMap[type] || 0.5;
+  }
+
   analyzeImpact(graph, failedNodeId, failureType, failureSeverity, impactScores, nodeIds) {
     const failedNode = graph.nodes.get(failedNodeId);
     const affectedNodes = [];
+    const visualizationEdges = [];
     let totalImpact = 0;
 
     nodeIds.forEach((nodeId, idx) => {
@@ -444,13 +574,46 @@ class ImpactPredictionGNN {
       const node = graph.nodes.get(nodeId);
       const score = impactScores[idx];
       
-      // Lower threshold for infrastructure impact analysis
-      if (score.impactProbability > 0.15) {
+      // PHYSICS-BASED DECAY: Use inverse square law (1/d²)
+      const distance = this.calculateNodeDistance(graph, failedNodeId, nodeId);
+      const physicsDecay = distance > 0 ? 1 / Math.pow(distance, 2) : 1;
+      
+      // Normalize physics decay to reasonable range (0.1 to 1.0)
+      const normalizedDecay = Math.max(0.1, Math.min(1.0, physicsDecay));
+      
+      const adjustedProbability = score.impactProbability * normalizedDecay;
+      
+      // NOISE FLOOR: Implement 30% threshold to avoid "impact leak"
+      const NOISE_FLOOR = 0.30;
+      
+      // Dynamic threshold based on node criticality
+      const criticalityThreshold = node.properties.criticalityLevel || 0.5;
+      const threshold = NOISE_FLOOR * (1 - criticalityThreshold * 0.3);
+      
+      if (adjustedProbability > threshold) {
+        score.impactProbability = Math.min(0.98, adjustedProbability); // Cap at 98%
+        
+        // Add edge for visualization (particle flow)
+        visualizationEdges.push({
+          source: failedNodeId,
+          target: nodeId,
+          strength: adjustedProbability,
+          particleSpeed: 0.01 * (1 - distance / 10), // Slower for distant nodes
+          particleWidth: 2 + Math.round(adjustedProbability * 3),
+          color: this.getEdgeColor(adjustedProbability)
+        });
+        
+        // Ensure probability is 0-1 range before displaying as percentage
+        let displayProbability = score.impactProbability;
+        if (displayProbability > 1) {
+          displayProbability = displayProbability / 100; // Fix if somehow already percentage
+        }
+        
         const impact = {
           nodeId,
           nodeType: node.type,
           nodeName: node.properties.name || nodeId,
-          probability: Math.round(score.impactProbability * 100),
+          probability: Math.min(98, Math.round(displayProbability * 100)),
           severity: this.getSeverityLevel(score.severityScore),
           severityScore: Math.round(score.severityScore * 100),
           timeToImpact: Math.round(score.timeToImpact * 10) / 10,
@@ -480,11 +643,139 @@ class ImpactPredictionGNN {
       failedNode, failureType, failureSeverity, affectedNodes, totalImpact
     );
 
+    // VISUALIZATION DATA STRUCTURE for react-force-graph
+    const visualizationData = this.buildVisualizationData(
+      graph, failedNodeId, affectedNodes, visualizationEdges, nodeIds
+    );
+
     return {
       sourceFailure: {
         nodeId: failedNodeId,
         nodeType: failedNode?.type,
         nodeName: failedNode?.properties?.name || failedNodeId,
+        failureType,
+        severity: failureSeverity
+      },
+      affectedNodes,
+      propagationPath,
+      overallAssessment,
+      totalAffected: affectedNodes.length,
+      criticalCount: affectedNodes.filter(n => n.severity === 'critical').length,
+      highCount: affectedNodes.filter(n => n.severity === 'high').length,
+      timestamp: new Date().toISOString(),
+      visualization: visualizationData // For graph rendering
+    };
+  }
+
+  // Build visualization data for react-force-graph / D3.js
+  buildVisualizationData(graph, failedNodeId, affectedNodes, visualizationEdges, nodeIds) {
+    const nodes = [];
+    const links = [];
+    
+    // Add all nodes with visual properties
+    nodeIds.forEach(nodeId => {
+      const graphNode = graph.nodes.get(nodeId);
+      const isEpicenter = nodeId === failedNodeId;
+      const affectedNode = affectedNodes.find(n => n.nodeId === nodeId);
+      
+      let nodeColor = '#4A5568'; // Default gray
+      let nodeSize = 5;
+      let pulseEffect = false;
+      
+      if (isEpicenter) {
+        nodeColor = '#9F7AEA'; // Purple for epicenter
+        nodeSize = 12;
+        pulseEffect = true;
+      } else if (affectedNode) {
+        // Heat signature based on severity
+        if (affectedNode.severity === 'critical') {
+          nodeColor = '#FC8181'; // Red
+          nodeSize = 10;
+        } else if (affectedNode.severity === 'high') {
+          nodeColor = '#F6AD55'; // Orange
+          nodeSize = 8;
+        } else {
+          nodeColor = '#F6E05E'; // Yellow
+          nodeSize = 6;
+        }
+      }
+      
+      nodes.push({
+        id: nodeId,
+        name: graphNode.properties.name || nodeId,
+        type: graphNode.type,
+        color: nodeColor,
+        size: nodeSize,
+        pulse: pulseEffect,
+        severity: affectedNode?.severity || 'none',
+        probability: affectedNode?.probability || 0,
+        isEpicenter
+      });
+    });
+    
+    // Add edges from graph structure
+    graph.edges.forEach((targets, sourceId) => {
+      targets.forEach(edge => {
+        links.push({
+          source: sourceId,
+          target: edge.target,
+          weight: edge.weight,
+          type: edge.type,
+          relationship: edge.relationship,
+          color: '#718096', // Default edge color
+          width: edge.weight * 2
+        });
+      });
+    });
+    
+    // Add impact flow edges (for particle animation)
+    visualizationEdges.forEach(edge => {
+      links.push({
+        source: edge.source,
+        target: edge.target,
+        weight: edge.strength,
+        type: 'impact-flow',
+        color: edge.color,
+        width: edge.particleWidth,
+        particles: Math.ceil(edge.strength * 3), // Number of particles
+        particleSpeed: edge.particleSpeed,
+        animated: true
+      });
+    });
+    
+    return {
+      nodes,
+      links,
+      layout: 'force-directed',
+      config: {
+        nodeRelSize: 4,
+        linkWidth: link => link.width || 1,
+        linkDirectionalParticles: link => link.animated ? link.particles : 0,
+        linkDirectionalParticleSpeed: link => link.particleSpeed || 0.01,
+        nodeCanvasObject: (node, ctx, globalScale) => {
+          // Custom rendering for pulsing epicenter
+          if (node.pulse) {
+            const size = node.size * (1 + 0.3 * Math.sin(Date.now() * 0.005));
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, size, 0, 2 * Math.PI);
+            ctx.fillStyle = node.color;
+            ctx.fill();
+            ctx.strokeStyle = '#B794F4';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          }
+        }
+      }
+    };
+  }
+
+  // Helper to determine edge color based on impact strength
+  getEdgeColor(strength) {
+    if (strength > 0.7) return '#FC8181'; // Red - high impact
+    if (strength > 0.5) return '#F6AD55'; // Orange - medium impact
+    if (strength > 0.3) return '#F6E05E'; // Yellow - low impact
+    return '#A0AEC0'; // Gray - minimal impact
+  }
         failureType,
         severity: failureSeverity
       },

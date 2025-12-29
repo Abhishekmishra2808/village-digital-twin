@@ -3,7 +3,8 @@ import mongoose from 'mongoose';
 export async function connectDatabase() {
   try {
     const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/village-twin', {
-      // Mongoose 6+ doesn't need these options, but kept for compatibility
+      serverSelectionTimeoutMS: 3000, // Fast timeout for offline mode
+      connectTimeoutMS: 3000,
     });
 
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
