@@ -2,10 +2,8 @@ import { useState } from 'react';
 import { 
   CloudRain, 
   AlertTriangle, 
-  TrendingUp,
   Droplets,
   Wind,
-  Navigation,
   CheckCircle,
   Brain,
   Waves,

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { 
   TrafficCone, 
   TrendingUp, 
@@ -16,7 +15,6 @@ import { useVillageStore } from '../../store/villageStore';
 
 export default function TrafficView() {
   const { setSelectedAsset } = useVillageStore();
-  const [selectedSignal, setSelectedSignal] = useState<any>(null);
 
   // Mock traffic signals data with AI control
   const trafficSignals = [
@@ -202,7 +200,6 @@ export default function TrafficView() {
                   key={signal.id}
                   className="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-md transition-all cursor-pointer"
                   onClick={() => {
-                    setSelectedSignal(signal);
                     setSelectedAsset({ type: 'trafficSignal', data: signal });
                   }}
                 >
