@@ -8,7 +8,6 @@ import type {
   VulnerableNode,
   WhatIfScenario,
   WhatIfResponse,
-  GNNStatusResponse,
   VulnerableNodesResponse,
 } from '../types/gnn';
 import type { WaterSimulationState } from '../types/water';
@@ -434,7 +433,7 @@ export function useGNN(): UseGNNReturn {
       }
       
       // Define scenario-specific cascade logic
-      const getCascadeTargets = (sourceType: string, failureScenario: string): string[] => {
+      const getCascadeTargets = (sourceType: string): string[] => {
         const cascadeMap: Record<string, string[]> = {
           // Road failures affect access to all services
           'road': ['building', 'school', 'hospital', 'market', 'cluster', 'residential', 'commercial', 'industrial'],
@@ -499,7 +498,7 @@ export function useGNN(): UseGNNReturn {
           return ['Electrical systems offline', 'Emergency lighting only', 'Equipment shutdown'];
         }
         // Building failure effects (residential/commercial/industrial)
-        if (sourceType === 'building' || sourceType === 'residential' || sourceType === 'commercial' || sourceType === 'industrial') {
+        if (sourceType === 'building' || sourceType === 'residential' || sourceType === 'commercial' || sourceType === 'industrial' || sourceType === 'market') {
           // Residential scenarios
           if (failureScenario.includes('residential') || sourceType === 'residential') {
             if (failureScenario.includes('fire')) return ['Resident evacuation required', 'Smoke affecting nearby buildings', 'Firefighting resources deployed'];

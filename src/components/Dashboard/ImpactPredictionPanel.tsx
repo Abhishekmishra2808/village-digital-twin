@@ -14,7 +14,6 @@ import {
   AlertCircle,
   CheckCircle,
   XCircle,
-  Info,
   ChevronDown,
   ChevronUp,
   Play,
@@ -34,7 +33,6 @@ import type {
   GNNNode, 
   AffectedNode, 
   ImpactPrediction,
-  FailureScenario,
   VulnerableNode 
 } from '../../types/gnn';
 import type { WaterSimulationState } from '../../types/water';
@@ -288,7 +286,6 @@ export const ImpactPredictionPanel: React.FC<ImpactPredictionPanelProps> = ({
             >
               <option value="">Choose a node...</option>
               {filteredNodes.map((node) => {
-                const Icon = nodeTypeIcons[node.type] || Activity;
                 return (
                   <option key={node.id} value={node.id}>
                     [{nodeTypeLabels[node.type] || node.type}] {node.name || node.id}
@@ -715,10 +712,9 @@ const ImpactGraphVisualizationWrapper: React.FC<{
   prediction: ImpactPrediction;
   nodes: GNNNode[];
   onNodeClick: (node: AffectedNode) => void;
-}> = ({ prediction, nodes, onNodeClick }) => {
+}> = ({ prediction, onNodeClick }) => {
   const { sourceFailure, affectedNodes, propagationPath } = prediction;
   const [currentTime, setCurrentTime] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
 
   // Start cascade animation
   useEffect(() => {
@@ -737,8 +733,6 @@ const ImpactGraphVisualizationWrapper: React.FC<{
       
       if (progress < 1) {
         requestAnimationFrame(animate);
-      } else {
-        setIsAnimating(true);
       }
     };
     

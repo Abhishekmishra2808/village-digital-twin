@@ -12,7 +12,7 @@
  */
 
 import React, { useRef, useState, useCallback, useMemo, useEffect } from 'react';
-import ForceGraph2D, { ForceGraphMethods } from 'react-force-graph-2d';
+import ForceGraph2D from 'react-force-graph-2d';
 import type { 
   GraphNode, 
   GraphLink, 
@@ -333,10 +333,6 @@ const ImpactGraphVisualizer: React.FC<ImpactGraphVisualizerProps> = ({
         cooldownTicks={100}
         d3AlphaDecay={0.02}
         d3VelocityDecay={0.3}
-        d3Force={{
-          charge: { strength: -200 },
-          link: { distance: 80 }
-        }}
         
         // Performance
         enableNodeDrag={enableInteraction}
