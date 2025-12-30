@@ -28,8 +28,8 @@ export interface GraphNode {
   y?: number;
   vx?: number;
   vy?: number;
-  fx?: number | null;  // Fixed x position
-  fy?: number | null;  // Fixed y position
+  fx?: number;  // Fixed x position
+  fy?: number;  // Fixed y position
   
   // For hover/selection features
   neighbors?: GraphNode[];
