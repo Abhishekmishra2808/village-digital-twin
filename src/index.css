@@ -13,7 +13,28 @@ body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
   color: #e2e8f0;
+  /* overflow: hidden removed - let landing page scroll naturally */
+}
+
+/* Dashboard-specific overflow hidden */
+body.dashboard-mode {
   overflow: hidden;
+}
+
+/* Landing Page Typography System */
+.landing-page h1,
+.landing-page h2,
+.landing-page h3,
+.landing-page h4,
+.landing-page .tech-text,
+.landing-page button {
+  font-family: 'Roboto Mono', monospace;
+}
+
+.landing-page p,
+.landing-page li,
+.landing-page span:not(.tech-text) {
+  font-family: 'Inter', sans-serif;
 }
 
 /* Beautiful gradient backgrounds */
