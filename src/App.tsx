@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { useVillageStore } from './store/villageStore';
+import LandingPage from './components/Landing/LandingPage';
 import LoginPage from './components/Auth/LoginPage';
 import TopNav from './components/Layout/TopNav';
 import Sidebar from './components/Sidebar/Sidebar';
@@ -24,7 +26,13 @@ import useWebSocket from './hooks/useWebSocket';
 
 function App() {
   const { activeView, sidebarCollapsed, infoPanelOpen, isAuthenticated, userRole, login } = useVillageStore();
+  const [showLanding, setShowLanding] = useState(true);
   useWebSocket();
+
+  // Show landing page first
+  if (showLanding && !isAuthenticated) {
+    return <LandingPage onGetStarted={() => setShowLanding(false)} />;
+  }
 
   // Show login page if not authenticated
   if (!isAuthenticated) {
