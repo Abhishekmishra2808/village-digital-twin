@@ -53,44 +53,88 @@ const LiveDataTicker = () => {
   );
 };
 
-// Interactive Digital Twin Hero Component
+// Interactive Digital Twin Hero Component with HUD
 const DigitalTwinHero = () => {
   const [hoveredElement, setHoveredElement] = useState<string | null>(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   const elements = [
-    { id: 'pump', x: 25, y: 35, label: 'PUMP_21B', status: 'OPERATIONAL', data: 'FLOW_RATE: 98.5%', lastMaint: '2025-10-15', icon: Droplets },
-    { id: 'power', x: 45, y: 20, label: 'GRID_SECTOR_4', status: 'STABLE', data: 'LOAD: 87%', lastMaint: '2025-10-28', icon: Zap },
-    { id: 'road', x: 15, y: 65, label: 'ROAD_NETWORK', status: 'MONITORING', data: 'CONDITION: 92%', lastMaint: '2025-09-12', icon: MapPin },
-    { id: 'sensor', x: 70, y: 50, label: 'IOT_SENSOR_08', status: 'ACTIVE', data: 'TEMP: 32°C', lastMaint: '2025-10-30', icon: TrendingUp },
+    { id: 'pump', x: 25, y: 35, label: 'PUMP_ID_45B', status: 'OPERATIONAL', data: 'FLOW_RATE: 97%', lastMaint: '2025-10-15', icon: Droplets, color: '#3b82f6' },
+    { id: 'power', x: 45, y: 20, label: 'GRID_SECTOR_4', status: 'STABLE', data: 'LOAD: 87%', lastMaint: '2025-10-28', icon: Zap, color: '#eab308' },
+    { id: 'road', x: 15, y: 65, label: 'ROAD_NETWORK_12', status: 'MONITORING', data: 'CONDITION: 92%', lastMaint: '2025-09-12', icon: MapPin, color: '#10b981' },
+    { id: 'sensor', x: 70, y: 50, label: 'IOT_NODE_08A', status: 'ACTIVE', data: 'TEMP: 32°C', lastMaint: '2025-10-30', icon: TrendingUp, color: '#14b8a6' },
+    { id: 'school', x: 60, y: 40, label: 'SCHOOL_INFRA', status: 'OPERATIONAL', data: 'ATTENDANCE: 94%', lastMaint: '2025-10-20', icon: Users, color: '#8b5cf6' },
   ];
 
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setMousePos({
+      x: ((e.clientX - rect.left) / rect.width) * 100,
+      y: ((e.clientY - rect.top) / rect.height) * 100
+    });
+  };
+
   return (
-    <div className="relative w-full h-[500px] bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 rounded-2xl border-2 border-teal-500/30 overflow-hidden">
-      {/* Blueprint Grid Background */}
-      <div className="absolute inset-0 opacity-20" style={{
+    <div 
+      className="relative w-full h-[550px] bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950/40 rounded-2xl border-2 border-teal-500/20 overflow-hidden shadow-2xl"
+      onMouseMove={handleMouseMove}
+    >
+      {/* HUD Blueprint Grid Background */}
+      <div className="absolute inset-0 opacity-15" style={{
         backgroundImage: `
           linear-gradient(to right, #0d9488 1px, transparent 1px),
           linear-gradient(to bottom, #0d9488 1px, transparent 1px)
         `,
-        backgroundSize: '40px 40px'
+        backgroundSize: '30px 30px'
       }}></div>
 
+      {/* Topographical Contour Lines */}
+      <svg className="absolute inset-0 w-full h-full opacity-10" viewBox="0 0 1000 1000">
+        <path d="M 100 300 Q 300 250 500 300 T 900 300" stroke="#14b8a6" strokeWidth="1" fill="none"/>
+        <path d="M 100 400 Q 300 350 500 400 T 900 400" stroke="#14b8a6" strokeWidth="1" fill="none"/>
+        <path d="M 100 500 Q 300 450 500 500 T 900 500" stroke="#14b8a6" strokeWidth="1" fill="none"/>
+        <path d="M 100 600 Q 300 550 500 600 T 900 600" stroke="#14b8a6" strokeWidth="1" fill="none"/>
+      </svg>
+
+      {/* Glowing Road Network */}
+      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 1000">
+        <path 
+          d="M 100 650 L 300 650 L 450 500 L 600 650 L 900 650" 
+          stroke="#14b8a6" 
+          strokeWidth="3" 
+          fill="none"
+          opacity="0.4"
+          className="road-glow"
+        />
+        <path 
+          d="M 450 200 L 450 500 M 600 300 L 600 650" 
+          stroke="#14b8a6" 
+          strokeWidth="2" 
+          fill="none"
+          opacity="0.3"
+        />
+      </svg>
+
       {/* Animated Scan Line */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 pointer-events-none">
         <div className="scan-line"></div>
       </div>
 
-      {/* Village Silhouette */}
-      <svg className="absolute bottom-0 w-full h-2/3 opacity-40" viewBox="0 0 1200 400" fill="none">
-        <path d="M0 300 Q 200 200 400 250 T 800 280 T 1200 300 V 400 H 0 Z" fill="#0d9488" opacity="0.3"/>
-        <rect x="200" y="200" width="60" height="80" fill="#14b8a6" opacity="0.5"/>
-        <rect x="500" y="180" width="80" height="100" fill="#14b8a6" opacity="0.5"/>
-        <rect x="800" y="220" width="50" height="60" fill="#14b8a6" opacity="0.5"/>
-      </svg>
+      {/* Cursor Glow Effect */}
+      <div 
+        className="absolute w-96 h-96 rounded-full pointer-events-none transition-all duration-300 ease-out"
+        style={{
+          left: `${mousePos.x}%`,
+          top: `${mousePos.y}%`,
+          transform: 'translate(-50%, -50%)',
+          background: 'radial-gradient(circle, rgba(20, 184, 166, 0.15) 0%, transparent 70%)',
+        }}
+      />
 
-      {/* Interactive Elements */}
+      {/* Interactive Asset Nodes */}
       {elements.map((element) => {
         const Icon = element.icon;
+        const isHovered = hoveredElement === element.id;
         return (
           <div
             key={element.id}
@@ -99,30 +143,54 @@ const DigitalTwinHero = () => {
             onMouseEnter={() => setHoveredElement(element.id)}
             onMouseLeave={() => setHoveredElement(null)}
           >
-            {/* Pulsing Dot */}
+            {/* Pulsing Ring */}
             <div className="relative">
-              <div className="w-5 h-5 rounded-full bg-teal-400 animate-ping absolute opacity-75"></div>
-              <div className="w-5 h-5 rounded-full bg-teal-500 relative shadow-lg shadow-teal-500/50 flex items-center justify-center">
-                <Icon size={12} className="text-slate-900" />
+              <div 
+                className="w-8 h-8 rounded-full animate-ping absolute opacity-40"
+                style={{ backgroundColor: element.color }}
+              ></div>
+              <div 
+                className={`w-8 h-8 rounded-full relative shadow-2xl flex items-center justify-center transition-all duration-300 ${
+                  isHovered ? 'scale-125' : 'scale-100'
+                }`}
+                style={{ 
+                  backgroundColor: element.color,
+                  boxShadow: isHovered ? `0 0 30px ${element.color}` : `0 0 15px ${element.color}`
+                }}
+              >
+                <Icon size={16} className="text-white" />
               </div>
             </div>
 
-            {/* Tooltip */}
-            {hoveredElement === element.id && (
+            {/* Data Tooltip - HUD Style */}
+            {isHovered && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.8, y: 10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                className="absolute left-8 top-0 bg-slate-900 border-2 border-teal-500 rounded-lg p-4 min-w-[240px] z-30 shadow-xl shadow-teal-500/20"
+                className="absolute left-10 top-0 bg-slate-950/95 border border-teal-500/50 rounded-lg p-4 min-w-[260px] z-30 shadow-2xl backdrop-blur-sm"
+                style={{ boxShadow: `0 0 20px ${element.color}40` }}
               >
-                <div className="tech-text text-xs text-teal-400 mb-2">// NODE: {element.label}</div>
-                <div className="tech-text text-sm text-white mb-1">STATUS: {element.status}</div>
+                <div className="tech-text text-xs text-teal-400 mb-2 font-semibold">// NODE: {element.label}</div>
+                <div className="tech-text text-sm text-white mb-1 font-medium">STATUS: {element.status}</div>
                 <div className="tech-text text-sm text-gray-300 mb-1">{element.data}</div>
                 <div className="tech-text text-xs text-gray-400">LAST_MAINT: {element.lastMaint}</div>
+                <div className="h-px bg-teal-500/30 my-2"></div>
+                <div className="tech-text text-xs text-teal-300">LIVE_FEED: ACTIVE</div>
               </motion.div>
             )}
           </div>
         );
       })}
+
+      {/* HUD Corner Elements */}
+      <div className="absolute top-4 left-4 tech-text text-xs text-teal-400/60">
+        <div>SECTOR: RURAL_GRID_04</div>
+        <div>ZOOM: 1:5000</div>
+      </div>
+      <div className="absolute top-4 right-4 tech-text text-xs text-teal-400/60 text-right">
+        <div>ASSETS: {elements.length} ONLINE</div>
+        <div>LAT: 28.7041° N</div>
+      </div>
 
       <style>{`
         .scan-line {
@@ -130,19 +198,24 @@ const DigitalTwinHero = () => {
           width: 100%;
           height: 2px;
           background: linear-gradient(90deg, transparent, #14b8a6, transparent);
-          box-shadow: 0 0 10px #14b8a6;
-          animation: scan 4s linear infinite;
+          box-shadow: 0 0 15px #14b8a6;
+          animation: scan 5s linear infinite;
         }
         @keyframes scan {
-          0% { top: 0; }
-          100% { top: 100%; }
+          0% { top: 0; opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { top: 100%; opacity: 0; }
+        }
+        .road-glow {
+          filter: drop-shadow(0 0 8px #14b8a6);
         }
       `}</style>
     </div>
   );
 };
 
-// Before/After Problem Slider Component
+// Before/After Problem Slider Component with Data Overlays
 const BeforeAfterSlider = () => {
   const [sliderPosition, setSliderPosition] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
@@ -157,74 +230,101 @@ const BeforeAfterSlider = () => {
 
   return (
     <div 
-      className="relative w-full h-[400px] rounded-2xl overflow-hidden cursor-col-resize select-none border-2 border-gray-300"
+      className="relative w-full h-[450px] rounded-2xl overflow-hidden cursor-col-resize select-none border-2 border-gray-300 shadow-2xl"
       onMouseMove={handleMouseMove}
       onMouseDown={() => setIsDragging(true)}
       onMouseUp={() => setIsDragging(false)}
       onMouseLeave={() => setIsDragging(false)}
     >
       {/* Before State (Grayscale Problem) */}
-      <div className="absolute inset-0 bg-gradient-to-br from-gray-400 via-gray-500 to-gray-600">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center p-8">
-            <div className="tech-text text-red-600 text-xl mb-6 font-bold">// STATUS: FAILURE</div>
+      <div className="absolute inset-0 bg-gradient-to-br from-gray-400 via-gray-500 to-gray-600" style={{ filter: 'grayscale(100%)' }}>
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-8">
+          <div className="max-w-md space-y-6">
+            <div className="tech-text text-red-600 text-2xl mb-8 font-bold tracking-tight">// STATUS: CRITICAL</div>
+            
             <div className="space-y-4">
-              <div className="flex items-center gap-3 text-gray-800">
-                <AlertTriangle className="text-red-600" size={24} />
-                <span className="text-lg font-semibold">&gt; Delayed Repairs</span>
+              <div className="flex items-start gap-4 bg-black/20 p-4 rounded-lg backdrop-blur-sm">
+                <AlertTriangle className="text-red-600 flex-shrink-0 mt-1" size={28} />
+                <div>
+                  <div className="text-lg font-bold text-gray-900 mb-1">&gt; Delayed Repairs</div>
+                  <div className="tech-text text-xs text-gray-700">REPORTED: 10-25-2025</div>
+                </div>
               </div>
-              <div className="flex items-center gap-3 text-gray-800">
-                <Scale className="text-red-600" size={24} />
-                <span className="text-lg font-semibold">&gt; Inequitable Allocation</span>
+              
+              <div className="flex items-start gap-4 bg-black/20 p-4 rounded-lg backdrop-blur-sm">
+                <Scale className="text-red-600 flex-shrink-0 mt-1" size={28} />
+                <div>
+                  <div className="text-lg font-bold text-gray-900 mb-1">&gt; Inequitable Allocation</div>
+                  <div className="tech-text text-xs text-gray-700">FUNDING: NOT ALLOCATED</div>
+                </div>
               </div>
-              <div className="flex items-center gap-3 text-gray-800">
-                <Wallet className="text-red-600" size={24} />
-                <span className="text-lg font-semibold">&gt; Opaque Funding</span>
+              
+              <div className="flex items-start gap-4 bg-black/20 p-4 rounded-lg backdrop-blur-sm">
+                <Wallet className="text-red-600 flex-shrink-0 mt-1" size={28} />
+                <div>
+                  <div className="text-lg font-bold text-gray-900 mb-1">&gt; Opaque Funding</div>
+                  <div className="tech-text text-xs text-gray-700">TRANSPARENCY: 0%</div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* After State (Color Solution) */}
+      {/* After State (Vibrant Color Solution) */}
       <div 
         className="absolute inset-0 bg-gradient-to-br from-teal-400 via-teal-500 to-teal-600"
         style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
       >
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center p-8">
-            <div className="tech-text text-white text-xl mb-6 font-bold">// STATUS: SOLVED</div>
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-8">
+          <div className="max-w-md space-y-6">
+            <div className="tech-text text-white text-2xl mb-8 font-bold tracking-tight drop-shadow-lg">// STATUS: SOLVED</div>
+            
             <div className="space-y-4">
-              <div className="flex items-center gap-3 text-white">
-                <Brain className="text-yellow-300" size={24} />
-                <span className="text-lg font-semibold">&gt; AI-Scheduled Repair</span>
+              <div className="flex items-start gap-4 bg-white/20 p-4 rounded-lg backdrop-blur-sm border border-white/30">
+                <Brain className="text-yellow-300 flex-shrink-0 mt-1" size={28} />
+                <div>
+                  <div className="text-lg font-bold text-white mb-1">&gt; AI-Scheduled Repair</div>
+                  <div className="tech-text text-xs text-teal-100">COMPLETED: 11-01-2025</div>
+                </div>
               </div>
-              <div className="flex items-center gap-3 text-white">
-                <BarChart3 className="text-yellow-300" size={24} />
-                <span className="text-lg font-semibold">&gt; Data-Based Allocation</span>
+              
+              <div className="flex items-start gap-4 bg-white/20 p-4 rounded-lg backdrop-blur-sm border border-white/30">
+                <BarChart3 className="text-yellow-300 flex-shrink-0 mt-1" size={28} />
+                <div>
+                  <div className="text-lg font-bold text-white mb-1">&gt; Data-Based Allocation</div>
+                  <div className="tech-text text-xs text-teal-100">EFFICIENCY: 94%</div>
+                </div>
               </div>
-              <div className="flex items-center gap-3 text-white">
-                <Shield className="text-yellow-300" size={24} />
-                <span className="text-lg font-semibold">&gt; Provable Transparency</span>
+              
+              <div className="flex items-start gap-4 bg-white/20 p-4 rounded-lg backdrop-blur-sm border border-white/30">
+                <Shield className="text-yellow-300 flex-shrink-0 mt-1" size={28} />
+                <div>
+                  <div className="text-lg font-bold text-white mb-1">&gt; Provable Transparency</div>
+                  <div className="tech-text text-xs text-teal-100">LEDGER_ID: 0x4a7...f3</div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Slider Handle */}
+      {/* Enhanced Slider Handle */}
       <div 
-        className="absolute top-0 bottom-0 w-1 bg-white shadow-2xl z-20"
+        className="absolute top-0 bottom-0 w-1 bg-gradient-to-b from-white via-teal-400 to-white shadow-2xl z-20"
         style={{ left: `${sliderPosition}%` }}
       >
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-xl flex items-center justify-center border-4 border-teal-500">
-          <div className="text-teal-600 font-bold text-xs">⟷</div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-white rounded-full shadow-2xl flex items-center justify-center border-4 border-teal-500">
+          <div className="flex gap-1">
+            <div className="text-teal-600 font-bold text-xl">&lt;</div>
+            <div className="text-teal-600 font-bold text-xl">&gt;</div>
+          </div>
         </div>
       </div>
 
       {/* Instructions */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 tech-text text-white text-sm bg-black/50 px-4 py-2 rounded-full backdrop-blur-sm">
-        ← Drag to Compare →
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 tech-text text-white text-sm bg-black/60 px-6 py-3 rounded-full backdrop-blur-md border border-white/20 shadow-xl">
+        ← DRAG TO COMPARE →
       </div>
     </div>
   );
@@ -396,26 +496,29 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
 
   return (
     <div className="landing-page min-h-screen bg-white">
-      {/* Persistent Glossy Nav Bar */}
+      {/* Persistent Glossy Nav Bar - Enhanced */}
       <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        className="fixed top-0 left-0 right-0 z-50 backdrop-blur-lg bg-white/70 border-b border-gray-200 shadow-lg"
+        className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-slate-950/80 border-b border-white/10 shadow-2xl"
+        style={{
+          boxShadow: '0 4px 30px rgba(0, 0, 0, 0.3), 0 0 1px rgba(255, 255, 255, 0.1)'
+        }}
       >
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <img src="/favicon.jpg" alt="RuraLens" className="w-10 h-10" />
-            <span className="text-2xl font-bold text-gray-900 tech-text">RuraLens</span>
+            <img src="/favicon.jpg" alt="RuraLens" className="w-10 h-10 rounded-lg" />
+            <span className="text-2xl font-bold text-white tech-text tracking-tight">RuraLens</span>
           </div>
           <div className="hidden md:flex items-center gap-8">
-            <a href="#problem" className="text-gray-600 hover:text-teal-600 transition-colors font-medium">Problem</a>
-            <a href="#solution" className="text-gray-600 hover:text-teal-600 transition-colors font-medium">Solution</a>
-            <a href="#users" className="text-gray-600 hover:text-teal-600 transition-colors font-medium">For Whom</a>
+            <a href="#problem" className="text-gray-300 hover:text-teal-400 transition-colors font-medium">Problem</a>
+            <a href="#solution" className="text-gray-300 hover:text-teal-400 transition-colors font-medium">Solution</a>
+            <a href="#users" className="text-gray-300 hover:text-teal-400 transition-colors font-medium">For Whom</a>
             <button
               onClick={onGetStarted}
-              className="px-6 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-all font-semibold shadow-md hover:shadow-lg tech-text"
+              className="px-6 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-500 transition-all font-semibold shadow-lg shadow-teal-600/30 hover:shadow-teal-600/50 tech-text"
             >
-              [ Login ]
+              [ LOGIN ]
             </button>
           </div>
         </div>
