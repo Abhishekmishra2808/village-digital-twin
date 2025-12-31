@@ -1,8 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useVillageStore } from '../store/villageStore';
-
-// Use environment variable for WebSocket URL, fallback to localhost for development
-const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:3001';
+import { WS_URL } from '../config/api';
 
 export default function useWebSocket() {
   const ws = useRef<WebSocket | null>(null);
