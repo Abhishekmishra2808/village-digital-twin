@@ -301,7 +301,6 @@ export default function Map3D() {
       air_quality: '💨',
       weather: '🌡️',
       water_quality: '💧',
-      traffic: '🚗',
       noise: '🔊',
       energy: '☀️',
       waste: '🗑️',

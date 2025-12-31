@@ -450,7 +450,6 @@
             <button class="tab-btn" onclick="switchTab('water')">Water</button>
             <button class="tab-btn" onclick="switchTab('power')">Power</button>
             <button class="tab-btn" onclick="switchTab('sensors')">IoT Sensors</button>
-            <button class="tab-btn" onclick="switchTab('traffic')">Traffic</button>
             <button class="tab-btn" onclick="switchTab('environment')">Environment</button>
             <button class="tab-btn" onclick="switchTab('flood')">Flood Control</button>
         </div>
@@ -476,10 +475,6 @@
                 </div>
                 <div class="summary-item">
                     <div class="summary-value">4</div>
-                    <div class="summary-label">Traffic Signals</div>
-                </div>
-                <div class="summary-item">
-                    <div class="summary-value">4</div>
                     <div class="summary-label">Environment Stations</div>
                 </div>
                 <div class="summary-item">
@@ -495,7 +490,6 @@
                 <button class="scenario-btn" onclick="simulateScenario('water_crisis')">💧 Water Crisis</button>
                 <button class="scenario-btn" onclick="simulateScenario('power_outage')">⚡ Power Outage</button>
                 <button class="scenario-btn" onclick="simulateScenario('heavy_rain')">🌧️ Heavy Rainfall</button>
-                <button class="scenario-btn" onclick="simulateScenario('traffic_jam')">🚦 Traffic Congestion</button>
                 <button class="scenario-btn" onclick="simulateScenario('air_pollution')">💨 Air Pollution</button>
                 <button class="scenario-btn" onclick="simulateScenario('flood_warning')">🌊 Flood Warning</button>
                 <button class="scenario-btn reset-btn" onclick="resetToNormal()">🔄 Reset to Normal</button>
@@ -606,15 +600,6 @@
                     </tbody>
                 </table>
             </div>
-        </div>
-
-        <!-- Traffic Tab -->
-        <div id="tab-traffic" class="tab-content">
-            <div class="section-header">
-                <div class="section-title">Traffic Signal Controls</div>
-                <span class="section-badge">4 Signals</span>
-            </div>
-            <div class="data-table" id="trafficTable"></div>
         </div>
 
         <!-- Environment Tab -->
@@ -750,7 +735,6 @@
             renderWaterTanks();
             renderPowerNodes();
             renderSensors();
-            renderTrafficSignals();
             renderEnvironmentSensors();
             renderFloodSensors();
         }
@@ -887,53 +871,6 @@
                                                    oninput="this.nextElementSibling.textContent = parseFloat(this.value).toFixed(1) + ' ${sensor.unit}'"
                                                    onchange="updateSensorValue('${sensor.id}', this.value)">
                                             <span class="slider-value">${sensor.value.toFixed(1)} ${sensor.unit}</span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            `;
-                        }).join('')}
-                    </tbody>
-                </table>
-            `;
-            container.innerHTML = html;
-        }
-
-        // Render Traffic Signals
-        function renderTrafficSignals() {
-            const container = document.getElementById('trafficTable');
-            const trafficSignals = [
-                { id: 'ts-1', name: 'Main Junction', vehicles: 98, congestion: 25 },
-                { id: 'ts-2', name: 'Market Square', vehicles: 234, congestion: 68 },
-                { id: 'ts-3', name: 'School Road', vehicles: 347, congestion: 82 },
-                { id: 'ts-4', name: 'Temple Junction', vehicles: 156, congestion: 42 }
-            ];
-            
-            const html = `
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Status</th>
-                            <th>Junction Name</th>
-                            <th>Congestion</th>
-                            <th>Vehicles</th>
-                            <th style="width: 35%">Adjust Vehicles</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${trafficSignals.map(signal => {
-                            const status = signal.congestion > 70 ? 'critical' : signal.congestion > 40 ? 'warning' : 'good';
-                            return `
-                                <tr>
-                                    <td><span class="status-indicator-small status-${status}-bg"></span></td>
-                                    <td><strong>${signal.name}</strong></td>
-                                    <td>${signal.congestion}%</td>
-                                    <td><span class="slider-value">${signal.vehicles}</span></td>
-                                    <td>
-                                        <div class="table-slider-container">
-                                            <input type="range" class="table-slider" min="0" max="500" step="1" 
-                                                   value="${signal.vehicles}" 
-                                                   oninput="this.nextElementSibling.textContent = this.value">
-                                            <span class="slider-value">${signal.vehicles}</span>
                                         </div>
                                     </td>
                                 </tr>
