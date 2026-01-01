@@ -1,0 +1,4 @@
+# Additional dependencies for advanced features
+captum>=0.7.0  # For feature importance analysis
+matplotlib>=3.7.0  # For visualization
+seaborn>=0.12.0  # For heatmaps
