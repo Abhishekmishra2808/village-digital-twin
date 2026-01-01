@@ -6,7 +6,7 @@ const getApiUrl = () => {
   if (import.meta.env.PROD) {
     // Use environment variable if set, otherwise use your Render backend URL
     // IMPORTANT: Replace YOUR_BACKEND_URL with your actual Render backend URL
-    return import.meta.env.VITE_API_URL || 'https://village-digital-twin-backend.onrender.com';
+    return import.meta.env.VITE_API_URL || 'https://village-digital-twin.onrender.com/';
   }
   // Development - use localhost
   return 'http://localhost:3001';
@@ -16,7 +16,7 @@ const getWsUrl = () => {
   // Check if we're in production (deployed)
   if (import.meta.env.PROD) {
     // Use environment variable if set, otherwise use your Render backend URL
-    const apiUrl = import.meta.env.VITE_API_URL || 'https://village-digital-twin-backend.onrender.com';
+    const apiUrl = import.meta.env.VITE_API_URL || 'https://village-digital-twin.onrender.com/';
     // Convert https to wss for WebSocket
     return apiUrl.replace('https://', 'wss://').replace('http://', 'ws://');
   }
