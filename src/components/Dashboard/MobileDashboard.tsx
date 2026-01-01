@@ -1,27 +1,11 @@
 import { useVillageStore } from '../../store/villageStore';
-import { Droplets, Zap, AlertTriangle, Activity, ArrowRight } from 'lucide-react';
+import { AlertTriangle, Activity, ArrowRight } from 'lucide-react';
 
 export default function MobileDashboard() {
   const { kpis, alerts, setActiveView, userRole } = useVillageStore();
 
   // Quick stats for mobile
   const stats = [
-    { 
-      label: 'Water Level', 
-      value: '85%', 
-      icon: Droplets, 
-      color: 'text-blue-400', 
-      bg: 'bg-blue-500/10',
-      view: 'water'
-    },
-    { 
-      label: 'Power Grid', 
-      value: 'Stable', 
-      icon: Zap, 
-      color: 'text-yellow-400', 
-      bg: 'bg-yellow-500/10',
-      view: 'power'
-    },
     { 
       label: 'Active Alerts', 
       value: alerts.length.toString(), 

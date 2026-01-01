@@ -3,8 +3,6 @@ import {
   TrendingUp, 
   TrendingDown,
   Activity,
-  Zap,
-  Droplet,
   Users,
   Download
 } from 'lucide-react';
@@ -12,35 +10,15 @@ import { useVillageStore } from '../../store/villageStore';
 import { useAnonymousReports } from '../../hooks/useAnonymousReports';
 
 export default function AnalyticsView() {
-  const { waterTanks, powerNodes, sensors } = useVillageStore();
+  const { sensors } = useVillageStore();
   const { reports: anonymousReports, stats: reportStats } = useAnonymousReports();
   const [dateRange, setDateRange] = useState('7days');
 
   // Calculate analytics
-  const avgWaterLevel = waterTanks.reduce((sum, t) => sum + t.currentLevel, 0) / waterTanks.length;
-  const avgPowerLoad = powerNodes.reduce((sum, n) => sum + (n.currentLoad / n.capacity * 100), 0) / powerNodes.length;
   const activeSensors = sensors.filter(s => s.status === 'active').length;
   const pendingReports = reportStats?.pending || 0;
 
   const stats = [
-    {
-      title: 'Water Infrastructure',
-      value: `${avgWaterLevel.toFixed(1)}%`,
-      change: '+5.2%',
-      trend: 'up',
-      icon: Droplet,
-      color: 'from-blue-500 to-cyan-500',
-      bgColor: 'bg-blue-500/10',
-    },
-    {
-      title: 'Power Grid Load',
-      value: `${avgPowerLoad.toFixed(1)}%`,
-      change: '+12.8%',
-      trend: 'up',
-      icon: Zap,
-      color: 'from-yellow-500 to-orange-500',
-      bgColor: 'bg-yellow-500/10',
-    },
     {
       title: 'Active IoT Sensors',
       value: activeSensors,
@@ -162,29 +140,6 @@ export default function AnalyticsView() {
 
         {/* Detailed Tables */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Top Water Consumers */}
-          <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
-            <h3 className="text-xl font-semibold text-white mb-4">Water Tank Status</h3>
-            <div className="space-y-3">
-              {waterTanks.slice(0, 5).map((tank) => (
-                <div key={tank.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-white/5">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-3 h-3 rounded-full ${
-                      tank.status === 'good' ? 'bg-green-500' :
-                      tank.status === 'warning' ? 'bg-yellow-500' :
-                      'bg-red-500'
-                    }`} />
-                    <span className="text-white font-medium">{tank.name}</span>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-white font-semibold">{tank.currentLevel.toFixed(1)}%</p>
-                    <p className="text-xs text-slate-400">{tank.capacity.toLocaleString()}L</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* Recent Anonymous Reports */}
           <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
             <h3 className="text-xl font-semibold text-white mb-4">Recent Reports</h3>

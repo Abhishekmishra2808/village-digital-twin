@@ -1,7 +1,7 @@
 {
   "name": "ruralens-backend",
   "version": "1.0.0",
-  "description": "WebSocket server for RuraLens real-time data",
+  "description": "Backend server for RuraLens with GNN integration",
   "type": "module",
   "main": "server.js",
   "scripts": {
@@ -25,8 +25,7 @@
     "multer": "^2.0.2",
     "node-cache": "^5.1.2",
     "ollama": "^0.5.0",
-    "pdf-parse-new": "^1.4.1",
-    "ws": "^8.16.0"
+    "pdf-parse-new": "^1.4.1"
   },
   "engines": {
     "node": ">=18.0.0"

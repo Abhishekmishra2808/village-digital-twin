@@ -9,8 +9,6 @@ import Sidebar from './components/Sidebar/Sidebar';
 import StatusBar from './components/Layout/StatusBar';
 import InfoPanel from './components/InfoPanel/InfoPanel';
 import Dashboard from './components/Dashboard/Dashboard';
-import WaterView from './components/Views/WaterView';
-import PowerView from './components/Views/PowerView';
 import AlertsView from './components/Views/AlertsView';
 import SettingsView from './components/Views/SettingsView';
 import AnalyticsView from './components/Views/AnalyticsView';
@@ -20,9 +18,7 @@ import FieldWorkerView from './components/Views/FieldWorkerView';
 import MapView from './components/Views/MapView';
 import EnvironmentView from './components/Views/EnvironmentView';
 import SchemesView from './components/Views/SchemesView';
-import AdminControls from './components/ControlPanel/AdminControls';
 import ImpactPredictorView from './components/Views/ImpactPredictorView';
-import useWebSocket from './hooks/useWebSocket';
 import MobileNav from './components/Layout/MobileNav';
 import MobileHeader from './components/Layout/MobileHeader';
 import MobileLandingPage from './components/Landing/MobileLandingPage';
@@ -33,7 +29,6 @@ function App() {
   const { activeView, sidebarCollapsed, infoPanelOpen, isAuthenticated, userRole, fetchSchemes, waterTanks, setVillageData } = useVillageStore();
   const [showLanding, setShowLanding] = useState(true);
   const isMobile = Capacitor.isNativePlatform();
-  useWebSocket();
 
   // Load demo data on startup if no data loaded
   useEffect(() => {
@@ -88,10 +83,6 @@ function App() {
         return <MapView />;
       case 'schemes':
         return <SchemesView />;
-      case 'water':
-        return <WaterView />;
-      case 'power':
-        return <PowerView />;
       case 'environment':
         return <EnvironmentView />;
       case 'alerts':
@@ -201,9 +192,6 @@ function App() {
       </div>
       
       <StatusBar />
-      
-      {/* Admin Control Panel - Floating (Only for Admin) */}
-      {userRole === 'admin' && <AdminControls />}
     </div>
   );
 }
