@@ -12,7 +12,9 @@ import {
   MapPin,
   Star,
   X,
-  Plus
+  Plus,
+  Upload,
+  Loader
 } from 'lucide-react';
 import { useVillageStore, type GovernmentScheme } from '../../store/villageStore';
 import { API_URL } from '../../config/api';
@@ -586,25 +588,302 @@ function SchemeDetailsModal({ scheme, onClose }: { scheme: GovernmentScheme; onC
           )}
 
           {activeTab === 'reports' && (
-            <div className="space-y-4">
-              {scheme.vendorReports.map((report) => (
-                <div key={report.id} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h4 className="font-bold text-gray-900">{report.vendorName}</h4>
-                      <div className="text-sm text-gray-600">Phase {report.phase} Report</div>
-                      <div className="text-xs text-gray-500">Submitted: {new Date(report.submittedDate).toLocaleDateString()}</div>
+            <VendorReportsTab scheme={scheme} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Vendor Reports Tab Component
+function VendorReportsTab({ scheme }: { scheme: GovernmentScheme }) {
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const userRole = useVillageStore((state) => state.userRole);
+
+  const handleVendorReportUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+      setUploadError('Please upload a PDF file');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadError('');
+
+    try {
+      console.log('📄 Uploading vendor report for analysis:', file.name);
+      
+      const formData = new FormData();
+      formData.append('pdf', file);
+
+      const response = await fetch(`${API_URL}/api/schemes/${scheme.id}/vendor-report`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log('✅ Vendor report analyzed:', result.report);
+        alert('✅ Vendor report uploaded and analyzed successfully! Refresh to see results.');
+        window.location.reload();
+      } else {
+        throw new Error(result.error || 'Failed to analyze vendor report');
+      }
+    } catch (err: any) {
+      console.error('❌ Vendor report upload error:', err);
+      setUploadError(err.message || 'Failed to upload vendor report');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Upload Section - Admin Only */}
+      {userRole === 'admin' && (
+        <div className="bg-gradient-to-r from-green-50 to-teal-50 border-2 border-dashed border-green-300 rounded-lg p-6">
+          <div className="flex items-center space-x-3 mb-4">
+            <FileText size={24} className="text-green-600" />
+            <div>
+              <h3 className="font-semibold text-gray-900">Upload Vendor Progress Report</h3>
+              <p className="text-xs text-gray-600">AI will analyze compliance against government plan</p>
+            </div>
+          </div>
+          
+          <label className="cursor-pointer block">
+            <input
+              type="file"
+              accept=".pdf"
+              onChange={handleVendorReportUpload}
+              className="hidden"
+              disabled={isUploading}
+            />
+            <div className="flex items-center justify-center space-x-2 bg-white border-2 border-green-400 hover:border-green-600 rounded-lg px-4 py-3 transition-colors">
+              {isUploading ? (
+                <>
+                  <Loader size={18} className="animate-spin text-green-600" />
+                  <span className="text-sm font-medium text-green-600">Analyzing report with AI...</span>
+                </>
+              ) : (
+                <>
+                  <Upload size={18} className="text-green-600" />
+                  <span className="text-sm font-medium text-green-600">Upload Vendor Report PDF</span>
+                </>
+              )}
+            </div>
+          </label>
+          
+          {uploadError && (
+            <div className="mt-3 text-sm text-red-600 bg-red-50 p-2 rounded">
+              {uploadError}
+            </div>
+          )}
+          
+          <p className="text-xs text-gray-500 mt-3 text-center">
+            AI will compare vendor's report with government plan and identify discrepancies, overdue work, and budget variances
+          </p>
+        </div>
+      )}
+
+      {/* Reports List */}
+      <div className="space-y-4">
+        {scheme.vendorReports && scheme.vendorReports.length > 0 ? (
+          scheme.vendorReports.map((report: any) => (
+            <div key={report.id} className="border border-gray-200 rounded-lg overflow-hidden">
+              {/* Report Header */}
+              <div className="bg-gray-50 p-4 border-b border-gray-200">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h4 className="font-bold text-gray-900">{report.vendorName}</h4>
+                    <div className="text-sm text-gray-600">Phase {report.phase} Report</div>
+                    <div className="text-xs text-gray-500">
+                      Submitted: {new Date(report.submittedDate).toLocaleDateString()}
+                      {report.pdfFileName && ` • ${report.pdfFileName}`}
                     </div>
+                  </div>
+                  <div className="flex flex-col items-end space-y-2">
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      report.verificationStatus === 'verified' ? 'bg-green-100 text-green-800' :
-                      report.verificationStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                      report.verificationStatus === 'approved' ? 'bg-green-100 text-green-800' :
+                      report.verificationStatus === 'under-review' ? 'bg-yellow-100 text-yellow-800' :
                       report.verificationStatus === 'rejected' ? 'bg-red-100 text-red-800' :
                       'bg-blue-100 text-blue-800'
                     }`}>
-                      {report.verificationStatus.toUpperCase()}
+                      {report.verificationStatus?.toUpperCase() || 'PENDING'}
                     </span>
+                    {report.complianceAnalysis && (
+                      <div className="text-right">
+                        <div className="text-xs text-gray-600">Compliance Score</div>
+                        <div className={`text-2xl font-bold ${
+                          report.complianceAnalysis.overallCompliance >= 80 ? 'text-green-600' :
+                          report.complianceAnalysis.overallCompliance >= 60 ? 'text-yellow-600' :
+                          'text-red-600'
+                        }`}>
+                          {report.complianceAnalysis.overallCompliance}%
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* AI Analysis Results */}
+              {report.complianceAnalysis && report.complianceAnalysis.aiProcessed && (
+                <div className="p-4 space-y-4">
+                  {/* AI Summary */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <FileText size={16} className="text-blue-600" />
+                      <h5 className="font-semibold text-blue-900">AI Analysis Summary</h5>
+                    </div>
+                    <p className="text-sm text-blue-800">{report.complianceAnalysis.aiSummary}</p>
                   </div>
 
+                  {/* Matching Items */}
+                  {report.complianceAnalysis.matchingItems?.length > 0 && (
+                    <div>
+                      <h5 className="font-semibold text-green-700 mb-2 flex items-center space-x-2">
+                        <CheckCircle size={16} />
+                        <span>Work Completed as Planned ({report.complianceAnalysis.matchingItems.length})</span>
+                      </h5>
+                      <ul className="space-y-1">
+                        {report.complianceAnalysis.matchingItems.map((item: string, idx: number) => (
+                          <li key={idx} className="text-sm text-gray-700 flex items-start space-x-2">
+                            <span className="text-green-500 mt-0.5">✓</span>
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Discrepancies */}
+                  {report.complianceAnalysis.discrepancies?.length > 0 && (
+                    <div>
+                      <h5 className="font-semibold text-red-700 mb-2 flex items-center space-x-2">
+                        <AlertTriangle size={16} />
+                        <span>Discrepancies Found ({report.complianceAnalysis.discrepancies.length})</span>
+                      </h5>
+                      <div className="space-y-3">
+                        {report.complianceAnalysis.discrepancies.map((disc: any, idx: number) => (
+                          <div key={idx} className={`border-l-4 pl-3 py-2 ${
+                            disc.severity === 'critical' ? 'border-red-600 bg-red-50' :
+                            disc.severity === 'high' ? 'border-orange-500 bg-orange-50' :
+                            disc.severity === 'medium' ? 'border-yellow-500 bg-yellow-50' :
+                            'border-blue-500 bg-blue-50'
+                          }`}>
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="font-medium text-sm text-gray-900">{disc.category?.toUpperCase()}</div>
+                                <div className="text-sm text-gray-700 mt-1">{disc.description}</div>
+                                <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
+                                  <div>
+                                    <span className="text-gray-600">Planned: </span>
+                                    <span className="font-medium">{disc.plannedValue}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-600">Actual: </span>
+                                    <span className="font-medium">{disc.actualValue}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <span className={`text-xs px-2 py-1 rounded font-medium ${
+                                disc.severity === 'critical' ? 'bg-red-200 text-red-800' :
+                                disc.severity === 'high' ? 'bg-orange-200 text-orange-800' :
+                                disc.severity === 'medium' ? 'bg-yellow-200 text-yellow-800' :
+                                'bg-blue-200 text-blue-800'
+                              }`}>
+                                {disc.severity?.toUpperCase()}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Overdue Work */}
+                  {report.complianceAnalysis.overdueWork?.length > 0 && (
+                    <div>
+                      <h5 className="font-semibold text-orange-700 mb-2 flex items-center space-x-2">
+                        <Calendar size={16} />
+                        <span>Overdue Work ({report.complianceAnalysis.overdueWork.length})</span>
+                      </h5>
+                      <div className="space-y-2">
+                        {report.complianceAnalysis.overdueWork.map((task: any, idx: number) => (
+                          <div key={idx} className="bg-orange-50 border border-orange-200 rounded p-3">
+                            <div className="font-medium text-sm text-gray-900">{task.task}</div>
+                            <div className="grid grid-cols-3 gap-2 mt-2 text-xs">
+                              <div>
+                                <span className="text-gray-600">Planned: </span>
+                                <span className="font-medium">{new Date(task.plannedDate).toLocaleDateString()}</span>
+                              </div>
+                              <div>
+                                <span className="text-gray-600">Status: </span>
+                                <span className="font-medium">{task.currentStatus}</span>
+                              </div>
+                              <div>
+                                <span className="text-gray-600">Delay: </span>
+                                <span className="font-medium text-red-600">{task.delayDays} days</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Budget Analysis */}
+                  {report.complianceAnalysis.budgetAnalysis && (
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                      <h5 className="font-semibold text-gray-900 mb-3 flex items-center space-x-2">
+                        <DollarSign size={16} />
+                        <span>Budget Analysis</span>
+                      </h5>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <div className="text-xs text-gray-600">Planned Budget</div>
+                          <div className="text-lg font-bold text-gray-900">
+                            ₹{(report.complianceAnalysis.budgetAnalysis.plannedBudget / 100000).toFixed(2)}L
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-600">Claimed Expense</div>
+                          <div className="text-lg font-bold text-gray-900">
+                            ₹{(report.complianceAnalysis.budgetAnalysis.claimedExpense / 100000).toFixed(2)}L
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-600">Variance</div>
+                          <div className={`text-lg font-bold ${
+                            report.complianceAnalysis.budgetAnalysis.variance > 0 ? 'text-red-600' : 'text-green-600'
+                          }`}>
+                            {report.complianceAnalysis.budgetAnalysis.variance > 0 ? '+' : ''}
+                            ₹{(report.complianceAnalysis.budgetAnalysis.variance / 100000).toFixed(2)}L
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-600">Variance %</div>
+                          <div className={`text-lg font-bold ${
+                            report.complianceAnalysis.budgetAnalysis.variancePercentage > 0 ? 'text-red-600' : 'text-green-600'
+                          }`}>
+                            {report.complianceAnalysis.budgetAnalysis.variancePercentage > 0 ? '+' : ''}
+                            {report.complianceAnalysis.budgetAnalysis.variancePercentage.toFixed(1)}%
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Basic Report Info (if no AI analysis) */}
+              {(!report.complianceAnalysis || !report.complianceAnalysis.aiProcessed) && (
+                <div className="p-4">
                   <div className="mb-3">
                     <div className="text-sm font-medium text-gray-700 mb-1">Work Completed:</div>
                     <div className="text-sm text-gray-600">{report.workCompleted}</div>
@@ -616,25 +895,19 @@ function SchemeDetailsModal({ scheme, onClose }: { scheme: GovernmentScheme; onC
                       <div className="text-lg font-bold text-gray-900">₹{(report.expenseClaimed / 100000).toFixed(2)}L</div>
                     </div>
                   </div>
-
-                  {report.documents.length > 0 && (
-                    <div className="mt-3">
-                      <div className="text-xs text-gray-600 mb-2">Documents:</div>
-                      <div className="flex flex-wrap gap-2">
-                        {report.documents.map((doc, idx) => (
-                          <span key={idx} className="inline-flex items-center space-x-1 px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs">
-                            <FileText size={12} />
-                            <span>{doc}</span>
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
-              ))}
+              )}
             </div>
-          )}
-        </div>
+          ))
+        ) : (
+          <div className="text-center py-12 text-gray-500">
+            <FileText size={48} className="mx-auto mb-3 opacity-50" />
+            <p>No vendor reports uploaded yet</p>
+            {userRole === 'admin' && (
+              <p className="text-sm mt-2">Upload a vendor report PDF to see AI-powered compliance analysis</p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -654,6 +927,61 @@ function AddSchemeModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [isExtractingPDF, setIsExtractingPDF] = useState(false);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+
+  const handlePDFUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+      setError('Please upload a PDF file');
+      return;
+    }
+
+    setPdfFile(file);
+    setIsExtractingPDF(true);
+    setError('');
+
+    try {
+      console.log('📄 Uploading PDF for extraction:', file.name);
+      
+      const formData = new FormData();
+      formData.append('pdf', file);
+
+      const response = await fetch(`${API_URL}/api/schemes/extract-from-pdf`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        console.log('✅ PDF data extracted:', result.data);
+        
+        // Auto-fill form with extracted data
+        setFormData({
+          name: result.data.name || '',
+          category: result.data.category || '',
+          village: result.data.village || '',
+          district: result.data.district || '',
+          totalBudget: result.data.totalBudget?.toString() || '',
+          startDate: result.data.startDate || '',
+          endDate: result.data.endDate || '',
+          description: result.data.description || ''
+        });
+
+        alert('✅ PDF data extracted successfully! Please review and edit if needed.');
+      } else {
+        throw new Error(result.error || 'Failed to extract data from PDF');
+      }
+    } catch (err: any) {
+      console.error('❌ PDF extraction error:', err);
+      setError(err.message || 'Failed to extract data from PDF. Please fill manually.');
+    } finally {
+      setIsExtractingPDF(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -709,6 +1037,57 @@ function AddSchemeModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
 
         <form onSubmit={handleSubmit} className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
           <div className="space-y-4">
+            {/* PDF Upload Section */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-dashed border-blue-300 rounded-lg p-6">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <FileText size={24} className="text-blue-600" />
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Upload Scheme Document</h3>
+                    <p className="text-xs text-gray-600">AI will extract and auto-fill all details from PDF</p>
+                  </div>
+                </div>
+                {pdfFile && (
+                  <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full">
+                    ✓ {pdfFile.name}
+                  </span>
+                )}
+              </div>
+              
+              <label className="cursor-pointer">
+                <input
+                  type="file"
+                  accept=".pdf"
+                  onChange={handlePDFUpload}
+                  className="hidden"
+                  disabled={isExtractingPDF}
+                />
+                <div className="flex items-center justify-center space-x-2 bg-white border-2 border-blue-400 hover:border-blue-600 rounded-lg px-4 py-3 transition-colors">
+                  {isExtractingPDF ? (
+                    <>
+                      <Loader size={18} className="animate-spin text-blue-600" />
+                      <span className="text-sm font-medium text-blue-600">Extracting data from PDF...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload size={18} className="text-blue-600" />
+                      <span className="text-sm font-medium text-blue-600">
+                        {pdfFile ? 'Upload Different PDF' : 'Upload Government Scheme PDF'}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </label>
+              
+              <p className="text-xs text-gray-500 mt-2 text-center">
+                PDF will be analyzed using AI to extract scheme details, phases, budget, and timeline
+              </p>
+            </div>
+
+            <div className="border-t pt-4">
+              <p className="text-sm text-gray-600 mb-3">Or fill manually:</p>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Scheme Name *</label>
               <input

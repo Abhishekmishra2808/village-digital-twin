@@ -9,18 +9,50 @@ const phaseSchema = new mongoose.Schema({
   startDate: String,
   endDate: String,
   budget: Number,
-  spent: Number
+  spent: Number,
+  // Enhanced phase details from PDF
+  milestones: [String],
+  deliverables: [String],
+  plannedWork: String,
+  timeline: String
 }, { _id: false });
 
 const vendorReportSchema = new mongoose.Schema({
-  id: Number,
+  id: String,
   vendorName: String,
-  submittedDate: String,
+  submittedDate: Date,
   phase: Number,
   workCompleted: String,
   expenseClaimed: Number,
   verificationStatus: String,
-  documents: [String]
+  documents: [String],
+  // AI-generated compliance analysis
+  complianceAnalysis: {
+    overallCompliance: Number, // 0-100%
+    matchingItems: [String],
+    discrepancies: [{
+      category: String, // 'budget', 'timeline', 'quality', 'scope'
+      severity: String, // 'critical', 'high', 'medium', 'low'
+      description: String,
+      plannedValue: String,
+      actualValue: String
+    }],
+    overdueWork: [{
+      task: String,
+      plannedDate: String,
+      currentStatus: String,
+      delayDays: Number
+    }],
+    budgetAnalysis: {
+      plannedBudget: Number,
+      claimedExpense: Number,
+      variance: Number,
+      variancePercentage: Number
+    },
+    aiSummary: String,
+    aiProcessed: Boolean
+  },
+  pdfFileName: String
 }, { _id: false });
 
 const discrepancySchema = new mongoose.Schema({

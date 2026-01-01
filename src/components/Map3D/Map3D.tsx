@@ -3,7 +3,7 @@ import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useVillageStore } from '../../store/villageStore';
 
-const VILLAGE_CENTER: [number, number] = [73.8567, 18.5204];
+const VILLAGE_CENTER: [number, number] = [73.8567, 18.5204]; // Pune coordinates
 
 export default function Map3D() {
   const mapContainer = useRef<HTMLDivElement>(null);

@@ -18,6 +18,8 @@
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.2",
+    "multer": "^2.0.2",
+    "pdf-parse-new": "^1.4.1",
     "ws": "^8.16.0"
   },
   "engines": {

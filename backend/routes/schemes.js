@@ -1,10 +1,27 @@
 import express from 'express';
 import crypto from 'crypto';
+import multer from 'multer';
 import Scheme from '../models/Scheme.js';
 import Feedback from '../models/Feedback.js';
 import { processFeedbackWithAI } from '../utils/geminiService.js';
+import { extractSchemeFromPDF, analyzeVendorReport } from '../utils/pdfService.js';
 
 const router = express.Router();
+
+// Configure multer for PDF uploads (memory storage)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF files are allowed'));
+    }
+  }
+});
 
 // Get all schemes
 router.get('/', async (req, res) => {
@@ -272,4 +289,128 @@ router.get('/:id/feedback', async (req, res) => {
   }
 });
 
+// Extract scheme details from PDF using AI
+router.post('/extract-from-pdf', upload.single('pdf'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No PDF file uploaded' });
+    }
+
+    console.log('📄 Processing scheme PDF:', req.file.originalname, 'Size:', req.file.size);
+
+    // Extract scheme data using Gemini AI
+    const result = await extractSchemeFromPDF(req.file.buffer);
+
+    if (result.success) {
+      console.log('✅ Successfully extracted scheme data from PDF');
+      res.json({
+        success: true,
+        data: result.data,
+        message: 'Scheme data extracted successfully. Please review and submit.'
+      });
+    } else {
+      console.error('❌ Failed to extract scheme data:', result.error);
+      res.status(500).json({
+        success: false,
+        error: result.error,
+        message: 'Failed to extract data from PDF. Please fill manually.'
+      });
+    }
+  } catch (error) {
+    console.error('❌ PDF extraction error:', error);
+    res.status(500).json({ error: 'Failed to process PDF file' });
+  }
+});
+
+// Upload and analyze vendor report against government plan
+router.post('/:id/vendor-report', upload.single('pdf'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No PDF file uploaded' });
+    }
+
+    const schemeId = req.params.id;
+    
+    // Get the government scheme plan
+    const scheme = await Scheme.findOne({ id: schemeId });
+    if (!scheme) {
+      return res.status(404).json({ error: 'Scheme not found' });
+    }
+
+    console.log('📊 Analyzing vendor report for scheme:', scheme.name);
+    console.log('📄 Vendor PDF:', req.file.originalname, 'Size:', req.file.size);
+
+    // Analyze vendor report using Gemini AI
+    const result = await analyzeVendorReport(req.file.buffer, scheme);
+
+    if (result.success) {
+      // Create vendor report entry
+      const vendorReport = {
+        id: `VR-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+        vendorName: result.analysis.vendorName || 'Unknown Vendor',
+        submittedDate: result.analysis.reportDate ? new Date(result.analysis.reportDate) : new Date(),
+        phase: result.analysis.phase || 1,
+        workCompleted: result.analysis.workCompleted || 'Not specified',
+        expenseClaimed: result.analysis.expenseClaimed || 0,
+        verificationStatus: result.analysis.overallCompliance >= 80 ? 'approved' : 
+                           result.analysis.overallCompliance >= 60 ? 'under-review' : 'rejected',
+        pdfFileName: req.file.originalname,
+        complianceAnalysis: {
+          overallCompliance: result.analysis.overallCompliance,
+          matchingItems: result.analysis.matchingItems || [],
+          discrepancies: result.analysis.discrepancies || [],
+          overdueWork: result.analysis.overdueWork || [],
+          budgetAnalysis: result.analysis.budgetAnalysis || {},
+          aiSummary: result.analysis.aiSummary,
+          aiProcessed: result.aiProcessed
+        }
+      };
+
+      // Add to scheme's vendor reports
+      if (!scheme.vendorReports) {
+        scheme.vendorReports = [];
+      }
+      scheme.vendorReports.push(vendorReport);
+
+      // Update scheme status based on compliance
+      if (result.analysis.discrepancies && result.analysis.discrepancies.length > 0) {
+        const hasCritical = result.analysis.discrepancies.some(d => d.severity === 'critical');
+        if (hasCritical) {
+          scheme.status = 'discrepant';
+        }
+      }
+
+      await scheme.save();
+
+      // Broadcast update via WebSocket
+      const broadcast = req.app.get('broadcast');
+      if (broadcast) {
+        broadcast({
+          type: 'vendor_report_added',
+          schemeId: scheme.id,
+          report: vendorReport
+        });
+      }
+
+      console.log('✅ Vendor report analyzed and saved');
+      res.json({
+        success: true,
+        report: vendorReport,
+        message: 'Vendor report analyzed successfully'
+      });
+    } else {
+      console.error('❌ Failed to analyze vendor report:', result.error);
+      res.status(500).json({
+        success: false,
+        error: result.error,
+        message: 'Failed to analyze vendor report. Please review manually.'
+      });
+    }
+  } catch (error) {
+    console.error('❌ Vendor report processing error:', error);
+    res.status(500).json({ error: 'Failed to process vendor report' });
+  }
+});
+
 export default router;
+

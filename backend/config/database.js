@@ -21,17 +21,27 @@ export async function connectDatabase() {
     return conn;
   } catch (error) {
     console.error('❌ MongoDB connection failed:', error.message);
-    console.log('\n💡 Make sure MongoDB is running:');
+    console.log('\n⚠️  WARNING: Running in OFFLINE MODE with mock data');
+    console.log('💡 To connect to MongoDB:');
     console.log('   - Install MongoDB: https://www.mongodb.com/try/download/community');
     console.log('   - Or use MongoDB Atlas (cloud): https://www.mongodb.com/cloud/atlas');
     console.log('   - Update MONGODB_URI in .env file\n');
-    process.exit(1);
+    
+    // Don't exit - allow server to run with mock data
+    return null;
   }
 }
 
 export async function seedDatabase() {
-  const User = (await import('../models/User.js')).default;
-  const Scheme = (await import('../models/Scheme.js')).default;
+  try {
+    // Check if MongoDB is connected
+    if (mongoose.connection.readyState !== 1) {
+      console.log('ℹ️  Skipping database seeding (MongoDB not connected)');
+      return;
+    }
+
+    const User = (await import('../models/User.js')).default;
+    const Scheme = (await import('../models/Scheme.js')).default;
 
   // Check if admin exists
   const adminExists = await User.findOne({ email: process.env.ADMIN_EMAIL });
@@ -91,5 +101,8 @@ export async function seedDatabase() {
     }
   } else {
     console.log(`ℹ️  Database already has ${schemesCount} schemes`);
+  }
+  } catch (error) {
+    console.error('❌ Database seeding failed:', error.message);
   }
 }
