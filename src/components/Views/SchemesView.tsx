@@ -150,7 +150,7 @@ export default function SchemesView() {
                 placeholder="Search schemes..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
             </div>
 
@@ -159,7 +159,7 @@ export default function SchemesView() {
               <select
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none"
               >
                 <option value="all">All Categories</option>
                 <option value="sanitation">Sanitation</option>
@@ -716,7 +716,7 @@ function AddSchemeModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 placeholder="e.g., Swachh Bharat Mission - Phase 3"
               />
             </div>
@@ -728,7 +728,7 @@ function AddSchemeModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
                   required
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 >
                   <option value="">Select category</option>
                   <option value="Sanitation">Sanitation</option>
@@ -746,7 +746,7 @@ function AddSchemeModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
                   required
                   value={formData.village}
                   onChange={(e) => setFormData({ ...formData, village: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   placeholder="Village name"
                 />
               </div>
@@ -760,7 +760,7 @@ function AddSchemeModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
                   required
                   value={formData.district}
                   onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   placeholder="District name"
                 />
               </div>
@@ -772,7 +772,7 @@ function AddSchemeModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
                   required
                   value={formData.totalBudget}
                   onChange={(e) => setFormData({ ...formData, totalBudget: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   placeholder="e.g., 5000000"
                 />
                 {formData.totalBudget && (
@@ -791,7 +791,7 @@ function AddSchemeModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
                   required
                   value={formData.startDate}
                   onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
               </div>
 
@@ -802,7 +802,7 @@ function AddSchemeModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
                   required
                   value={formData.endDate}
                   onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
               </div>
             </div>
@@ -813,7 +813,7 @@ function AddSchemeModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
                 required
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
                 rows={4}
                 placeholder="Brief description of the scheme objectives and scope..."
               />
