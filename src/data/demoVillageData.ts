@@ -13,8 +13,6 @@
  * 8. Flow Sensor (Center-East)
  */
 
-const VILLAGE_CENTER: [number, number] = [73.8567, 18.5204];
-
 export const demoVillageData = {
   // Water Infrastructure - 1 Tank only
   waterTanks: [
