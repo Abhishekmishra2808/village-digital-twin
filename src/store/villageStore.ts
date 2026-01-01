@@ -192,8 +192,8 @@ export interface KPIs {
 }
 
 interface VillageState {
-  waterTanks: WaterTank[];
-  buildings: Building[];
+  waterTanks: WaterTank[];  waterPumps: any[];
+  waterPipes: any[];  buildings: Building[];
   powerNodes: PowerNode[];
   roads: Road[];
   sensors: Sensor[];
@@ -247,6 +247,8 @@ interface VillageState {
 }
 export const useVillageStore = create<VillageState>((set) => ({
   waterTanks: [],
+  waterPumps: [],
+  waterPipes: [],
   buildings: [],
   powerNodes: [],
   roads: [],
@@ -277,7 +279,7 @@ export const useVillageStore = create<VillageState>((set) => ({
   userRole: null,
   username: null,
   
-  setVillageData: (data) => set((state) => {
+  setVillageData: (data) => set(() => {
     const waterTanks = data.waterTanks || [];
     const waterPumps = data.waterPumps || [];
     const waterPipes = data.waterPipes || [];
@@ -416,7 +418,7 @@ export const useVillageStore = create<VillageState>((set) => ({
     // More realistic: proximity-based and type-appropriate connections
     
     // Each tank connects to 1-2 nearest pumps (not all pumps)
-    waterTanks.forEach((tank: any, tankIdx: number) => {
+    waterTanks.forEach((tank: any) => {
       const pumpsToConnect = waterPumps.slice(0, Math.min(2, waterPumps.length));
       pumpsToConnect.forEach((pump: any) => {
         edges.push({ source: tank.id, target: pump.id });
