@@ -19,10 +19,6 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/schemes', schemesRoutes);
-
 // Initialize database and server
 async function startServer() {
   await connectDatabase();
@@ -38,6 +34,20 @@ async function startServer() {
 const server = await startServer();
 
 const wss = new WebSocketServer({ server });
+
+// Make broadcast and wss available to routes
+app.set('wss', wss);
+app.set('broadcast', (data) => {
+  wss.clients.forEach(client => {
+    if (client.readyState === 1) { // OPEN
+      client.send(JSON.stringify(data));
+    }
+  });
+});
+
+// API Routes (after wss is initialized)
+app.use('/api/auth', authRoutes);
+app.use('/api/schemes', schemesRoutes);
 
 // Initialize village data (in-memory for real-time sensors, schemes from DB)
 let villageState = generateVillageData();

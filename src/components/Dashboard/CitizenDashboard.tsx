@@ -19,6 +19,7 @@ import { API_URL } from '../../config/api';
 
 export default function CitizenDashboard() {
   const schemes = useVillageStore((state) => state.schemes);
+  const username = useVillageStore((state) => state.username);
   const [expandedScheme, setExpandedScheme] = useState<string | null>(null);
   const [feedbackScheme, setFeedbackScheme] = useState<GovernmentScheme | null>(null);
   const [rating, setRating] = useState(0);
@@ -54,16 +55,18 @@ export default function CitizenDashboard() {
     setIsProcessing(true);
 
     try {
+      // Generate a unique userId from username or create anonymous ID
+      const userId = username || `anon-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
       const feedbackData = {
-        schemeId: feedbackScheme.id,
         rating,
         comment: comment.trim() || undefined,
         isUrgent,
-        timestamp: new Date().toISOString()
+        userId
       };
 
       // Submit feedback to backend (Gemini AI will process it)
-      const response = await fetch(`${API_URL}/api/feedback`, {
+      const response = await fetch(`${API_URL}/api/schemes/${feedbackScheme.id}/feedback`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -73,6 +76,15 @@ export default function CitizenDashboard() {
 
       if (!response.ok) {
         const error = await response.json();
+        
+        // Handle rate limiting error (429)
+        if (response.status === 429) {
+          alert(error.message || 'You have already submitted feedback recently. Please try again later.');
+          setIsProcessing(false);
+          closeFeedbackModal();
+          return;
+        }
+        
         throw new Error(error.error || 'Failed to submit feedback');
       }
 

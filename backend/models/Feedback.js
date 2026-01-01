@@ -6,6 +6,12 @@ const feedbackSchema = new mongoose.Schema({
     required: true,
     index: true
   },
+  // Anonymous user identifier (hashed IP or session ID)
+  userHash: {
+    type: String,
+    required: true,
+    select: false // Never expose to admin
+  },
   rating: {
     type: Number,
     required: true,
@@ -51,5 +57,7 @@ const feedbackSchema = new mongoose.Schema({
 
 // Index for efficient queries
 feedbackSchema.index({ schemeId: 1, createdAt: -1 });
+// Index to check if user already submitted feedback recently
+feedbackSchema.index({ schemeId: 1, userHash: 1, createdAt: -1 });
 
 export default mongoose.model('Feedback', feedbackSchema);

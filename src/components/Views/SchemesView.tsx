@@ -5,29 +5,26 @@ import {
   AlertTriangle, 
   CheckCircle, 
   DollarSign,
-  Users,
   FileText,
   Filter,
   Search,
   Calendar,
   MapPin,
   Star,
-  MessageSquare,
   X,
-  Plus,
-  Send,
-  Flag
+  Plus
 } from 'lucide-react';
 import { useVillageStore, type GovernmentScheme } from '../../store/villageStore';
+import { API_URL } from '../../config/api';
 
 export default function SchemesView() {
   // Get schemes from store instead of mock data
   const schemes = useVillageStore((state) => state.schemes);
+  const fetchSchemes = useVillageStore((state) => state.fetchSchemes);
   const userRole = useVillageStore((state) => state.userRole);
   
   const [selectedScheme, setSelectedScheme] = useState<GovernmentScheme | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showAddSchemeModal, setShowAddSchemeModal] = useState(false);
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -321,17 +318,7 @@ export default function SchemesView() {
                 >
                   Vendor Reports
                 </button>
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedScheme(scheme);
-                    setShowFeedbackModal(true);
-                  }}
-                  className="px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs font-medium hover:bg-green-200 transition-colors flex items-center space-x-1"
-                >
-                  <MessageSquare size={12} />
-                  <span>Citizen Feedback</span>
-                </button>
+                {/* Citizen Feedback button removed from admin portal */}
               </div>
             </div>
           ))}
@@ -358,25 +345,15 @@ export default function SchemesView() {
         />
       )}
 
-      {/* Citizen Feedback Modal */}
-      {showFeedbackModal && selectedScheme && (
-        <CitizenFeedbackModal 
-          scheme={selectedScheme} 
-          onClose={() => {
-            setShowFeedbackModal(false);
-            setSelectedScheme(null);
-          }}
-        />
-      )}
-
       {/* Add Scheme Modal */}
       {showAddSchemeModal && (
         <AddSchemeModal 
           onClose={() => setShowAddSchemeModal(false)}
-          onSubmit={(newScheme) => {
+          onSubmit={async (newScheme) => {
             console.log('New scheme added:', newScheme);
             setShowAddSchemeModal(false);
-            // In real app, this would send to backend
+            // Refresh schemes after adding
+            await fetchSchemes();
           }}
         />
       )}
@@ -663,130 +640,6 @@ function SchemeDetailsModal({ scheme, onClose }: { scheme: GovernmentScheme; onC
   );
 }
 
-// Citizen Feedback Modal Component
-function CitizenFeedbackModal({ scheme, onClose }: { scheme: GovernmentScheme; onClose: () => void }) {
-  const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState('');
-  const [isUrgent, setIsUrgent] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-
-  const handleSubmit = () => {
-    console.log('Feedback submitted:', { schemeId: scheme.id, rating, comment, isUrgent });
-    setSubmitted(true);
-    setTimeout(() => {
-      onClose();
-    }, 2000);
-  };
-
-  if (submitted) {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle size={32} className="text-green-600" />
-          </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-2">Thank You!</h3>
-          <p className="text-gray-600">Your anonymous feedback has been recorded and will help improve this project.</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-green-600 to-teal-600 p-6 text-white rounded-t-2xl">
-          <div className="flex items-start justify-between">
-            <div>
-              <h2 className="text-2xl font-bold mb-1">Citizen Feedback</h2>
-              <p className="text-sm opacity-90">{scheme.name}</p>
-            </div>
-            <button 
-              onClick={onClose}
-              className="p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
-            >
-              <X size={24} />
-            </button>
-          </div>
-        </div>
-
-        <div className="p-6">
-          {/* Anonymous Notice */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6 flex items-start space-x-2">
-            <Users size={16} className="text-blue-600 mt-0.5 flex-shrink-0" />
-            <div className="text-sm text-blue-900">
-              <div className="font-medium mb-1">100% Anonymous</div>
-              <div className="text-xs text-blue-700">Your identity will never be revealed. Feel free to share honest feedback.</div>
-            </div>
-          </div>
-
-          {/* Rating */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Rate this scheme</label>
-            <div className="flex space-x-2">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  onClick={() => setRating(star)}
-                  className="focus:outline-none transition-transform hover:scale-110"
-                >
-                  <Star
-                    size={32}
-                    className={star <= rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}
-                  />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Comment */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Comments (Optional)
-            </label>
-            <textarea
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Share your experience, suggestions, or concerns..."
-              className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
-              rows={4}
-              maxLength={500}
-            />
-            <div className="text-xs text-gray-500 mt-1">{comment.length}/500 characters</div>
-          </div>
-
-          {/* Urgent Issue */}
-          <div className="mb-6">
-            <label className="flex items-center space-x-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={isUrgent}
-                onChange={(e) => setIsUrgent(e.target.checked)}
-                className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
-              />
-              <div className="flex items-center space-x-1">
-                <Flag size={16} className="text-red-600" />
-                <span className="text-sm text-gray-700">Mark as urgent/critical issue</span>
-              </div>
-            </label>
-          </div>
-
-          {/* Submit Button */}
-          <button
-            onClick={handleSubmit}
-            disabled={rating === 0}
-            className="w-full py-3 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg font-medium hover:from-green-700 hover:to-teal-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-          >
-            <Send size={18} />
-            <span>Submit Feedback</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // Add Scheme Modal Component
 function AddSchemeModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (scheme: any) => void }) {
   const [formData, setFormData] = useState({
@@ -799,10 +652,40 @@ function AddSchemeModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
     endDate: '',
     description: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      console.log('📤 Submitting new scheme:', formData);
+      
+      const response = await fetch(`${API_URL}/api/schemes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create scheme');
+      }
+
+      const result = await response.json();
+      console.log('✅ Scheme created:', result);
+      
+      onSubmit(formData);
+    } catch (err: any) {
+      console.error('❌ Error creating scheme:', err);
+      setError(err.message || 'Failed to create scheme. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -950,22 +833,43 @@ function AddSchemeModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
                 </div>
               </div>
             </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-start space-x-2">
+                  <AlertTriangle size={16} className="text-red-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-red-900">{error}</div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex space-x-3 mt-6">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              disabled={isSubmitting}
+              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-indigo-700 transition-all flex items-center justify-center space-x-2"
+              disabled={isSubmitting}
+              className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-indigo-700 transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Plus size={18} />
-              <span>Add Scheme</span>
+              {isSubmitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Creating...</span>
+                </>
+              ) : (
+                <>
+                  <Plus size={18} />
+                  <span>Add Scheme</span>
+                </>
+              )}
             </button>
           </div>
         </form>

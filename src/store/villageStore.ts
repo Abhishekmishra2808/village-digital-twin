@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { API_URL } from '../config/api';
 
 export interface WaterTank {
   id: string;
@@ -191,6 +192,7 @@ interface VillageState {
   addAlert: (alert: Alert) => void;
   login: (role: 'user' | 'admin' | 'field_worker', username: string) => void;
   logout: () => void;
+  fetchSchemes: () => Promise<void>;
 }
 
 export const useVillageStore = create<VillageState>((set) => ({
@@ -268,4 +270,16 @@ export const useVillageStore = create<VillageState>((set) => ({
     username: null,
     activeView: 'dashboard',
   }),
+
+  fetchSchemes: async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/schemes`);
+      const data = await response.json();
+      if (data.schemes) {
+        set({ schemes: data.schemes });
+      }
+    } catch (error) {
+      console.error('Failed to fetch schemes:', error);
+    }
+  },
 }));

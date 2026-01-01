@@ -36,6 +36,49 @@ export default function useWebSocket() {
                 }
               }
               break;
+            
+            case 'scheme_added':
+              // Handle new scheme added
+              console.log('🆕 New scheme added:', message.scheme);
+              if (message.allSchemes) {
+                // Update schemes in the store
+                const currentState = useVillageStore.getState();
+                const updatedData = {
+                  waterTanks: currentState.waterTanks,
+                  buildings: currentState.buildings,
+                  powerNodes: currentState.powerNodes,
+                  roads: currentState.roads,
+                  sensors: currentState.sensors,
+                  citizenReports: currentState.citizenReports,
+                  schemes: message.allSchemes,
+                  alerts: currentState.alerts,
+                  kpis: currentState.kpis
+                };
+                setVillageData(updatedData);
+              }
+              setLastUpdate(message.timestamp);
+              break;
+            
+            case 'scheme_updated':
+              // Handle scheme update (e.g., new feedback added)
+              console.log('📝 Scheme updated:', message.schemeId);
+              if (message.allSchemes) {
+                const currentState = useVillageStore.getState();
+                const updatedData = {
+                  waterTanks: currentState.waterTanks,
+                  buildings: currentState.buildings,
+                  powerNodes: currentState.powerNodes,
+                  roads: currentState.roads,
+                  sensors: currentState.sensors,
+                  citizenReports: currentState.citizenReports,
+                  schemes: message.allSchemes,
+                  alerts: currentState.alerts,
+                  kpis: currentState.kpis
+                };
+                setVillageData(updatedData);
+              }
+              setLastUpdate(message.timestamp);
+              break;
               
             default:
               console.log('Unknown message type:', message.type);
