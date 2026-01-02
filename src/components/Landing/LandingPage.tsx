@@ -496,7 +496,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
 
   return (
     <div className="landing-page min-h-screen bg-white">
-      {/* Persistent Glossy Nav Bar - Enhanced */}
+      {/* Persistent Glossy Nav Bar - Enhanced & Responsive */}
       <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
@@ -505,40 +505,41 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
           boxShadow: '0 4px 30px rgba(0, 0, 0, 0.3), 0 0 1px rgba(255, 255, 255, 0.1)'
         }}
       >
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <img src="/favicon.jpg" alt="RuraLens" className="w-10 h-10 rounded-lg" />
-            <span className="text-2xl font-bold text-white tech-text tracking-tight">RuraLens</span>
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 md:py-4 flex justify-between items-center">
+          <div className="flex items-center gap-2 md:gap-3">
+            <img src="/favicon.jpg" alt="RuraLens" className="w-8 h-8 md:w-10 md:h-10 rounded-lg" />
+            <span className="text-lg sm:text-xl md:text-2xl font-bold text-white tech-text tracking-tight">RuraLens</span>
           </div>
-          <div className="hidden md:flex items-center gap-8">
-            <a href="#problem" className="text-gray-300 hover:text-teal-400 transition-colors font-medium">Problem</a>
-            <a href="#solution" className="text-gray-300 hover:text-teal-400 transition-colors font-medium">Solution</a>
-            <a href="#users" className="text-gray-300 hover:text-teal-400 transition-colors font-medium">For Whom</a>
+          <div className="flex items-center gap-3 md:gap-8">
+            <a href="#problem" className="hidden sm:inline text-gray-300 hover:text-teal-400 transition-colors font-medium text-sm md:text-base">Problem</a>
+            <a href="#solution" className="hidden sm:inline text-gray-300 hover:text-teal-400 transition-colors font-medium text-sm md:text-base">Solution</a>
+            <a href="#users" className="hidden lg:inline text-gray-300 hover:text-teal-400 transition-colors font-medium text-sm md:text-base">For Whom</a>
             <button
               onClick={onGetStarted}
-              className="px-6 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-500 transition-all font-semibold shadow-lg shadow-teal-600/30 hover:shadow-teal-600/50 tech-text"
+              className="px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-500 transition-all font-semibold shadow-lg shadow-teal-600/30 hover:shadow-teal-600/50 tech-text text-xs sm:text-sm md:text-base"
             >
-              [ LOGIN ]
+              <span className="hidden sm:inline">[ LOGIN ]</span>
+              <span className="sm:hidden">LOGIN</span>
             </button>
           </div>
         </div>
       </motion.nav>
 
-      {/* Live Data Ticker */}
-      <div className="fixed top-[73px] left-0 right-0 z-40">
+      {/* Live Data Ticker - Hidden on mobile */}
+      <div className="hidden md:block fixed top-[73px] left-0 right-0 z-40">
         <LiveDataTicker />
       </div>
 
       {/* Hero Section with Interactive Digital Twin */}
-      <section className="pt-40 pb-20 px-6 bg-gradient-to-b from-gray-50 to-white min-h-screen flex items-center">
+      <section className="pt-24 sm:pt-32 md:pt-40 pb-12 sm:pb-16 md:pb-20 px-3 sm:px-6 bg-gradient-to-b from-gray-50 to-white min-h-screen flex items-center">
         <div className="max-w-7xl mx-auto w-full">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <div className="grid lg:grid-cols-2 gap-8 md:gap-12 lg:gap-16 items-center">
             {/* Left: Content */}
             <motion.div
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
-              className="space-y-8"
+              className="space-y-4 sm:space-y-6 md:space-y-8"
             >
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
@@ -555,11 +556,12 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="text-5xl lg:text-7xl font-bold text-gray-900 leading-tight"
+                className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-gray-900 leading-tight"
               >
                 From Infrastructure{' '}
                 <span className="text-teal-600">Blindness</span>
-                <br />
+                <br className="hidden sm:block" />
+                <span className="sm:hidden"> </span>
                 to Digital{' '}
                 <span className="text-teal-600">Foresight</span>
               </motion.h1>
@@ -568,7 +570,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
-                className="text-xl text-gray-700 leading-relaxed"
+                className="text-base sm:text-lg md:text-xl text-gray-700 leading-relaxed"
               >
                 The digital twin platform for rural India. Real-time monitoring, predictive analytics, and transparent, performance-based fund management for 600,000+ villages.
               </motion.p>
@@ -577,18 +579,19 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7 }}
-                className="flex flex-wrap gap-4"
+                className="flex flex-col sm:flex-row gap-3 sm:gap-4"
               >
                 <button
                   onClick={onGetStarted}
-                  className="px-8 py-4 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-all font-bold text-lg flex items-center gap-3 shadow-xl shadow-teal-600/30 hover:shadow-2xl hover:shadow-teal-600/40 transform hover:-translate-y-1"
+                  className="px-6 sm:px-8 py-3 sm:py-4 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-all font-bold text-base sm:text-lg flex items-center justify-center gap-2 sm:gap-3 shadow-xl shadow-teal-600/30 hover:shadow-2xl hover:shadow-teal-600/40 transform hover:-translate-y-1"
                 >
-                  [ Request Demo ]
-                  <ArrowRight size={22} />
+                  <span>[ Request Demo ]</span>
+                  <ArrowRight size={18} className="sm:hidden" />
+                  <ArrowRight size={22} className="hidden sm:block" />
                 </button>
                 <a
                   href="#solution"
-                  className="px-8 py-4 bg-white text-gray-900 rounded-xl hover:bg-gray-50 transition-all font-bold text-lg border-2 border-gray-300 hover:border-teal-600 transform hover:-translate-y-1"
+                  className="px-6 sm:px-8 py-3 sm:py-4 bg-white text-gray-900 rounded-xl hover:bg-gray-50 transition-all font-bold text-base sm:text-lg border-2 border-gray-300 hover:border-teal-600 transform hover:-translate-y-1 text-center"
                 >
                   [ See How It Works ]
                 </a>
@@ -600,7 +603,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.9 }}
-                className="grid grid-cols-3 gap-6 pt-8 border-t-2 border-gray-200"
+                className="grid grid-cols-3 gap-3 sm:gap-4 md:gap-6 pt-6 md:pt-8 border-t-2 border-gray-200"
               >
                 <div>
                   <div className="text-4xl font-bold text-teal-600 tech-text">

@@ -101,18 +101,18 @@ function App() {
         <Sidebar />
         
         <main className={`flex-1 flex transition-all duration-300 ${
-          sidebarCollapsed ? 'ml-16' : 'ml-64'
-        }`}>
+          sidebarCollapsed ? 'md:ml-16' : 'md:ml-64'
+        } ml-0`}>
           {/* Central Canvas */}
           <div className={`flex-1 relative transition-all duration-300 ${
-            infoPanelOpen ? 'w-3/4' : 'w-full'
+            infoPanelOpen ? 'lg:w-3/4' : 'w-full'
           }`}>
             {renderView()}
           </div>
           
-          {/* Info Panel */}
+          {/* Info Panel - Hidden on mobile and tablet */}
           {infoPanelOpen && (
-            <div className="w-1/4 min-w-[300px] max-w-[400px]">
+            <div className="hidden lg:block w-1/4 min-w-[300px] max-w-[400px]">
               <InfoPanel />
             </div>
           )}
