@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Wrench, 
   MapPin, 
@@ -8,39 +8,101 @@ import {
   AlertCircle,
   Camera,
   ArrowRight,
-  Filter
+  Filter,
+  Loader2
 } from 'lucide-react';
 import { useVillageStore } from '../../store/villageStore';
 import { format } from 'date-fns';
 
+interface CitizenReport {
+  id: string;
+  category: string;
+  title: string;
+  description: string;
+  coords: [number, number];
+  location: string;
+  priority: string;
+  status: string;
+  assignedTo?: string;
+  photos: string[];
+  photoCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export default function FieldWorkerView() {
-  const { citizenReports, username } = useVillageStore();
-  const [filter, setFilter] = useState<'all' | 'assigned' | 'pending'>('assigned');
-  const [selectedTicket, setSelectedTicket] = useState<any>(null);
+  const { username } = useVillageStore();
+  const [reports, setReports] = useState<CitizenReport[]>([]);
+  const [filter, setFilter] = useState<'all' | 'assigned' | 'pending'>('all');
+  const [selectedTicket, setSelectedTicket] = useState<CitizenReport | null>(null);
+  const [updating, setUpdating] = useState(false);
   const [updateForm, setUpdateForm] = useState({
     status: '',
-    notes: '',
-    estimatedCompletion: '',
+    assignedTo: '',
   });
 
+  // Fetch reports from backend
+  useEffect(() => {
+    fetchReports();
+  }, []);
+
+  const fetchReports = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/api/reports');
+      const data = await response.json();
+      setReports(data.reports || []);
+    } catch (error) {
+      console.error('Error fetching reports:', error);
+    }
+  };
+
   // Filter reports for field worker
-  const myTickets = citizenReports.filter(report => {
-    if (filter === 'assigned') return report.assignedTo?.includes('Field Worker');
+  const myTickets = reports.filter(report => {
+    if (filter === 'assigned') return report.assignedTo === username || report.assignedTo?.includes('Field Worker');
     if (filter === 'pending') return report.status === 'pending';
     return true;
   });
 
   const stats = {
-    assigned: citizenReports.filter(r => r.assignedTo?.includes('Field Worker')).length,
-    inProgress: citizenReports.filter(r => r.status === 'in_progress' && r.assignedTo?.includes('Field Worker')).length,
-    completed: citizenReports.filter(r => r.status === 'completed' && r.assignedTo?.includes('Field Worker')).length,
+    assigned: reports.filter(r => r.assignedTo === username || r.assignedTo?.includes('Field Worker')).length,
+    inProgress: reports.filter(r => r.status === 'in_progress' && (r.assignedTo === username || r.assignedTo?.includes('Field Worker'))).length,
+    completed: reports.filter(r => r.status === 'completed' && (r.assignedTo === username || r.assignedTo?.includes('Field Worker'))).length,
   };
 
-  const handleUpdateTicket = (e: React.FormEvent) => {
+  const handleUpdateTicket = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In real app, send update to backend
-    alert('Ticket updated successfully!');
-    setSelectedTicket(null);
+    if (!selectedTicket) return;
+
+    setUpdating(true);
+    try {
+      const response = await fetch(`http://localhost:3001/api/reports/${selectedTicket.id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: updateForm.status,
+          assignedTo: updateForm.assignedTo || selectedTicket.assignedTo,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('Ticket updated successfully!');
+        setSelectedTicket(null);
+        setUpdateForm({ status: '', assignedTo: '' });
+        // Refresh reports
+        fetchReports();
+      } else {
+        alert('Failed to update ticket. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error updating ticket:', error);
+      alert('Failed to update ticket. Please check your connection.');
+    } finally {
+      setUpdating(false);
+    }
   };
 
   return (
@@ -167,19 +229,42 @@ export default function FieldWorkerView() {
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2 text-gray-600">
                   <MapPin size={16} />
-                  <span>{ticket.coords.join(', ')}</span>
+                  <span>{ticket.location || `${ticket.coords[1].toFixed(4)}, ${ticket.coords[0].toFixed(4)}`}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-600">
                   <Calendar size={16} />
                   <span>{format(new Date(ticket.createdAt), 'MMM dd, yyyy HH:mm')}</span>
                 </div>
-                {ticket.photos > 0 && (
+                {ticket.photoCount > 0 && (
                   <div className="flex items-center gap-2 text-gray-600">
                     <Camera size={16} />
-                    <span>{ticket.photos} photos attached</span>
+                    <span>{ticket.photoCount} photo{ticket.photoCount > 1 ? 's' : ''} attached</span>
                   </div>
                 )}
               </div>
+
+              {/* Photo Gallery */}
+              {ticket.photos && ticket.photos.length > 0 && (
+                <div className="mt-4 grid grid-cols-3 gap-2">
+                  {ticket.photos.slice(0, 3).map((photo, idx) => (
+                    <img
+                      key={idx}
+                      src={`http://localhost:3001${photo}`}
+                      alt={`Report photo ${idx + 1}`}
+                      className="w-full h-20 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(`http://localhost:3001${photo}`, '_blank');
+                      }}
+                    />
+                  ))}
+                  {ticket.photoCount > 3 && (
+                    <div className="w-full h-20 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 text-sm">
+                      +{ticket.photoCount - 3} more
+                    </div>
+                  )}
+                </div>
+              )}
 
               {ticket.assignedTo && (
                 <div className="mt-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-700 border border-blue-200">
@@ -249,51 +334,61 @@ export default function FieldWorkerView() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Work Notes
-                  </label>
-                  <textarea
-                    value={updateForm.notes}
-                    onChange={(e) => setUpdateForm({ ...updateForm, notes: e.target.value })}
-                    placeholder="Describe work done, materials used, etc."
-                    rows={4}
-                    className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-500"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Estimated Completion
+                    Assign To
                   </label>
                   <input
-                    type="datetime-local"
-                    value={updateForm.estimatedCompletion}
-                    onChange={(e) => setUpdateForm({ ...updateForm, estimatedCompletion: e.target.value })}
-                    className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-300 text-gray-900"
+                    type="text"
+                    value={updateForm.assignedTo}
+                    onChange={(e) => setUpdateForm({ ...updateForm, assignedTo: e.target.value })}
+                    placeholder={selectedTicket?.assignedTo || "Field worker name"}
+                    className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-500"
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Leave blank to keep current assignment
+                  </p>
                 </div>
 
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50">
-                  <Camera size={40} className="mx-auto text-gray-400 mb-2" />
-                  <p className="text-gray-600 mb-2">Upload Completion Photos</p>
-                  <button
-                    type="button"
-                    className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-all"
-                  >
-                    Choose Files
-                  </button>
-                </div>
+                {/* Show attached photos */}
+                {selectedTicket.photos && selectedTicket.photos.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Attached Photos ({selectedTicket.photoCount})
+                    </label>
+                    <div className="grid grid-cols-3 gap-3">
+                      {selectedTicket.photos.map((photo, idx) => (
+                        <img
+                          key={idx}
+                          src={`http://localhost:3001${photo}`}
+                          alt={`Report photo ${idx + 1}`}
+                          className="w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => window.open(`http://localhost:3001${photo}`, '_blank')}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex gap-4">
                   <button
                     type="submit"
-                    className="flex-1 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all"
+                    disabled={updating}
+                    className="flex-1 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-lg hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
                   >
-                    Submit Update
+                    {updating ? (
+                      <>
+                        <Loader2 size={18} className="animate-spin" />
+                        Updating...
+                      </>
+                    ) : (
+                      'Submit Update'
+                    )}
                   </button>
                   <button
                     type="button"
-                    onClick={() => setSelectedTicket(null)}
+                    onClick={() => {
+                      setSelectedTicket(null);
+                      setUpdateForm({ status: '', assignedTo: '' });
+                    }}
                     className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all"
                   >
                     Cancel

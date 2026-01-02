@@ -2,13 +2,20 @@ import express from 'express';
 import { WebSocketServer } from 'ws';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { generateVillageData, updateSensorData, simulateScenario } from './utils/dataGenerator.js';
 import { processFeedbackWithAI } from './utils/geminiService.js';
 import { connectDatabase, seedDatabase } from './config/database.js';
 import authRoutes from './routes/auth.js';
 import schemesRoutes from './routes/schemes.js';
+import reportsRoutes from './routes/reports.js';
 import Scheme from './models/Scheme.js';
 import Feedback from './models/Feedback.js';
+
+// Get __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Load environment variables
 dotenv.config();
@@ -18,6 +25,9 @@ const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
+
+// Serve uploaded images
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Initialize database and server
 async function startServer() {
@@ -48,6 +58,7 @@ app.set('broadcast', (data) => {
 // API Routes (after wss is initialized)
 app.use('/api/auth', authRoutes);
 app.use('/api/schemes', schemesRoutes);
+app.use('/api/reports', reportsRoutes);
 
 // Initialize village data (in-memory for real-time sensors, schemes from DB)
 let villageState = generateVillageData();

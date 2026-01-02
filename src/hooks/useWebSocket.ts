@@ -60,7 +60,8 @@ export default function useWebSocket() {
               break;
             
             case 'scheme_updated':
-              // Handle scheme update (e.g., new feedback added)
+            case 'vendor_report_added':
+              // Handle scheme update (feedback or vendor report added)
               console.log('📝 Scheme updated:', message.schemeId);
               if (message.allSchemes) {
                 const currentState = useVillageStore.getState();
@@ -77,6 +78,16 @@ export default function useWebSocket() {
                 };
                 setVillageData(updatedData);
               }
+              setLastUpdate(message.timestamp);
+              break;
+            
+            case 'report_added':
+            case 'report_updated':
+            case 'report_deleted':
+              // Handle citizen report changes
+              console.log('📋 Citizen reports updated');
+              // Frontend will fetch reports directly from API
+              // This is just for notification purposes
               setLastUpdate(message.timestamp);
               break;
               

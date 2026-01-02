@@ -372,12 +372,67 @@ router.post('/:id/vendor-report', upload.single('pdf'), async (req, res) => {
       }
       scheme.vendorReports.push(vendorReport);
 
-      // Update scheme status based on compliance
+      // ===== UPDATE SCHEME METRICS BASED ON VENDOR REPORT =====
+      
+      // 1. UPDATE BUDGET UTILIZED
+      const claimedExpense = result.analysis.expenseClaimed || 0;
+      if (claimedExpense > 0) {
+        // Add the claimed expense to budget utilized
+        scheme.budgetUtilized = (scheme.budgetUtilized || 0) + claimedExpense;
+        console.log(`💰 Budget Updated: +₹${claimedExpense} → Total: ₹${scheme.budgetUtilized}`);
+      }
+
+      // 2. UPDATE OVERALL PROGRESS
+      // Calculate progress based on phases and vendor reports
+      const totalPhases = scheme.phases.length || 4;
+      const reportedPhase = result.analysis.phase || 1;
+      
+      // Update the specific phase progress if provided in analysis
+      if (scheme.phases && scheme.phases.length > 0) {
+        const phaseIndex = scheme.phases.findIndex(p => p.id === reportedPhase);
+        if (phaseIndex !== -1) {
+          // Estimate phase progress from compliance score
+          const phaseProgress = Math.min(100, Math.round(result.analysis.overallCompliance));
+          scheme.phases[phaseIndex].progress = phaseProgress;
+          
+          // Update phase status
+          if (phaseProgress >= 100) {
+            scheme.phases[phaseIndex].status = 'completed';
+          } else if (phaseProgress > 0) {
+            scheme.phases[phaseIndex].status = result.analysis.overallCompliance >= 70 ? 'on-track' : 'delayed';
+          }
+          
+          // Update phase budget spent
+          if (claimedExpense > 0) {
+            scheme.phases[phaseIndex].spent = (scheme.phases[phaseIndex].spent || 0) + claimedExpense;
+          }
+        }
+      }
+      
+      // Calculate overall progress as average of all phases
+      let totalProgress = 0;
+      if (scheme.phases && scheme.phases.length > 0) {
+        totalProgress = scheme.phases.reduce((sum, phase) => sum + (phase.progress || 0), 0) / scheme.phases.length;
+      } else {
+        // Fallback: estimate from reported phase and compliance
+        totalProgress = ((reportedPhase - 1) / totalPhases) * 100 + (result.analysis.overallCompliance / totalPhases);
+      }
+      
+      scheme.overallProgress = Math.min(100, Math.round(totalProgress));
+      console.log(`📊 Progress Updated: ${scheme.overallProgress}%`);
+
+      // 3. UPDATE SCHEME STATUS
       if (result.analysis.discrepancies && result.analysis.discrepancies.length > 0) {
         const hasCritical = result.analysis.discrepancies.some(d => d.severity === 'critical');
         if (hasCritical) {
           scheme.status = 'discrepant';
+        } else if (result.analysis.overallCompliance < 70) {
+          scheme.status = 'delayed';
         }
+      } else if (scheme.overallProgress >= 100) {
+        scheme.status = 'completed';
+      } else if (result.analysis.overallCompliance >= 70) {
+        scheme.status = 'on-track';
       }
 
       await scheme.save();
@@ -385,18 +440,31 @@ router.post('/:id/vendor-report', upload.single('pdf'), async (req, res) => {
       // Broadcast update via WebSocket
       const broadcast = req.app.get('broadcast');
       if (broadcast) {
+        // Fetch updated scheme list to reflect changes
+        const allSchemes = await Scheme.find().sort({ lastUpdated: -1 });
         broadcast({
           type: 'vendor_report_added',
           schemeId: scheme.id,
-          report: vendorReport
+          report: vendorReport,
+          allSchemes: allSchemes, // Send updated schemes list
+          timestamp: new Date().toISOString()
         });
       }
 
       console.log('✅ Vendor report analyzed and saved');
+      console.log(`📈 Scheme Updated - Progress: ${scheme.overallProgress}%, Budget: ₹${scheme.budgetUtilized}, Status: ${scheme.status}`);
+      
       res.json({
         success: true,
         report: vendorReport,
-        message: 'Vendor report analyzed successfully'
+        message: 'Vendor report analyzed successfully',
+        updatedScheme: {
+          id: scheme.id,
+          overallProgress: scheme.overallProgress,
+          budgetUtilized: scheme.budgetUtilized,
+          status: scheme.status,
+          phases: scheme.phases
+        }
       });
     } else {
       console.error('❌ Failed to analyze vendor report:', result.error);
@@ -409,6 +477,35 @@ router.post('/:id/vendor-report', upload.single('pdf'), async (req, res) => {
   } catch (error) {
     console.error('❌ Vendor report processing error:', error);
     res.status(500).json({ error: 'Failed to process vendor report' });
+  }
+});
+// Delete a scheme (admin only)
+router.delete('/:id', async (req, res) => {
+  try {
+    const scheme = await Scheme.findOneAndDelete({ id: req.params.id });
+    if (!scheme) {
+      return res.status(404).json({ error: 'Scheme not found' });
+    }
+
+    // Optionally, delete related feedback
+    await Feedback.deleteMany({ schemeId: req.params.id });
+
+    // Broadcast to all connected clients
+    const broadcast = req.app.get('broadcast');
+    if (broadcast) {
+      const allSchemes = await Scheme.find().sort({ lastUpdated: -1 });
+      broadcast({
+        type: 'scheme_deleted',
+        schemeId: req.params.id,
+        allSchemes: allSchemes,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    res.json({ success: true, message: 'Scheme deleted successfully', schemeId: req.params.id });
+  } catch (error) {
+    console.error('Error deleting scheme:', error);
+    res.status(500).json({ error: 'Failed to delete scheme' });
   }
 });
 

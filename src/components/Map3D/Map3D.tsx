@@ -12,7 +12,7 @@ export default function Map3D() {
   const markersRef = useRef<maplibregl.Marker[]>([]);
   const userInteractedRef = useRef(false);
   const lastViewRef = useRef<string>('');
-  const [currentZoom, setCurrentZoom] = useState(15);
+  const [currentZoom, setCurrentZoom] = useState(16.6);
   const [currentPitch, setCurrentPitch] = useState(45);
   
   const { 
@@ -49,7 +49,7 @@ export default function Map3D() {
         }],
       },
       center: VILLAGE_CENTER,
-      zoom: 15,
+  zoom: 16.6, // 16.6x view
       minZoom: 12,
       maxZoom: 20,
       pitch: 45,
@@ -360,7 +360,7 @@ export default function Map3D() {
         if (waterTanks.length > 0) {
           map.current.flyTo({
             center: waterTanks[0].coords,
-            zoom: 16,
+            zoom: 16.6,
             pitch: 60,
             duration: 1500,
             essential: true,
@@ -371,7 +371,7 @@ export default function Map3D() {
         if (powerNodes.length > 0) {
           map.current.flyTo({
             center: powerNodes[0].coords,
-            zoom: 16,
+            zoom: 16.6,
             pitch: 50,
             duration: 1500,
             essential: true,
@@ -382,7 +382,7 @@ export default function Map3D() {
         // Reset to overview when switching to map view
         map.current.flyTo({
           center: VILLAGE_CENTER,
-          zoom: 15,
+          zoom: 16.6,
           pitch: 45,
           duration: 1500,
           essential: true,
@@ -421,7 +421,7 @@ export default function Map3D() {
             if (map.current) {
               map.current.flyTo({
                 center: VILLAGE_CENTER,
-                zoom: 15,
+                zoom: 16.6,
                 pitch: 45,
                 bearing: 0,
                 duration: 1000,

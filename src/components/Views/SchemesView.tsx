@@ -448,6 +448,10 @@ function SchemeDetailsModal({
   initialTab?: 'overview' | 'phases' | 'reports';
 }) {
   const [activeTab, setActiveTab] = useState<'overview' | 'phases' | 'reports'>(initialTab);
+  const userRole = useVillageStore((state) => state.userRole);
+  const deleteScheme = useVillageStore((state) => state.deleteScheme);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 md:p-4">
@@ -470,15 +474,43 @@ function SchemeDetailsModal({
                 </div>
               </div>
             </div>
-            <button 
-              onClick={onClose}
-              className="p-1.5 md:p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors flex-shrink-0"
-              aria-label="Close"
-            >
-              <X size={20} className="md:hidden" />
-              <X size={24} className="hidden md:block" />
-            </button>
+            <div className="flex flex-col items-end space-y-2">
+              <button 
+                onClick={onClose}
+                className="p-1.5 md:p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors flex-shrink-0"
+                aria-label="Close"
+              >
+                <X size={20} className="md:hidden" />
+                <X size={24} className="hidden md:block" />
+              </button>
+              {userRole === 'admin' && (
+                <button
+                  className="mt-2 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs rounded-lg font-semibold shadow transition disabled:opacity-60"
+                  disabled={isDeleting}
+                  onClick={async () => {
+                    if (!window.confirm('Are you sure you want to delete this scheme? This action cannot be undone.')) return;
+                    setIsDeleting(true);
+                    setDeleteError('');
+                    try {
+                      await deleteScheme(scheme.id);
+                      setIsDeleting(false);
+                      onClose();
+                    } catch (err: any) {
+                      setDeleteError(err.message || 'Failed to delete scheme');
+                      setIsDeleting(false);
+                    }
+                  }}
+                >
+                  {isDeleting ? 'Deleting...' : 'Delete Scheme'}
+                </button>
+              )}
+            </div>
           </div>
+        {deleteError && (
+          <div className="bg-red-100 text-red-700 rounded px-3 py-2 mb-2 text-xs font-semibold text-center">
+            {deleteError}
+          </div>
+        )}
 
           {/* Quick Stats */}
           <div className="grid grid-cols-3 gap-2 md:gap-4">
@@ -688,6 +720,7 @@ function VendorReportsTab({ scheme }: { scheme: GovernmentScheme }) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const userRole = useVillageStore((state) => state.userRole);
+  const fetchSchemes = useVillageStore((state) => state.fetchSchemes);
 
   const handleVendorReportUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -716,7 +749,21 @@ function VendorReportsTab({ scheme }: { scheme: GovernmentScheme }) {
 
       if (result.success) {
         console.log('✅ Vendor report analyzed:', result.report);
-        alert('✅ Vendor report uploaded and analyzed successfully! Refresh to see results.');
+        console.log('📊 Scheme metrics updated:', result.updatedScheme);
+        
+        // Show success message with updated metrics
+        const updatedScheme = result.updatedScheme;
+        alert(`✅ Vendor report uploaded and analyzed successfully!\n\n` +
+              `Updated Metrics:\n` +
+              `• Progress: ${updatedScheme.overallProgress}%\n` +
+              `• Budget Utilized: ₹${(updatedScheme.budgetUtilized / 100000).toFixed(2)}L\n` +
+              `• Status: ${updatedScheme.status.toUpperCase()}\n\n` +
+              `Refreshing to show updates...`);
+        
+        // Refresh the schemes data
+        await fetchSchemes();
+        
+        // Reload the page to reflect changes
         window.location.reload();
       } else {
         throw new Error(result.error || 'Failed to analyze vendor report');

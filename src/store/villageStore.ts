@@ -219,6 +219,7 @@ interface VillageState {
   login: (role: 'user' | 'admin' | 'field_worker', username: string) => void;
   logout: () => void;
   fetchSchemes: () => Promise<void>;
+  deleteScheme: (schemeId: string) => Promise<void>;
 }
 
 export const useVillageStore = create<VillageState>((set) => ({
@@ -306,6 +307,25 @@ export const useVillageStore = create<VillageState>((set) => ({
       }
     } catch (error) {
       console.error('Failed to fetch schemes:', error);
+    }
+  },
+
+  deleteScheme: async (schemeId: string) => {
+    try {
+      const response = await fetch(`${API_URL}/api/schemes/${schemeId}`, {
+        method: 'DELETE',
+      });
+      const data = await response.json();
+      if (data.success) {
+        set((state) => ({
+          schemes: state.schemes.filter((s) => s.id !== schemeId),
+        }));
+      } else {
+        throw new Error(data.error || 'Failed to delete scheme');
+      }
+    } catch (error) {
+      console.error('Failed to delete scheme:', error);
+      throw error;
     }
   },
 }));
