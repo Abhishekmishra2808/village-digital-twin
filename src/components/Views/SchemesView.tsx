@@ -1430,7 +1430,6 @@ function AddSchemeModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
     documents: [] as string[],
     monitoringCheckpoints: [] as any[]
   });
-  const [currentStep, setCurrentStep] = useState(1); // 1: Basic Info, 2: Phases, 3: Contractors, 4: Documents & Monitoring
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [isExtractingPDF, setIsExtractingPDF] = useState(false);
