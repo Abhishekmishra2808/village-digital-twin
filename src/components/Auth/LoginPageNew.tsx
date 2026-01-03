@@ -115,13 +115,17 @@ export default function LoginPage({ onBack }: LoginPageProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white px-6 py-8">
-      <div className="w-full max-w-6xl">
+    <div className="min-h-screen flex items-center justify-center bg-slate-950 relative overflow-hidden px-6 py-8">
+      {/* Background Effects */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-slate-950/60 to-slate-950 pointer-events-none" />
+      <div className="absolute top-[-10%] left-[20%] w-[50vw] h-[50vw] bg-blue-600/10 rounded-full blur-[120px] animate-pulse pointer-events-none" />
+      
+      <div className="w-full max-w-6xl relative z-10">
         {/* Back Button - Always visible at top */}
         {onBack && (
           <button
             onClick={onBack}
-            className="mb-6 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors p-2 rounded-lg hover:bg-gray-100"
+            className="mb-6 flex items-center gap-2 text-slate-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/5"
           >
             <ArrowLeft size={20} />
             <span className="text-sm font-medium">Back to Home</span>
@@ -129,11 +133,12 @@ export default function LoginPage({ onBack }: LoginPageProps) {
         )}
 
         {/* Hero Section */}
-        <div className="text-center mb-12 animate-fadeIn">
-          <h1 className="text-5xl md:text-7xl font-semibold text-gray-900 mb-6 tracking-tight">
+        <div className="text-center mb-12 animate-fadeIn flex flex-col items-center">
+          <img src="/ruralens-logo.png" alt="RuraLens Logo" className="w-24 h-24 object-contain mb-4" />
+          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 tracking-tight">
             RuraLens
           </h1>
-          <p className="text-lg md:text-xl text-gray-500 font-light max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-slate-400 font-light max-w-2xl mx-auto">
             AI-Powered Government Schemes Monitoring • Anonymous Citizen Feedback • Real-time Analytics
           </p>
         </div>
@@ -148,21 +153,21 @@ export default function LoginPage({ onBack }: LoginPageProps) {
                   <button
                     key={role.id}
                     onClick={() => setSelectedRole(role.id)}
-                    className="group relative p-8 rounded-3xl transition-all duration-500 text-left bg-gray-50 text-gray-900 hover:bg-gray-900 hover:text-white hover:scale-105 hover:shadow-2xl"
+                    className="group relative p-8 rounded-3xl transition-all duration-500 text-left bg-slate-900/50 border border-white/5 hover:border-blue-500/30 hover:bg-slate-800/80 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/10"
                   >
                     <div className="flex flex-col h-full">
-                      <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-6 bg-white group-hover:bg-white/10 transition-all">
-                        <RoleIcon size={24} className="text-gray-900 group-hover:text-white" />
+                      <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-6 bg-slate-800 border border-white/5 group-hover:bg-blue-500/20 group-hover:border-blue-500/30 transition-all">
+                        <RoleIcon size={24} className="text-slate-300 group-hover:text-blue-400" />
                       </div>
                       
-                      <h3 className="font-semibold text-lg mb-2">{role.name}</h3>
-                      <p className="text-sm mb-4 flex-grow text-gray-500 group-hover:text-gray-300">
+                      <h3 className="font-bold text-lg mb-2 text-white">{role.name}</h3>
+                      <p className="text-sm mb-4 flex-grow text-slate-400 group-hover:text-slate-300">
                         {role.description}
                       </p>
                       
-                      <div className="flex items-center text-sm font-medium text-gray-400 group-hover:text-white">
+                      <div className="flex items-center text-sm font-medium text-slate-500 group-hover:text-blue-400 transition-colors">
                         Select
-                        <ChevronRight size={16} className="ml-1" />
+                        <ChevronRight size={16} className="ml-1 group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
                   </button>
@@ -171,39 +176,39 @@ export default function LoginPage({ onBack }: LoginPageProps) {
             </div>
 
             {/* Quick Demo Login */}
-            <div className="bg-gray-50 rounded-3xl p-8 text-center">
-              <p className="text-sm text-gray-600 mb-4 font-medium">Quick Demo Access:</p>
+            <div className="bg-slate-900/30 border border-white/5 rounded-3xl p-8 text-center backdrop-blur-sm">
+              <p className="text-sm text-slate-400 mb-4 font-medium">Quick Demo Access:</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <button
                   onClick={() => quickLogin('admin@village.com', 'admin123', 'admin')}
                   disabled={loading}
-                  className="bg-purple-100 text-purple-700 py-4 px-6 rounded-xl hover:bg-purple-200 transition-colors disabled:opacity-50 font-medium text-base"
+                  className="bg-purple-500/10 border border-purple-500/20 text-purple-300 py-4 px-6 rounded-xl hover:bg-purple-500/20 transition-colors disabled:opacity-50 font-medium text-base"
                 >
                   Admin Demo
                 </button>
                 <button
                   onClick={() => quickLogin('field@village.com', 'field123', 'field_worker')}
                   disabled={loading}
-                  className="bg-blue-100 text-blue-700 py-4 px-6 rounded-xl hover:bg-blue-200 transition-colors disabled:opacity-50 font-medium text-base"
+                  className="bg-blue-500/10 border border-blue-500/20 text-blue-300 py-4 px-6 rounded-xl hover:bg-blue-500/20 transition-colors disabled:opacity-50 font-medium text-base"
                 >
                   Field Demo
                 </button>
                 <button
                   onClick={() => quickLogin('citizen@village.com', 'user123', 'user')}
                   disabled={loading}
-                  className="bg-green-100 text-green-700 py-4 px-6 rounded-xl hover:bg-green-200 transition-colors disabled:opacity-50 font-medium text-base"
+                  className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 py-4 px-6 rounded-xl hover:bg-emerald-500/20 transition-colors disabled:opacity-50 font-medium text-base"
                 >
                   Citizen Demo
                 </button>
               </div>
               {error && (
-                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-center space-x-2 text-red-700">
+                <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center justify-center space-x-2 text-red-400">
                   <AlertCircle size={16} />
                   <span className="text-sm">{error}</span>
                 </div>
               )}
               {loading && (
-                <div className="mt-4 flex items-center justify-center space-x-2 text-gray-600">
+                <div className="mt-4 flex items-center justify-center space-x-2 text-slate-400">
                   <Loader size={16} className="animate-spin" />
                   <span className="text-sm">Logging in...</span>
                 </div>
@@ -215,21 +220,21 @@ export default function LoginPage({ onBack }: LoginPageProps) {
           <div className="max-w-md mx-auto animate-fadeIn">
             <button
               onClick={() => { setSelectedRole(null); setError(''); }}
-              className="text-gray-500 hover:text-gray-900 mb-8 flex items-center gap-2 transition-colors text-sm"
+              className="text-slate-400 hover:text-white mb-8 flex items-center gap-2 transition-colors text-sm"
             >
               ← Back
             </button>
 
-            <div className="bg-gray-50 rounded-3xl p-10">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-2 text-center">
+            <div className="bg-slate-900/50 border border-white/5 backdrop-blur-md rounded-3xl p-10 shadow-2xl">
+              <h2 className="text-2xl font-bold text-white mb-2 text-center">
                 {isRegister ? 'Create Account' : 'Sign In'}
               </h2>
-              <p className="text-sm text-gray-500 mb-8 text-center">
+              <p className="text-sm text-slate-400 mb-8 text-center">
                 as {roles.find(r => r.id === selectedRole)?.name}
               </p>
 
               {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2 text-red-700">
+                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center space-x-2 text-red-400">
                   <AlertCircle size={16} />
                   <span className="text-sm">{error}</span>
                 </div>
@@ -239,12 +244,12 @@ export default function LoginPage({ onBack }: LoginPageProps) {
                 {isRegister && (
                   <div>
                     <div className="relative">
-                      <User size={18} className="absolute left-4 top-4 text-gray-400" />
+                      <User size={18} className="absolute left-4 top-4 text-slate-400" />
                       <input
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="w-full pl-12 pr-5 py-4 rounded-xl bg-white border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
+                        className="w-full pl-12 pr-5 py-4 rounded-xl bg-slate-800/50 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                         placeholder="Full Name"
                         required={isRegister}
                       />
@@ -254,12 +259,12 @@ export default function LoginPage({ onBack }: LoginPageProps) {
 
                 <div>
                   <div className="relative">
-                    <Mail size={18} className="absolute left-4 top-4 text-gray-400" />
+                    <Mail size={18} className="absolute left-4 top-4 text-slate-400" />
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-12 pr-5 py-4 rounded-xl bg-white border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
+                      className="w-full pl-12 pr-5 py-4 rounded-xl bg-slate-800/50 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                       placeholder="Email"
                       required
                     />
@@ -268,12 +273,12 @@ export default function LoginPage({ onBack }: LoginPageProps) {
 
                 <div>
                   <div className="relative">
-                    <Lock size={18} className="absolute left-4 top-4 text-gray-400" />
+                    <Lock size={18} className="absolute left-4 top-4 text-slate-400" />
                     <input
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-12 pr-5 py-4 rounded-xl bg-white border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
+                      className="w-full pl-12 pr-5 py-4 rounded-xl bg-slate-800/50 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                       placeholder="Password"
                       required
                       minLength={6}
@@ -284,7 +289,7 @@ export default function LoginPage({ onBack }: LoginPageProps) {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-gray-900 text-white py-4 rounded-xl font-medium hover:bg-gray-800 transition-all duration-300 shadow-sm hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                  className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-500 transition-all duration-300 shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                 >
                   {loading ? (
                     <>
@@ -300,15 +305,15 @@ export default function LoginPage({ onBack }: LoginPageProps) {
               <div className="mt-6 text-center">
                 <button
                   onClick={() => { setIsRegister(!isRegister); setError(''); }}
-                  className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                  className="text-sm text-slate-400 hover:text-white transition-colors"
                 >
                   {isRegister ? 'Already have an account? Sign in' : 'Need an account? Register'}
                 </button>
               </div>
 
-              <div className="mt-8 pt-8 border-t border-gray-200 text-center">
-                <p className="text-xs text-gray-400 mb-2">Demo credentials:</p>
-                <p className="text-xs text-gray-500">admin@village.com / admin123</p>
+              <div className="mt-8 pt-8 border-t border-white/5 text-center">
+                <p className="text-xs text-slate-500 mb-2">Demo credentials:</p>
+                <p className="text-xs text-slate-400">admin@village.com / admin123</p>
               </div>
             </div>
           </div>
@@ -316,7 +321,7 @@ export default function LoginPage({ onBack }: LoginPageProps) {
 
         {/* Footer */}
         <div className="text-center mt-12">
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-slate-500">
             Powered by MongoDB • Gemini AI • Real-time WebSocket
           </p>
         </div>

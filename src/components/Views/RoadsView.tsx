@@ -23,83 +23,83 @@ export default function RoadsView() {
   };
 
   return (
-    <div className="h-full w-full overflow-auto bg-gray-50 p-6">
+    <div className="h-full w-full overflow-auto p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-sm">
+            <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/20">
               <Navigation size={24} className="text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Roads & Transport</h1>
-              <p className="text-gray-600">Monitor road conditions and maintenance schedules</p>
+              <h1 className="text-3xl font-bold text-white">Roads & Transport</h1>
+              <p className="text-slate-400">Monitor road conditions and maintenance schedules</p>
             </div>
           </div>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
             <div className="flex items-center gap-3 mb-2">
-              <Navigation size={20} className="text-blue-600" />
-              <h3 className="text-gray-600 text-sm">Total Roads</h3>
+              <Navigation size={20} className="text-blue-400" />
+              <h3 className="text-slate-400 text-sm">Total Roads</h3>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.totalRoads}</p>
+            <p className="text-3xl font-bold text-white">{stats.totalRoads}</p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
             <div className="flex items-center gap-3 mb-2">
-              <MapPin size={20} className="text-purple-600" />
-              <h3 className="text-gray-600 text-sm">Total Length</h3>
+              <MapPin size={20} className="text-purple-400" />
+              <h3 className="text-slate-400 text-sm">Total Length</h3>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.totalLength.toFixed(1)} km</p>
+            <p className="text-3xl font-bold text-white">{stats.totalLength.toFixed(1)} km</p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
             <div className="flex items-center gap-3 mb-2">
-              <CheckCircle size={20} className="text-green-600" />
-              <h3 className="text-gray-600 text-sm">Good Condition</h3>
+              <CheckCircle size={20} className="text-green-400" />
+              <h3 className="text-slate-400 text-sm">Good Condition</h3>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.good}</p>
+            <p className="text-3xl font-bold text-white">{stats.good}</p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
             <div className="flex items-center gap-3 mb-2">
-              <Wrench size={20} className="text-yellow-600" />
-              <h3 className="text-gray-600 text-sm">Needs Repair</h3>
+              <Wrench size={20} className="text-yellow-400" />
+              <h3 className="text-slate-400 text-sm">Needs Repair</h3>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.needsRepair}</p>
+            <p className="text-3xl font-bold text-white">{stats.needsRepair}</p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
             <div className="flex items-center gap-3 mb-2">
-              <AlertTriangle size={20} className="text-red-600" />
-              <h3 className="text-gray-600 text-sm">Total Potholes</h3>
+              <AlertTriangle size={20} className="text-red-400" />
+              <h3 className="text-slate-400 text-sm">Total Potholes</h3>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.totalPotholes}</p>
+            <p className="text-3xl font-bold text-white">{stats.totalPotholes}</p>
           </div>
         </div>
 
         {/* Road Segments Grid */}
-        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Road Segments</h2>
+        <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
+          <h2 className="text-xl font-bold text-white mb-6">Road Segments</h2>
           
           <div className="space-y-4">
             {roadSegments.map((road) => (
               <div
                 key={road.id}
-                className="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-md transition-all cursor-pointer"
+                className="p-4 bg-slate-800/50 rounded-lg border border-white/5 hover:bg-slate-800 transition-all cursor-pointer"
                 onClick={() => setSelectedAsset({ type: 'road', data: road })}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">{road.name}</h3>
+                      <h3 className="text-lg font-semibold text-white">{road.name}</h3>
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        road.condition === 'good' ? 'bg-green-50 text-green-700 border border-green-200' :
-                        road.condition === 'warning' ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' :
-                        'bg-red-50 text-red-700 border border-red-200'
+                        road.condition === 'good' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
+                        road.condition === 'warning' ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' :
+                        'bg-red-500/10 text-red-400 border border-red-500/20'
                       }`}>
                         {road.condition.toUpperCase()}
                       </span>
@@ -107,46 +107,46 @@ export default function RoadsView() {
                     
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3">
                       <div>
-                        <p className="text-xs text-gray-600">Length</p>
-                        <p className="text-sm font-semibold text-gray-900">{road.length} km</p>
+                        <p className="text-xs text-slate-400">Length</p>
+                        <p className="text-sm font-semibold text-white">{road.length} km</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-600">Potholes</p>
-                        <p className={`text-sm font-semibold ${road.potholes > 5 ? 'text-red-600' : road.potholes > 0 ? 'text-yellow-600' : 'text-green-600'}`}>
+                        <p className="text-xs text-slate-400">Potholes</p>
+                        <p className={`text-sm font-semibold ${road.potholes > 5 ? 'text-red-400' : road.potholes > 0 ? 'text-yellow-400' : 'text-green-400'}`}>
                           {road.potholes}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-600">Traffic Level</p>
-                        <p className="text-sm font-semibold text-gray-900 capitalize">{road.trafficLevel}</p>
+                        <p className="text-xs text-slate-400">Traffic Level</p>
+                        <p className="text-sm font-semibold text-white capitalize">{road.trafficLevel}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-600">Last Maintenance</p>
-                        <p className="text-sm font-semibold text-gray-900">{new Date(road.lastMaintenance).toLocaleDateString()}</p>
+                        <p className="text-xs text-slate-400">Last Maintenance</p>
+                        <p className="text-sm font-semibold text-white">{new Date(road.lastMaintenance).toLocaleDateString()}</p>
                       </div>
                     </div>
                   </div>
 
                   <div className={`ml-4 p-3 rounded-lg ${
-                    road.condition === 'good' ? 'bg-green-50' :
-                    road.condition === 'warning' ? 'bg-yellow-50' :
-                    'bg-red-50'
+                    road.condition === 'good' ? 'bg-green-500/10' :
+                    road.condition === 'warning' ? 'bg-yellow-500/10' :
+                    'bg-red-500/10'
                   }`}>
-                    {road.condition === 'good' && <CheckCircle size={24} className="text-green-600" />}
-                    {road.condition === 'warning' && <Clock size={24} className="text-yellow-600" />}
-                    {road.condition === 'critical' && <AlertTriangle size={24} className="text-red-600" />}
+                    {road.condition === 'good' && <CheckCircle size={24} className="text-green-400" />}
+                    {road.condition === 'warning' && <Clock size={24} className="text-yellow-400" />}
+                    {road.condition === 'critical' && <AlertTriangle size={24} className="text-red-400" />}
                   </div>
                 </div>
 
                 {/* Progress Bar for Condition */}
                 <div className="mt-4">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-gray-600">Road Condition Score</span>
-                    <span className="text-xs font-semibold text-gray-900">
+                    <span className="text-xs text-slate-400">Road Condition Score</span>
+                    <span className="text-xs font-semibold text-white">
                       {road.condition === 'good' ? '85%' : road.condition === 'warning' ? '60%' : '35%'}
                     </span>
                   </div>
-                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
                     <div 
                       className={`h-full ${
                         road.condition === 'good' ? 'bg-green-500' :

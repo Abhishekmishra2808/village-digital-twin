@@ -23,133 +23,133 @@ export default function WasteView() {
   };
 
   return (
-    <div className="h-full w-full overflow-auto bg-gray-50 p-6">
+    <div className="h-full w-full overflow-auto p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-sm">
+            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/20">
               <Trash2 size={24} className="text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Waste Management</h1>
-              <p className="text-gray-600">Monitor waste collection points and schedules</p>
+              <h1 className="text-3xl font-bold text-white">Waste Management</h1>
+              <p className="text-slate-400">Monitor waste collection points and schedules</p>
             </div>
           </div>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
             <div className="flex items-center gap-3 mb-2">
-              <Trash2 size={20} className="text-gray-600" />
-              <h3 className="text-gray-600 text-sm">Total Bins</h3>
+              <Trash2 size={20} className="text-slate-400" />
+              <h3 className="text-slate-400 text-sm">Total Bins</h3>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.totalBins}</p>
+            <p className="text-3xl font-bold text-white">{stats.totalBins}</p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
             <div className="flex items-center gap-3 mb-2">
-              <AlertTriangle size={20} className="text-red-600" />
-              <h3 className="text-gray-600 text-sm">Critical</h3>
+              <AlertTriangle size={20} className="text-red-400" />
+              <h3 className="text-slate-400 text-sm">Critical</h3>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.critical}</p>
+            <p className="text-3xl font-bold text-white">{stats.critical}</p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
             <div className="flex items-center gap-3 mb-2">
-              <TrendingUp size={20} className="text-blue-600" />
-              <h3 className="text-gray-600 text-sm">Avg Fill Level</h3>
+              <TrendingUp size={20} className="text-blue-400" />
+              <h3 className="text-slate-400 text-sm">Avg Fill Level</h3>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.avgFillLevel.toFixed(0)}%</p>
+            <p className="text-3xl font-bold text-white">{stats.avgFillLevel.toFixed(0)}%</p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
             <div className="flex items-center gap-3 mb-2">
-              <CheckCircle size={20} className="text-green-600" />
-              <h3 className="text-gray-600 text-sm">Collected Today</h3>
+              <CheckCircle size={20} className="text-green-400" />
+              <h3 className="text-slate-400 text-sm">Collected Today</h3>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.collected}</p>
+            <p className="text-3xl font-bold text-white">{stats.collected}</p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+          <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
             <div className="flex items-center gap-3 mb-2">
-              <Clock size={20} className="text-orange-600" />
-              <h3 className="text-gray-600 text-sm">Pending</h3>
+              <Clock size={20} className="text-orange-400" />
+              <h3 className="text-slate-400 text-sm">Pending</h3>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.pending}</p>
+            <p className="text-3xl font-bold text-white">{stats.pending}</p>
           </div>
         </div>
 
         {/* Waste Collection Points Grid */}
-        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Waste Collection Points</h2>
+        <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
+          <h2 className="text-xl font-bold text-white mb-6">Waste Collection Points</h2>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {wastePoints.map((point) => (
               <div
                 key={point.id}
-                className="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-md transition-all cursor-pointer"
+                className="p-4 bg-slate-800/50 rounded-lg border border-white/5 hover:bg-slate-800 transition-all cursor-pointer"
                 onClick={() => setSelectedAsset({ type: 'wasteBin', data: point })}
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">{point.name}</h3>
+                      <h3 className="text-lg font-semibold text-white">{point.name}</h3>
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        point.status === 'good' ? 'bg-green-50 text-green-700 border border-green-200' :
-                        point.status === 'warning' ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' :
-                        'bg-red-50 text-red-700 border border-red-200'
+                        point.status === 'good' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
+                        point.status === 'warning' ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' :
+                        'bg-red-500/10 text-red-400 border border-red-500/20'
                       }`}>
                         {point.status.toUpperCase()}
                       </span>
                     </div>
                     
-                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
+                    <div className="flex items-center gap-2 text-sm text-slate-400 mb-3">
                       <MapPin size={14} />
                       <span>{point.location}</span>
                     </div>
                   </div>
 
                   <div className={`ml-4 p-3 rounded-lg ${
-                    point.status === 'good' ? 'bg-green-50' :
-                    point.status === 'warning' ? 'bg-yellow-50' :
-                    'bg-red-50'
+                    point.status === 'good' ? 'bg-green-500/10' :
+                    point.status === 'warning' ? 'bg-yellow-500/10' :
+                    'bg-red-500/10'
                   }`}>
-                    {point.status === 'good' && <CheckCircle size={24} className="text-green-600" />}
-                    {point.status === 'warning' && <Clock size={24} className="text-yellow-600" />}
-                    {point.status === 'critical' && <AlertTriangle size={24} className="text-red-600" />}
+                    {point.status === 'good' && <CheckCircle size={24} className="text-green-400" />}
+                    {point.status === 'warning' && <Clock size={24} className="text-yellow-400" />}
+                    {point.status === 'critical' && <AlertTriangle size={24} className="text-red-400" />}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-3 mb-4">
                   <div>
-                    <p className="text-xs text-gray-600">Type</p>
-                    <p className="text-sm font-semibold text-gray-900 capitalize">{point.type}</p>
+                    <p className="text-xs text-slate-400">Type</p>
+                    <p className="text-sm font-semibold text-white capitalize">{point.type}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600">Capacity</p>
-                    <p className="text-sm font-semibold text-gray-900">{point.capacity}L</p>
+                    <p className="text-xs text-slate-400">Capacity</p>
+                    <p className="text-sm font-semibold text-white">{point.capacity}L</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600">Last Collection</p>
-                    <p className="text-sm font-semibold text-gray-900">{new Date(point.lastCollection).toLocaleDateString()}</p>
+                    <p className="text-xs text-slate-400">Last Collection</p>
+                    <p className="text-sm font-semibold text-white">{new Date(point.lastCollection).toLocaleDateString()}</p>
                   </div>
                 </div>
 
                 {/* Fill Level Progress Bar */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-gray-600">Fill Level</span>
+                    <span className="text-xs text-slate-400">Fill Level</span>
                     <span className={`text-xs font-semibold ${
-                      point.fillLevel > 80 ? 'text-red-600' :
-                      point.fillLevel > 60 ? 'text-yellow-600' :
-                      'text-green-600'
+                      point.fillLevel > 80 ? 'text-red-400' :
+                      point.fillLevel > 60 ? 'text-yellow-400' :
+                      'text-green-400'
                     }`}>
                       {point.fillLevel}%
                     </span>
                   </div>
-                  <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="w-full h-3 bg-slate-700 rounded-full overflow-hidden">
                     <div 
                       className={`h-full transition-all ${
                         point.fillLevel > 80 ? 'bg-red-500' :
@@ -166,15 +166,15 @@ export default function WasteView() {
         </div>
 
         {/* Collection Schedule */}
-        <div className="mt-6 bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Weekly Collection Schedule</h2>
+        <div className="mt-6 bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
+          <h2 className="text-xl font-bold text-white mb-4">Weekly Collection Schedule</h2>
           <div className="grid grid-cols-7 gap-2">
             {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, idx) => (
               <div key={day} className={`p-3 rounded-lg text-center ${
-                idx === 4 ? 'bg-blue-50 border-2 border-blue-500' : 'bg-gray-50 border border-gray-200'
+                idx === 4 ? 'bg-blue-500/10 border-2 border-blue-500/50' : 'bg-slate-800/50 border border-white/10'
               }`}>
-                <p className={`text-xs font-semibold ${idx === 4 ? 'text-blue-700' : 'text-gray-600'}`}>{day}</p>
-                <p className={`text-lg font-bold mt-1 ${idx === 4 ? 'text-blue-700' : 'text-gray-900'}`}>
+                <p className={`text-xs font-semibold ${idx === 4 ? 'text-blue-400' : 'text-slate-400'}`}>{day}</p>
+                <p className={`text-lg font-bold mt-1 ${idx === 4 ? 'text-blue-400' : 'text-white'}`}>
                   {idx === 4 ? '✓' : idx % 2 === 0 ? '✓' : '-'}
                 </p>
               </div>

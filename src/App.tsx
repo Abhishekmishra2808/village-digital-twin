@@ -96,7 +96,7 @@ function App() {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden bg-gray-50">
+    <div className="h-screen w-screen flex flex-col overflow-hidden bg-slate-950 text-slate-200">
       <TopNav />
       
       <div className="flex-1 flex overflow-hidden" style={{

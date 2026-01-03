@@ -67,7 +67,7 @@ export default function Sidebar() {
       {/* Mobile Overlay - Only visible when sidebar is open on mobile */}
       {!sidebarCollapsed && (
         <div 
-          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-20 top-16 bottom-8"
+          className="md:hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-20 top-16 bottom-8"
           onClick={toggleSidebar}
           aria-label="Close sidebar"
         />
@@ -75,7 +75,7 @@ export default function Sidebar() {
 
       {/* Sidebar - Always render content, just hide/show the container */}
       <aside 
-        className={`fixed left-0 bottom-8 bg-white border-r border-gray-200 shadow-sm transition-transform duration-300 z-30 ${
+        className={`fixed left-0 bottom-8 bg-slate-900/50 backdrop-blur-md border-r border-white/10 shadow-xl transition-transform duration-300 z-30 ${
           sidebarCollapsed 
             ? '-translate-x-full md:translate-x-0 md:w-16' 
             : 'translate-x-0 w-64'
@@ -87,7 +87,7 @@ export default function Sidebar() {
         {/* Toggle Button - Desktop Only */}
         <button
           onClick={toggleSidebar}
-          className="hidden md:flex absolute -right-3 top-6 w-6 h-6 bg-gray-900 rounded-full items-center justify-center hover:bg-gray-800 transition-colors shadow-lg z-50"
+          className="hidden md:flex absolute -right-3 top-6 w-6 h-6 bg-blue-600 rounded-full items-center justify-center hover:bg-blue-500 transition-colors shadow-lg shadow-blue-500/20 z-50"
           aria-label="Toggle sidebar"
         >
           {sidebarCollapsed ? (
@@ -110,8 +110,8 @@ export default function Sidebar() {
                 onClick={() => handleMenuClick(item.id)}
                 className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
                   isActive 
-                    ? 'bg-gray-900 text-white shadow-sm' 
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' 
+                    : 'text-slate-400 hover:bg-white/5 hover:text-white'
                 }`}
                 title={sidebarCollapsed ? item.label : ''}
               >

@@ -82,7 +82,7 @@ export default function SchemesView() {
   };
 
   return (
-    <div className="h-full overflow-auto bg-gray-50">
+    <div className="h-full overflow-auto bg-transparent">
       <div className="max-w-7xl mx-auto p-3 md:p-6">
         {/* Header */}
         <div className="mb-6 md:mb-8">
@@ -93,8 +93,8 @@ export default function SchemesView() {
                 <Briefcase size={24} className="hidden md:block text-white" />
               </div>
               <div>
-                <h1 className="text-xl md:text-3xl font-bold text-gray-900">Government Schemes Dashboard</h1>
-                <p className="text-sm md:text-base text-gray-600">Real-time monitoring of rural development projects</p>
+                <h1 className="text-xl md:text-3xl font-bold text-white">Government Schemes Dashboard</h1>
+                <p className="text-sm md:text-base text-slate-400">Real-time monitoring of rural development projects</p>
               </div>
             </div>
             {/* Action Buttons */}
@@ -122,67 +122,67 @@ export default function SchemesView() {
 
         {/* Summary KPI Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
+          <div className="bg-slate-900/50 backdrop-blur-md rounded-xl shadow-sm border border-white/10 p-4 md:p-6">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-xs md:text-sm font-medium text-gray-600">Total Schemes</div>
-              <Briefcase size={16} className="md:hidden text-purple-600" />
-              <Briefcase size={20} className="hidden md:block text-purple-600" />
+              <div className="text-xs md:text-sm font-medium text-slate-400">Total Schemes</div>
+              <Briefcase size={16} className="md:hidden text-purple-400" />
+              <Briefcase size={20} className="hidden md:block text-purple-400" />
             </div>
-            <div className="text-2xl md:text-3xl font-bold text-gray-900">{totalSchemes}</div>
-            <div className="text-[10px] md:text-xs text-gray-500 mt-1">Active projects</div>
+            <div className="text-2xl md:text-3xl font-bold text-white">{totalSchemes}</div>
+            <div className="text-[10px] md:text-xs text-slate-500 mt-1">Active projects</div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
+          <div className="bg-slate-900/50 backdrop-blur-md rounded-xl shadow-sm border border-white/10 p-4 md:p-6">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-xs md:text-sm font-medium text-gray-600">On Track / Delayed</div>
-              <TrendingUp size={16} className="md:hidden text-green-600" />
-              <TrendingUp size={20} className="hidden md:block text-green-600" />
+              <div className="text-xs md:text-sm font-medium text-slate-400">On Track / Delayed</div>
+              <TrendingUp size={16} className="md:hidden text-emerald-400" />
+              <TrendingUp size={20} className="hidden md:block text-emerald-400" />
             </div>
-            <div className="text-2xl md:text-3xl font-bold text-gray-900">{onTrackSchemes} / {delayedSchemes}</div>
-            <div className="text-[10px] md:text-xs text-gray-500 mt-1">{discrepantSchemes} with discrepancies</div>
+            <div className="text-2xl md:text-3xl font-bold text-white">{onTrackSchemes} / {delayedSchemes}</div>
+            <div className="text-[10px] md:text-xs text-slate-500 mt-1">{discrepantSchemes} with discrepancies</div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
+          <div className="bg-slate-900/50 backdrop-blur-md rounded-xl shadow-sm border border-white/10 p-4 md:p-6">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-xs md:text-sm font-medium text-gray-600">Budget Utilization</div>
-              <DollarSign size={16} className="md:hidden text-blue-600" />
-              <DollarSign size={20} className="hidden md:block text-blue-600" />
+              <div className="text-xs md:text-sm font-medium text-slate-400">Budget Utilization</div>
+              <DollarSign size={16} className="md:hidden text-blue-400" />
+              <DollarSign size={20} className="hidden md:block text-blue-400" />
             </div>
-            <div className="text-2xl md:text-3xl font-bold text-gray-900">{totalBudget > 0 ? Math.round((budgetUtilized / totalBudget) * 100) : 0}%</div>
-            <div className="text-[10px] md:text-xs text-gray-500 mt-1">₹{(budgetUtilized / 10000000).toFixed(1)}Cr of ₹{(totalBudget / 10000000).toFixed(1)}Cr</div>
+            <div className="text-2xl md:text-3xl font-bold text-white">{totalBudget > 0 ? Math.round((budgetUtilized / totalBudget) * 100) : 0}%</div>
+            <div className="text-[10px] md:text-xs text-slate-500 mt-1">₹{(budgetUtilized / 10000000).toFixed(1)}Cr of ₹{(totalBudget / 10000000).toFixed(1)}Cr</div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
+          <div className="bg-slate-900/50 backdrop-blur-md rounded-xl shadow-sm border border-white/10 p-4 md:p-6">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-xs md:text-sm font-medium text-gray-600">Avg Progress</div>
-              <CheckCircle size={16} className="md:hidden text-indigo-600" />
-              <CheckCircle size={20} className="hidden md:block text-indigo-600" />
+              <div className="text-xs md:text-sm font-medium text-slate-400">Avg Progress</div>
+              <CheckCircle size={16} className="md:hidden text-indigo-400" />
+              <CheckCircle size={20} className="hidden md:block text-indigo-400" />
             </div>
-            <div className="text-2xl md:text-3xl font-bold text-gray-900">{avgProgress}%</div>
-            <div className="text-[10px] md:text-xs text-gray-500 mt-1">{totalFeedback} citizen feedbacks</div>
+            <div className="text-2xl md:text-3xl font-bold text-white">{avgProgress}%</div>
+            <div className="text-[10px] md:text-xs text-slate-500 mt-1">{totalFeedback} citizen feedbacks</div>
           </div>
         </div>
 
         {/* Filters & Search */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 md:p-4 mb-4 md:mb-6">
+        <div className="bg-slate-900/50 backdrop-blur-md rounded-xl shadow-sm border border-white/10 p-3 md:p-4 mb-4 md:mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4">
             <div className="relative">
-              <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500" />
               <input
                 type="text"
                 placeholder="Search schemes..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm md:text-base text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-white/10 rounded-lg text-sm md:text-base text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-slate-500"
               />
             </div>
 
             <div className="relative">
-              <Filter size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Filter size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500" />
               <select
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none"
+                className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none"
               >
                 <option value="all">All Categories</option>
                 <option value="sanitation">Sanitation</option>
@@ -194,11 +194,11 @@ export default function SchemesView() {
             </div>
 
             <div className="relative">
-              <Filter size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Filter size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500" />
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none"
+                className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none"
               >
                 <option value="all">All Status</option>
                 <option value="on-track">On Track</option>
@@ -214,7 +214,7 @@ export default function SchemesView() {
                 setFilterStatus('all');
                 setSearchQuery('');
               }}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium text-gray-700"
+              className="px-4 py-2 border border-white/10 rounded-lg hover:bg-white/5 transition-colors text-sm font-medium text-slate-300"
             >
               Clear Filters
             </button>
@@ -231,37 +231,37 @@ export default function SchemesView() {
                 setModalInitialTab('overview');
                 setShowDetailsModal(true);
               }}
-              className="bg-white rounded-2xl shadow-sm border border-gray-200 hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden group"
+              className="bg-slate-900/50 backdrop-blur-md rounded-2xl shadow-sm border border-white/10 hover:border-white/20 transition-all duration-300 cursor-pointer overflow-hidden group"
             >
               {/* Header Section with Gradient */}
-              <div className="bg-gradient-to-r from-purple-50 via-blue-50 to-indigo-50 p-4 md:p-6 border-b border-gray-100">
+              <div className="bg-gradient-to-r from-purple-500/10 via-blue-500/10 to-indigo-500/10 p-4 md:p-6 border-b border-white/5">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start space-x-3 md:space-x-4 flex-1">
                     {/* Category Icon */}
-                    <div className="flex-shrink-0 w-12 h-12 md:w-14 md:h-14 bg-white rounded-xl shadow-sm flex items-center justify-center text-2xl md:text-3xl">
+                    <div className="flex-shrink-0 w-12 h-12 md:w-14 md:h-14 bg-slate-800 rounded-xl shadow-sm flex items-center justify-center text-2xl md:text-3xl border border-white/5">
                       {categoryIcons[scheme.category] || '📋'}
                     </div>
                     
                     {/* Title and Meta */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-purple-700 transition-colors">
+                      <h3 className="text-lg md:text-xl font-bold text-white mb-2 line-clamp-2 group-hover:text-purple-400 transition-colors">
                         {scheme.name}
                       </h3>
                       
                       <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-3">
                         <StatusBadge status={scheme.status} />
-                        <span className="px-2.5 py-1 bg-white rounded-full text-xs font-medium text-gray-700 border border-gray-200">
+                        <span className="px-2.5 py-1 bg-slate-800 rounded-full text-xs font-medium text-slate-300 border border-white/10">
                           {scheme.category}
                         </span>
                       </div>
                       
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-600">
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400">
                         <div className="flex items-center space-x-1">
-                          <MapPin size={14} className="flex-shrink-0 text-gray-400" />
+                          <MapPin size={14} className="flex-shrink-0 text-slate-500" />
                           <span className="truncate">{scheme.village}, {scheme.district}</span>
                         </div>
                         <div className="flex items-center space-x-1">
-                          <FileText size={14} className="flex-shrink-0 text-gray-400" />
+                          <FileText size={14} className="flex-shrink-0 text-slate-500" />
                           <span className="font-mono">{scheme.id}</span>
                         </div>
                       </div>
@@ -276,7 +276,7 @@ export default function SchemesView() {
                           cx="50%"
                           cy="50%"
                           r="30%"
-                          stroke="#e5e7eb"
+                          stroke="#334155"
                           strokeWidth="8"
                           fill="none"
                         />
@@ -298,7 +298,7 @@ export default function SchemesView() {
                         />
                       </svg>
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-lg md:text-xl font-bold text-gray-900">{scheme.overallProgress}%</span>
+                        <span className="text-lg md:text-xl font-bold text-white">{scheme.overallProgress}%</span>
                       </div>
                     </div>
                   </div>
@@ -306,41 +306,41 @@ export default function SchemesView() {
               </div>
               
               {/* Stats Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 md:p-6 bg-gray-50">
-                <div className="text-center p-3 bg-white rounded-xl border border-gray-100">
-                  <div className="text-xs text-gray-500 mb-1">Budget</div>
-                  <div className="text-sm md:text-base font-bold text-gray-900">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 md:p-6 bg-slate-900/30">
+                <div className="text-center p-3 bg-slate-800/50 rounded-xl border border-white/5">
+                  <div className="text-xs text-slate-500 mb-1">Budget</div>
+                  <div className="text-sm md:text-base font-bold text-white">
                     ₹{(scheme.totalBudget / 100000).toFixed(1)}L
                   </div>
-                  <div className="text-[10px] text-gray-400 mt-0.5">
+                  <div className="text-[10px] text-slate-500 mt-0.5">
                     {Math.round((scheme.budgetUtilized / scheme.totalBudget) * 100)}% used
                   </div>
                 </div>
                 
-                <div className="text-center p-3 bg-white rounded-xl border border-gray-100">
-                  <div className="text-xs text-gray-500 mb-1">Utilized</div>
-                  <div className="text-sm md:text-base font-bold text-green-600">
+                <div className="text-center p-3 bg-slate-800/50 rounded-xl border border-white/5">
+                  <div className="text-xs text-slate-500 mb-1">Utilized</div>
+                  <div className="text-sm md:text-base font-bold text-emerald-400">
                     ₹{(scheme.budgetUtilized / 100000).toFixed(1)}L
                   </div>
-                  <div className="text-[10px] text-gray-400 mt-0.5">
+                  <div className="text-[10px] text-slate-500 mt-0.5">
                     ₹{((scheme.totalBudget - scheme.budgetUtilized) / 100000).toFixed(1)}L left
                   </div>
                 </div>
                 
-                <div className="text-center p-3 bg-white rounded-xl border border-gray-100">
-                  <div className="text-xs text-gray-500 mb-1">Rating</div>
+                <div className="text-center p-3 bg-slate-800/50 rounded-xl border border-white/5">
+                  <div className="text-xs text-slate-500 mb-1">Rating</div>
                   <div className="flex items-center justify-center space-x-1">
-                    <Star size={14} className="text-yellow-500 fill-yellow-500" />
-                    <span className="text-sm md:text-base font-bold text-gray-900">{scheme.citizenRating.toFixed(1)}</span>
+                    <Star size={14} className="text-yellow-400 fill-yellow-400" />
+                    <span className="text-sm md:text-base font-bold text-white">{scheme.citizenRating.toFixed(1)}</span>
                   </div>
-                  <div className="text-[10px] text-gray-400 mt-0.5">
+                  <div className="text-[10px] text-slate-500 mt-0.5">
                     {scheme.feedbackCount} reviews
                   </div>
                 </div>
                 
-                <div className="text-center p-3 bg-white rounded-xl border border-gray-100">
-                  <div className="text-xs text-gray-500 mb-1">Timeline</div>
-                  <div className="text-sm md:text-base font-bold text-gray-900">
+                <div className="text-center p-3 bg-slate-800/50 rounded-xl border border-white/5">
+                  <div className="text-xs text-slate-500 mb-1">Timeline</div>
+                  <div className="text-sm md:text-base font-bold text-white">
                     {(() => {
                       const end = new Date(scheme.endDate);
                       const now = new Date();
@@ -348,7 +348,7 @@ export default function SchemesView() {
                       return daysLeft > 0 ? `${daysLeft}d` : 'Complete';
                     })()}
                   </div>
-                  <div className="text-[10px] text-gray-400 mt-0.5">
+                  <div className="text-[10px] text-slate-500 mt-0.5">
                     {new Date(scheme.endDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
                   </div>
                 </div>
@@ -370,16 +370,16 @@ export default function SchemesView() {
                     const overdueCount = latestReport.complianceAnalysis?.overdueWork?.length ?? 0;
                     
                     return (discCount > 0 || overdueCount > 0) ? (
-                      <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center space-x-2">
-                        <AlertTriangle size={16} className="text-red-600 flex-shrink-0" />
+                      <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 flex items-center space-x-2">
+                        <AlertTriangle size={16} className="text-red-400 flex-shrink-0" />
                         <div className="flex-1">
-                          <div className="text-xs font-semibold text-red-900">
+                          <div className="text-xs font-semibold text-red-200">
                             {discCount > 0 && `${discCount} Discrepancies`}
                             {discCount > 0 && overdueCount > 0 && ' • '}
                             {overdueCount > 0 && `${overdueCount} Overdue Tasks`}
                           </div>
                         </div>
-                        <span className="text-[10px] text-red-700 px-2 py-1 bg-red-100 rounded-full font-medium">
+                        <span className="text-[10px] text-red-200 px-2 py-1 bg-red-500/20 rounded-full font-medium">
                           Action Needed
                         </span>
                       </div>
@@ -388,9 +388,9 @@ export default function SchemesView() {
                   
                   {/* Legacy Discrepancies */}
                   {scheme.discrepancies.length > 0 && (
-                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 flex items-center space-x-2">
-                      <AlertTriangle size={16} className="text-orange-600 flex-shrink-0" />
-                      <span className="text-xs font-semibold text-orange-900 flex-1">
+                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3 flex items-center space-x-2">
+                      <AlertTriangle size={16} className="text-orange-400 flex-shrink-0" />
+                      <span className="text-xs font-semibold text-orange-200 flex-1">
                         {scheme.discrepancies.length} Issue{scheme.discrepancies.length > 1 ? 's' : ''} Detected
                       </span>
                     </div>
@@ -399,8 +399,8 @@ export default function SchemesView() {
               )}
 
               {/* Action Footer */}
-              <div className="px-4 md:px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-                <div className="text-[10px] md:text-xs text-gray-500">
+              <div className="px-4 md:px-6 py-3 bg-slate-900/30 border-t border-white/5 flex items-center justify-between">
+                <div className="text-[10px] md:text-xs text-slate-500">
                   Updated {new Date(scheme.lastUpdated).toLocaleDateString()}
                 </div>
                 <div className="flex items-center space-x-2">
@@ -412,7 +412,7 @@ export default function SchemesView() {
                         setModalInitialTab('reports');
                         setShowDetailsModal(true);
                       }}
-                      className="px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs font-medium hover:bg-green-200 transition-colors flex items-center space-x-1"
+                      className="px-3 py-1.5 bg-emerald-500/20 text-emerald-400 rounded-lg text-xs font-medium hover:bg-emerald-500/30 transition-colors flex items-center space-x-1"
                     >
                       <Upload size={12} />
                       <span className="hidden sm:inline">Upload Report</span>
@@ -420,7 +420,7 @@ export default function SchemesView() {
                     </button>
                   )}
                   <button
-                    className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg text-xs font-medium hover:bg-purple-200 transition-colors flex items-center space-x-1 group-hover:bg-purple-600 group-hover:text-white"
+                    className="px-3 py-1.5 bg-purple-500/20 text-purple-400 rounded-lg text-xs font-medium hover:bg-purple-500/30 transition-colors flex items-center space-x-1 group-hover:bg-purple-600 group-hover:text-white"
                   >
                     <span>View Details</span>
                     <ChevronRight size={14} />
@@ -432,11 +432,11 @@ export default function SchemesView() {
         </div>
 
         {filteredSchemes.length === 0 && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-            <div className="text-gray-400 mb-2">
+          <div className="bg-slate-900/50 backdrop-blur-md rounded-xl shadow-sm border border-white/10 p-12 text-center">
+            <div className="text-slate-600 mb-2">
               <Search size={48} className="mx-auto" />
             </div>
-            <p className="text-gray-600">No schemes found matching your filters</p>
+            <p className="text-slate-400">No schemes found matching your filters</p>
           </div>
         )}
       </div>
