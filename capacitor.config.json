@@ -1,0 +1,6 @@
+{
+  "appId": "com.yourorg.ruralens",
+  "appName": "rura-lens",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}

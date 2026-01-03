@@ -38,3 +38,27 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# Android
+android/app/build/
+android/app/release/
+android/build/
+android/.gradle/
+android/local.properties
+android/app/google-services.json
+*.apk
+*.aab
+*.dex
+*.class
+
+# Capacitor
+.cap-backup/
+android/app/src/main/assets/public/
+capacitor.config.ts.bak
+
+# iOS (if you add it later)
+ios/App/Pods/
+ios/App/build/
+ios/App/App.xcworkspace/xcuserdata/
+ios/App/App.xcodeproj/xcuserdata/
+*.ipa

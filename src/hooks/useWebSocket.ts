@@ -4,7 +4,7 @@ import { WS_URL } from '../config/api';
 
 export default function useWebSocket() {
   const ws = useRef<WebSocket | null>(null);
-  const reconnectTimeout = useRef<number>();
+  const reconnectTimeout = useRef<ReturnType<typeof setTimeout>>();
   const { setVillageData, setWsConnected, setLastUpdate } = useVillageStore();
 
   const connect = () => {
