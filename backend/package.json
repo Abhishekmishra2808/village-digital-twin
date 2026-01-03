@@ -8,7 +8,8 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "clear-db": "node clearDB.js",
-    "cleanup-feedback": "node cleanupFeedback.js"
+    "cleanup-feedback": "node cleanupFeedback.js",
+    "export-pathway": "node scripts/export-to-pathway.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

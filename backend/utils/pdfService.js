@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import pdfParse from 'pdf-parse-new';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'AIzaSyDeuF0wiOxFEJrkHJ8StvumGhN4l_Y7ocA');
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 /**
  * Extract structured data using regex patterns
