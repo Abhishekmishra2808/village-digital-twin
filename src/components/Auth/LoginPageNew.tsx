@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User, Shield, Briefcase, ChevronRight, Lock, Mail, AlertCircle, Loader } from 'lucide-react';
+import { User, Shield, Briefcase, ChevronRight, Lock, Mail, AlertCircle, Loader, ArrowLeft } from 'lucide-react';
 import { useVillageStore } from '../../store/villageStore';
 import { API_URL } from '../../config/api';
 
@@ -24,7 +24,11 @@ const roles = [
   },
 ];
 
-export default function LoginPage() {
+interface LoginPageProps {
+  onBack?: () => void;
+}
+
+export default function LoginPage({ onBack }: LoginPageProps) {
   const [selectedRole, setSelectedRole] = useState<'user' | 'admin' | 'field_worker' | null>(null);
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState('');
@@ -111,14 +115,25 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white px-6">
-      <div className="w-full max-w-6xl py-20">
+    <div className="min-h-screen flex items-center justify-center bg-white px-6 py-8">
+      <div className="w-full max-w-6xl">
+        {/* Back Button - Always visible at top */}
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="mb-6 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors p-2 rounded-lg hover:bg-gray-100"
+          >
+            <ArrowLeft size={20} />
+            <span className="text-sm font-medium">Back to Home</span>
+          </button>
+        )}
+
         {/* Hero Section */}
-        <div className="text-center mb-20 animate-fadeIn">
-          <h1 className="text-7xl font-semibold text-gray-900 mb-6 tracking-tight">
+        <div className="text-center mb-12 animate-fadeIn">
+          <h1 className="text-5xl md:text-7xl font-semibold text-gray-900 mb-6 tracking-tight">
             RuraLens
           </h1>
-          <p className="text-xl text-gray-500 font-light max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-gray-500 font-light max-w-2xl mx-auto">
             AI-Powered Government Schemes Monitoring • Anonymous Citizen Feedback • Real-time Analytics
           </p>
         </div>
@@ -157,26 +172,26 @@ export default function LoginPage() {
 
             {/* Quick Demo Login */}
             <div className="bg-gray-50 rounded-3xl p-8 text-center">
-              <p className="text-sm text-gray-600 mb-4">Quick Demo Access:</p>
-              <div className="grid grid-cols-3 gap-3">
+              <p className="text-sm text-gray-600 mb-4 font-medium">Quick Demo Access:</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <button
                   onClick={() => quickLogin('admin@village.com', 'admin123', 'admin')}
                   disabled={loading}
-                  className="bg-purple-100 text-purple-700 py-3 px-4 rounded-xl hover:bg-purple-200 transition-colors disabled:opacity-50 font-medium"
+                  className="bg-purple-100 text-purple-700 py-4 px-6 rounded-xl hover:bg-purple-200 transition-colors disabled:opacity-50 font-medium text-base"
                 >
                   Admin Demo
                 </button>
                 <button
                   onClick={() => quickLogin('field@village.com', 'field123', 'field_worker')}
                   disabled={loading}
-                  className="bg-blue-100 text-blue-700 py-3 px-4 rounded-xl hover:bg-blue-200 transition-colors disabled:opacity-50 font-medium"
+                  className="bg-blue-100 text-blue-700 py-4 px-6 rounded-xl hover:bg-blue-200 transition-colors disabled:opacity-50 font-medium text-base"
                 >
                   Field Demo
                 </button>
                 <button
                   onClick={() => quickLogin('citizen@village.com', 'user123', 'user')}
                   disabled={loading}
-                  className="bg-green-100 text-green-700 py-3 px-4 rounded-xl hover:bg-green-200 transition-colors disabled:opacity-50 font-medium"
+                  className="bg-green-100 text-green-700 py-4 px-6 rounded-xl hover:bg-green-200 transition-colors disabled:opacity-50 font-medium text-base"
                 >
                   Citizen Demo
                 </button>
@@ -300,7 +315,7 @@ export default function LoginPage() {
         )}
 
         {/* Footer */}
-        <div className="text-center mt-20">
+        <div className="text-center mt-12">
           <p className="text-sm text-gray-400">
             Powered by MongoDB • Gemini AI • Real-time WebSocket
           </p>

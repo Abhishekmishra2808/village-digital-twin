@@ -39,44 +39,65 @@ export default function Sidebar() {
   // Filter menu items based on user role
   const getMenuItems = () => {
     if (userRole === 'field_worker') {
-      // Field workers see limited menu - only Dashboard, 3D Map View, and Settings
+      // Field workers see limited menu
       return menuItems.filter(item => 
         ['dashboard', 'map', 'settings'].includes(item.id)
       );
     }
     if (userRole === 'user') {
-      // Citizens see basic menu (no roads and waste)
+      // Citizens see basic menu
       return menuItems.filter(item => 
         ['dashboard', 'map', 'schemes', 'water', 'power', 'environment', 'flood', 'reports', 'settings'].includes(item.id)
       );
     }
-    // Admin sees all except roads and waste (removed from admin view)
+    // Admin sees all
     return menuItems;
+  };
+
+  const handleMenuClick = (itemId: string) => {
+    setActiveView(itemId);
+    // On mobile, close sidebar after clicking
+    if (window.innerWidth < 768 && !sidebarCollapsed) {
+      toggleSidebar();
+    }
   };
 
   return (
     <>
-      {/* Mobile Overlay */}
+      {/* Mobile Overlay - Only visible when sidebar is open on mobile */}
       {!sidebarCollapsed && (
         <div 
           className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-20 top-16 bottom-8"
           onClick={toggleSidebar}
+          aria-label="Close sidebar"
         />
       )}
 
-      {/* Sidebar */}
-      <aside className={`fixed left-0 top-16 bottom-8 bg-white border-r border-gray-200 shadow-sm transition-all duration-300 z-30 ${
-        sidebarCollapsed ? 'md:w-16 -translate-x-full md:translate-x-0' : 'w-64 translate-x-0'
-      }`}>
+      {/* Sidebar - Always render content, just hide/show the container */}
+      <aside 
+        className={`fixed left-0 bottom-8 bg-white border-r border-gray-200 shadow-sm transition-transform duration-300 z-30 ${
+          sidebarCollapsed 
+            ? '-translate-x-full md:translate-x-0 md:w-16' 
+            : 'translate-x-0 w-64'
+        }`}
+        style={{
+          top: 'calc(64px + env(safe-area-inset-top, 0px))'
+        }}
+      >
         {/* Toggle Button - Desktop Only */}
         <button
           onClick={toggleSidebar}
-          className="hidden md:block absolute -right-3 top-6 w-6 h-6 bg-gray-900 rounded-full items-center justify-center hover:bg-gray-800 transition-colors shadow-lg"
+          className="hidden md:flex absolute -right-3 top-6 w-6 h-6 bg-gray-900 rounded-full items-center justify-center hover:bg-gray-800 transition-colors shadow-lg z-50"
+          aria-label="Toggle sidebar"
         >
-          {sidebarCollapsed ? <ChevronRight size={14} className="text-white" /> : <ChevronLeft size={14} className="text-white" />}
+          {sidebarCollapsed ? (
+            <ChevronRight size={14} className="text-white" />
+          ) : (
+            <ChevronLeft size={14} className="text-white" />
+          )}
         </button>
 
-        {/* Menu Items */}
+        {/* Menu Items - ALWAYS RENDERED */}
         <nav className="p-2 space-y-1 overflow-y-auto h-full">
           {getMenuItems().map((item) => {
             const Icon = item.icon;
@@ -86,13 +107,7 @@ export default function Sidebar() {
             return (
               <button
                 key={item.id}
-                onClick={() => {
-                  setActiveView(item.id);
-                  // Close mobile menu after selection
-                  if (window.innerWidth < 768 && !sidebarCollapsed) {
-                    toggleSidebar();
-                  }
-                }}
+                onClick={() => handleMenuClick(item.id)}
                 className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
                   isActive 
                     ? 'bg-gray-900 text-white shadow-sm' 
@@ -103,11 +118,11 @@ export default function Sidebar() {
                 <Icon size={20} className="flex-shrink-0" />
                 {!sidebarCollapsed && (
                   <>
-                    <span className="text-sm font-medium flex-1 text-left">
+                    <span className="text-sm font-medium flex-1 text-left whitespace-nowrap">
                       {item.label}
                     </span>
                     {showBadge && (
-                      <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">
+                      <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full flex-shrink-0">
                         {unreadAlerts}
                       </span>
                     )}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Briefcase, 
   Star,
@@ -12,10 +12,26 @@ import {
   Flag,
   Users,
   CheckCircle,
-  X
+  X,
+  Smartphone,
+  Download,
+  Loader,
+  Cpu,
+  Shield,
+  Sparkles
 } from 'lucide-react';
 import { useVillageStore, type GovernmentScheme } from '../../store/villageStore';
 import { API_URL } from '../../config/api';
+import { Capacitor } from '@capacitor/core';
+import RagQueryModal from '../Rag/RagQueryModal';
+import type { Citation } from '../../hooks/useRagQuery';
+
+// Define LocalLLM plugin
+const LocalLLM = Capacitor.isNativePlatform() ? {
+  addListener: (eventName: string, callback: (data: any) => void) => {
+    return (window as any).Capacitor?.Plugins?.LocalLLM?.addListener(eventName, callback);
+  }
+} : null;
 
 export default function CitizenDashboard() {
   const schemes = useVillageStore((state) => state.schemes);
@@ -27,6 +43,38 @@ export default function CitizenDashboard() {
   const [isUrgent, setIsUrgent] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showRagModal, setShowRagModal] = useState(false);
+  
+  // AI Processing Status
+  const [aiStatus, setAiStatus] = useState<{
+    status: string;
+    message: string;
+    progress: number;
+  }>({
+    status: 'idle',
+    message: '',
+    progress: 0
+  });
+
+  // Listen to AI processing status events
+  useEffect(() => {
+    if (!LocalLLM) return;
+
+    const listener = LocalLLM.addListener('aiProcessingStatus', (data: any) => {
+      console.log('AI Status Update:', data);
+      setAiStatus({
+        status: data.status,
+        message: data.message,
+        progress: data.progress || 0
+      });
+    });
+
+    return () => {
+      if (listener && listener.remove) {
+        listener.remove();
+      }
+    };
+  }, []);
 
   const toggleExpand = (schemeId: string) => {
     setExpandedScheme(expandedScheme === schemeId ? null : schemeId);
@@ -53,6 +101,7 @@ export default function CitizenDashboard() {
     if (!feedbackScheme || !rating) return;
 
     setIsProcessing(true);
+    setAiStatus({ status: 'starting', message: 'Preparing to process feedback...', progress: 0 });
 
     try {
       // Generate a unique userId from username or create anonymous ID
@@ -65,7 +114,7 @@ export default function CitizenDashboard() {
         userId
       };
 
-      // Submit feedback to backend (Gemini AI will process it)
+      // Submit feedback to backend (RunAnywhereAI will process it locally)
       const response = await fetch(`${API_URL}/api/schemes/${feedbackScheme.id}/feedback`, {
         method: 'POST',
         headers: {
@@ -103,6 +152,7 @@ export default function CitizenDashboard() {
     } catch (error) {
       console.error('❌ Error submitting feedback:', error);
       setIsProcessing(false);
+      setAiStatus({ status: 'error', message: 'Failed to submit feedback', progress: 0 });
       alert('Failed to submit feedback. Please try again.');
       setSubmitted(false);
     }
@@ -137,9 +187,18 @@ export default function CitizenDashboard() {
   return (
     <div className="h-full overflow-y-auto p-6 space-y-6 bg-gray-50">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Government Schemes</h1>
-        <p className="text-gray-600">Track development projects in your village and share your feedback</p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Government Schemes</h1>
+          <p className="text-gray-600">Track development projects in your village and share your feedback</p>
+        </div>
+        <button
+          onClick={() => setShowRagModal(true)}
+          className="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-cyan-700 transition-all shadow-md flex items-center space-x-2"
+        >
+          <Sparkles size={18} />
+          <span className="hidden sm:inline">Ask AI</span>
+        </button>
       </div>
 
       {/* Citizen KPI Cards */}
@@ -404,18 +463,114 @@ export default function CitizenDashboard() {
       {/* Feedback Modal */}
       {feedbackScheme && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
             {isProcessing ? (
-              <div className="p-8 text-center">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-                  <MessageSquare size={32} className="text-blue-600" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Processing with AI...</h3>
-                <p className="text-gray-600">Gemini is analyzing your feedback to ensure anonymity and extract key concerns.</p>
-                <div className="flex items-center justify-center space-x-2 mt-4">
-                  <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                  <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                  <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+              <div className="p-8">
+                {/* AI Processing Status Display */}
+                <div className="text-center mb-6">
+                  <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 relative">
+                    {aiStatus.status === 'downloading' && (
+                      <Download size={36} className="text-white animate-bounce" />
+                    )}
+                    {aiStatus.status === 'loading' && (
+                      <Loader size={36} className="text-white animate-spin" />
+                    )}
+                    {aiStatus.status === 'processing' && (
+                      <Cpu size={36} className="text-white animate-pulse" />
+                    )}
+                    {(aiStatus.status === 'checking' || aiStatus.status === 'starting') && (
+                      <Smartphone size={36} className="text-white animate-pulse" />
+                    )}
+                    {(aiStatus.status === 'complete' || aiStatus.status === 'loaded') && (
+                      <CheckCircle size={36} className="text-white" />
+                    )}
+                    {aiStatus.status === 'fallback' && (
+                      <Shield size={36} className="text-white" />
+                    )}
+                  </div>
+                  
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                    {aiStatus.status === 'downloading' && 'Downloading AI Model'}
+                    {aiStatus.status === 'loading' && 'Loading AI Model'}
+                    {aiStatus.status === 'processing' && 'AI Processing'}
+                    {aiStatus.status === 'checking' && 'Checking Model'}
+                    {aiStatus.status === 'complete' && 'Complete!'}
+                    {aiStatus.status === 'fallback' && 'Using Fallback'}
+                    {aiStatus.status === 'starting' && 'Starting...'}
+                  </h3>
+                  
+                  <p className="text-gray-600 mb-4">{aiStatus.message}</p>
+                  
+                  {/* Progress Bar (for downloading) */}
+                  {aiStatus.status === 'downloading' && aiStatus.progress > 0 && (
+                    <div className="mb-4">
+                      <div className="flex justify-between text-sm text-gray-600 mb-2">
+                        <span>Downloading SmolLM2 360M (119 MB)</span>
+                        <span className="font-bold">{Math.round(aiStatus.progress * 100)}%</span>
+                      </div>
+                      <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                        <div 
+                          className="h-3 bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-300 ease-out"
+                          style={{ width: `${aiStatus.progress * 100}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">First-time only • Stored locally on your device</p>
+                    </div>
+                  )}
+                  
+                  {/* Status Indicators */}
+                  <div className="space-y-2 mt-6">
+                    <div className={`flex items-center justify-between p-3 rounded-lg ${
+                      aiStatus.status === 'checking' || aiStatus.status === 'downloaded' || 
+                      aiStatus.status === 'loading' || aiStatus.status === 'processing' || 
+                      aiStatus.status === 'complete' ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200'
+                    }`}>
+                      <span className="text-sm text-gray-700">Model Check</span>
+                      {(aiStatus.status === 'checking' || aiStatus.status === 'downloaded' || 
+                        aiStatus.status === 'loading' || aiStatus.status === 'processing' || 
+                        aiStatus.status === 'complete') && (
+                        <CheckCircle size={16} className="text-green-600" />
+                      )}
+                    </div>
+                    
+                    {aiStatus.status === 'downloading' && (
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-blue-50 border border-blue-200">
+                        <span className="text-sm text-gray-700">Downloading</span>
+                        <Loader size={16} className="text-blue-600 animate-spin" />
+                      </div>
+                    )}
+                    
+                    {(aiStatus.status === 'downloaded' || aiStatus.status === 'loading' || 
+                      aiStatus.status === 'processing' || aiStatus.status === 'complete') && (
+                      <div className={`flex items-center justify-between p-3 rounded-lg ${
+                        aiStatus.status === 'loading' || aiStatus.status === 'processing' || 
+                        aiStatus.status === 'complete' ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200'
+                      }`}>
+                        <span className="text-sm text-gray-700">Model Loading</span>
+                        {aiStatus.status === 'loading' && <Loader size={16} className="text-blue-600 animate-spin" />}
+                        {(aiStatus.status === 'processing' || aiStatus.status === 'complete') && (
+                          <CheckCircle size={16} className="text-green-600" />
+                        )}
+                      </div>
+                    )}
+                    
+                    {(aiStatus.status === 'processing' || aiStatus.status === 'complete') && (
+                      <div className={`flex items-center justify-between p-3 rounded-lg ${
+                        aiStatus.status === 'complete' ? 'bg-green-50 border border-green-200' : 'bg-blue-50 border border-blue-200'
+                      }`}>
+                        <span className="text-sm text-gray-700">AI Anonymization</span>
+                        {aiStatus.status === 'processing' && <Loader size={16} className="text-blue-600 animate-spin" />}
+                        {aiStatus.status === 'complete' && <CheckCircle size={16} className="text-green-600" />}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="mt-6 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center justify-center space-x-2 text-sm text-green-800">
+                      <Shield size={14} />
+                      <span className="font-medium">100% On-Device • No Cloud • Private</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             ) : submitted ? (
@@ -424,8 +579,8 @@ export default function CitizenDashboard() {
                   <CheckCircle size={32} className="text-green-600" />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">Thank You!</h3>
-                <p className="text-gray-600 mb-2">Your anonymous feedback has been processed by AI and recorded.</p>
-                <p className="text-sm text-gray-500">Admins will see a professional summary without your identity.</p>
+                <p className="text-gray-600 mb-2">Your anonymous feedback has been processed by LOCAL AI (RunanywhereAI) running ON YOUR DEVICE and recorded. Your data never left your phone\!.</p>
+                <p className="text-sm text-gray-500">Admins will see a professional summary without your identity. All AI processing happened locally on your device\!.</p>
               </div>
             ) : (
               <>
@@ -455,6 +610,15 @@ export default function CitizenDashboard() {
                     </div>
                   </div>
 
+                  {/* Local AI Badge */}
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-6 flex items-start space-x-2">
+                    <Smartphone size={16} className="text-green-600 mt-0.5 flex-shrink-0" />
+                    <div className="text-sm text-green-900">
+                      <div className="font-medium mb-1">Local AI Processing (RunanywhereAI)</div>
+                      <div className="text-xs text-green-700">AI runs 100% ON YOUR DEVICE. Your data never leaves your phone. No cloud, no tracking\!</div>
+                    </div>
+                  </div>
+
                   {/* Rating */}
                   <div className="mb-6">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Rate this scheme</label>
@@ -481,12 +645,12 @@ export default function CitizenDashboard() {
                     </label>
                     <div className="mb-2 flex items-center space-x-2 text-xs text-blue-600 bg-blue-50 p-2 rounded">
                       <MessageSquare size={14} />
-                      <span>AI will process your feedback to protect your identity</span>
+                      <span>Local AI (RunanywhereAI) will process your feedback ON YOUR DEVICE to protect your identity</span>
                     </div>
                     <textarea
                       value={comment}
                       onChange={(e) => setComment(e.target.value)}
-                      placeholder="Share your experience in your own words, any language... AI will analyze and anonymize your feedback."
+                      placeholder="Share your experience in your own words, any language... Local AI (RunanywhereAI) running ON YOUR DEVICE will analyze and anonymize your feedback - 100% private, no cloud."
                       className="w-full border border-gray-300 rounded-lg p-3 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                       rows={4}
                       maxLength={500}
@@ -524,6 +688,18 @@ export default function CitizenDashboard() {
             )}
           </div>
         </div>
+      )}
+
+      {/* RAG Query Modal */}
+      {showRagModal && (
+        <RagQueryModal
+          isOpen={showRagModal}
+          onClose={() => setShowRagModal(false)}
+          onHighlightCitation={(citation: Citation) => {
+            console.log('📍 Citizen Dashboard - AI Citation:', citation);
+            alert(`📍 AI Answer Citation:\n\nType: ${citation.type}\nSnippet: ${citation.snippet}\nRelevance: ${(citation.score * 100).toFixed(0)}%`);
+          }}
+        />
       )}
     </div>
   );

@@ -31,6 +31,37 @@ repositories {
 }
 
 dependencies {
+    implementation files('libs/RunAnywhereKotlinSDK-release.aar')
+    implementation files('libs/runanywhere-llm-llamacpp-release.aar')
+
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2"
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3"
+    implementation "org.jetbrains.kotlinx:kotlinx-datetime:0.6.1"
+
+    implementation "io.ktor:ktor-client-core:3.0.3"
+    implementation "io.ktor:ktor-client-okhttp:3.0.3"
+    implementation "io.ktor:ktor-client-content-negotiation:3.0.3"
+    implementation "io.ktor:ktor-client-logging:3.0.3"
+    implementation "io.ktor:ktor-serialization-kotlinx-json:3.0.3"
+
+    implementation "com.squareup.okhttp3:okhttp:4.12.0"
+    implementation "com.squareup.okhttp3:logging-interceptor:4.12.0"
+
+    implementation "com.squareup.retrofit2:retrofit:2.11.0"
+    implementation "com.squareup.retrofit2:converter-gson:2.11.0"
+
+    implementation "com.google.code.gson:gson:2.11.0"
+
+    implementation "com.squareup.okio:okio:3.9.1"
+
+    implementation "androidx.work:work-runtime-ktx:2.10.0"
+
+    implementation "androidx.room:room-runtime:2.6.1"
+    implementation "androidx.room:room-ktx:2.6.1"
+
+    implementation "androidx.security:security-crypto:1.1.0-alpha06"
+
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"

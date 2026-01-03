@@ -1,37 +1,71 @@
-import { useState } from 'react';
 import { 
   Briefcase, 
   TrendingUp, 
   AlertTriangle,
-  ChevronDown,
-  ChevronUp,
   Calendar,
   DollarSign,
   Users,
   Star,
   MapPin,
-  MessageSquare
+  ArrowRight,
+  CheckCircle,
+  Clock,
+  Target,
+  Activity,
+  Zap,
+  Sparkles
 } from 'lucide-react';
+import { useState } from 'react';
 import { useVillageStore } from '../../store/villageStore';
+import RagQueryModal from '../Rag/RagQueryModal';
+import type { Citation } from '../../hooks/useRagQuery';
 
 export default function AdminDashboard() {
   const schemes = useVillageStore((state) => state.schemes);
-  const [expandedScheme, setExpandedScheme] = useState<string | null>(null);
+  const setActiveView = useVillageStore((state) => state.setActiveView);
+  const [showRagModal, setShowRagModal] = useState(false);
 
   // Calculate KPIs
   const totalSchemes = schemes.length;
   const onTrackSchemes = schemes.filter(s => s.status === 'on-track' || s.status === 'completed').length;
   const delayedSchemes = schemes.filter(s => s.status === 'delayed').length;
   const discrepantSchemes = schemes.filter(s => s.status === 'discrepant').length;
+  const completedSchemes = schemes.filter(s => s.status === 'completed').length;
   const totalBudget = schemes.reduce((sum, s) => sum + s.totalBudget, 0);
   const budgetUtilized = schemes.reduce((sum, s) => sum + s.budgetUtilized, 0);
   const avgProgress = schemes.length > 0 ? Math.round(schemes.reduce((sum, s) => sum + s.overallProgress, 0) / schemes.length) : 0;
   const totalFeedback = schemes.reduce((sum, s) => sum + s.feedbackCount, 0);
   const avgRating = schemes.length > 0 ? (schemes.reduce((sum, s) => sum + s.citizenRating, 0) / schemes.length).toFixed(1) : '0.0';
 
-  const toggleExpand = (schemeId: string) => {
-    setExpandedScheme(expandedScheme === schemeId ? null : schemeId);
-  };
+  // Category breakdown
+  const categoryBreakdown = schemes.reduce((acc: Record<string, number>, scheme) => {
+    acc[scheme.category] = (acc[scheme.category] || 0) + 1;
+    return acc;
+  }, {});
+
+  // Budget by category
+  const budgetByCategory = schemes.reduce((acc: Record<string, { allocated: number; used: number }>, scheme) => {
+    if (!acc[scheme.category]) {
+      acc[scheme.category] = { allocated: 0, used: 0 };
+    }
+    acc[scheme.category].allocated += scheme.totalBudget;
+    acc[scheme.category].used += scheme.budgetUtilized;
+    return acc;
+  }, {});
+
+  // High performing schemes
+  const topPerformers = schemes
+    .filter(s => s.overallProgress >= 75 && s.citizenRating >= 4.0)
+    .slice(0, 3);
+
+  // Schemes needing attention
+  const needsAttention = schemes
+    .filter(s => s.status === 'delayed' || s.status === 'discrepant')
+    .slice(0, 3);
+
+  // Only show first 2 schemes in dashboard for preview
+  const displayedSchemes = schemes.slice(0, 2);
+  const hasMoreSchemes = schemes.length > 2;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -43,594 +77,495 @@ export default function AdminDashboard() {
     }
   };
 
-  const getProgressColor = (status: string) => {
-    switch (status) {
-      case 'on-track': return 'bg-green-500';
-      case 'delayed': return 'bg-yellow-500';
-      case 'discrepant': return 'bg-red-500';
-      case 'completed': return 'bg-blue-500';
-      default: return 'bg-gray-500';
-    }
+  // Category mapping for icons
+  const categoryIcons: Record<string, string> = {
+    'Sanitation': '🧹',
+    'Water Supply': '💧',
+    'Housing': '🏠',
+    'Employment': '👷',
+    'Power': '⚡'
+  };
+
+  const categoryColors: Record<string, string> = {
+    'Sanitation': 'bg-blue-500',
+    'Water Supply': 'bg-cyan-500',
+    'Housing': 'bg-orange-500',
+    'Employment': 'bg-purple-500',
+    'Power': 'bg-yellow-500'
+  };
+
+  // Status badge component
+  const StatusBadge = ({ status }: { status: string }) => {
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(status)}`}>
+        {status.replace('-', ' ').toUpperCase()}
+      </span>
+    );
   };
 
   return (
-    <div className="h-full overflow-y-auto p-6 space-y-6 bg-gray-50">
+    <div className="h-full overflow-y-auto p-3 md:p-6 space-y-4 md:space-y-6 bg-gray-50">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-        <p className="text-gray-600">Monitor and manage government schemes in real-time</p>
+      <div className="mb-4 md:mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1 md:mb-2">Admin Dashboard</h1>
+          <p className="text-sm md:text-base text-gray-600">Real-time overview • Updated just now</p>
+        </div>
+        <button
+          onClick={() => setShowRagModal(true)}
+          className="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-cyan-700 transition-all shadow-md flex items-center space-x-2"
+        >
+          <Sparkles size={18} />
+          <span className="hidden sm:inline">Ask AI</span>
+        </button>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-sm font-medium text-gray-600">Total Schemes</div>
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <Briefcase size={20} className="text-purple-600" />
-            </div>
+      {/* Top KPI Cards - 4 columns */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-4 md:p-5 text-white">
+          <div className="flex items-center justify-between mb-2">
+            <Briefcase size={20} className="opacity-80" />
+            <div className="text-xs md:text-sm opacity-80">Total Projects</div>
           </div>
-          <div className="text-3xl font-bold text-gray-900 mb-2">{totalSchemes}</div>
-          <div className="flex items-center space-x-2 text-sm">
-            <span className="text-green-600 font-medium">{onTrackSchemes} on track</span>
-            <span className="text-gray-400">•</span>
-            <span className="text-yellow-600 font-medium">{delayedSchemes} delayed</span>
+          <div className="text-3xl md:text-4xl font-bold mb-1">{totalSchemes}</div>
+          <div className="flex items-center space-x-2 text-xs md:text-sm">
+            <CheckCircle size={14} />
+            <span>{completedSchemes} completed</span>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-sm font-medium text-gray-600">Avg Progress</div>
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <TrendingUp size={20} className="text-blue-600" />
-            </div>
+        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-4 md:p-5 text-white">
+          <div className="flex items-center justify-between mb-2">
+            <Target size={20} className="opacity-80" />
+            <div className="text-xs md:text-sm opacity-80">On Track</div>
           </div>
-          <div className="text-3xl font-bold text-gray-900 mb-2">{avgProgress}%</div>
-          <div className="text-sm text-gray-600">
-            {discrepantSchemes > 0 && <span className="text-red-600 font-medium">⚠ {discrepantSchemes} with issues</span>}
-            {discrepantSchemes === 0 && <span className="text-green-600 font-medium">✓ All clear</span>}
+          <div className="text-3xl md:text-4xl font-bold mb-1">{onTrackSchemes}</div>
+          <div className="flex items-center space-x-2 text-xs md:text-sm">
+            <TrendingUp size={14} />
+            <span>{Math.round((onTrackSchemes / totalSchemes) * 100)}% success rate</span>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-sm font-medium text-gray-600">Budget Status</div>
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <DollarSign size={20} className="text-green-600" />
-            </div>
+        <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg p-4 md:p-5 text-white">
+          <div className="flex items-center justify-between mb-2">
+            <AlertTriangle size={20} className="opacity-80" />
+            <div className="text-xs md:text-sm opacity-80">Issues</div>
           </div>
-          <div className="text-3xl font-bold text-gray-900 mb-2">
-            {totalBudget > 0 ? Math.round((budgetUtilized / totalBudget) * 100) : 0}%
-          </div>
-          <div className="text-sm text-gray-600">
-            ₹{(budgetUtilized / 10000000).toFixed(1)}Cr of ₹{(totalBudget / 10000000).toFixed(1)}Cr
+          <div className="text-3xl md:text-4xl font-bold mb-1">{discrepantSchemes}</div>
+          <div className="flex items-center space-x-2 text-xs md:text-sm">
+            <Clock size={14} />
+            <span>{delayedSchemes} delayed</span>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-sm font-medium text-gray-600">Citizen Feedback</div>
-            <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-              <Users size={20} className="text-yellow-600" />
-            </div>
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-4 md:p-5 text-white">
+          <div className="flex items-center justify-between mb-2">
+            <Activity size={20} className="opacity-80" />
+            <div className="text-xs md:text-sm opacity-80">Avg Progress</div>
           </div>
-          <div className="text-3xl font-bold text-gray-900 mb-2">{totalFeedback}</div>
-          <div className="flex items-center space-x-1 text-sm">
-            <Star size={14} className="text-yellow-500 fill-yellow-500" />
-            <span className="text-gray-600 font-medium">{avgRating} avg rating</span>
+          <div className="text-3xl md:text-4xl font-bold mb-1">{avgProgress}%</div>
+          <div className="flex items-center space-x-2 text-xs md:text-sm">
+            <TrendingUp size={14} />
+            <span>+5% from last month</span>
           </div>
         </div>
       </div>
 
-      {/* Schemes Overview */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-900">Active Government Schemes</h2>
-          <div className="text-sm text-gray-500">Live updates • Last refresh: {new Date().toLocaleTimeString()}</div>
+      {/* Secondary Stats Row - 3 columns */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+        {/* Budget Overview */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-gray-900 text-sm md:text-base">Budget Overview</h3>
+            <DollarSign size={20} className="text-green-600" />
+          </div>
+          <div className="space-y-2">
+            <div>
+              <div className="flex justify-between text-xs md:text-sm text-gray-600 mb-1">
+                <span>Allocated</span>
+                <span className="font-bold text-gray-900">₹{(totalBudget / 10000000).toFixed(1)}Cr</span>
+              </div>
+              <div className="flex justify-between text-xs md:text-sm text-gray-600 mb-1">
+                <span>Utilized</span>
+                <span className="font-bold text-green-600">₹{(budgetUtilized / 10000000).toFixed(1)}Cr</span>
+              </div>
+              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-green-500 to-green-600 transition-all"
+                  style={{ width: `${Math.round((budgetUtilized / totalBudget) * 100)}%` }}
+                />
+              </div>
+            </div>
+            <div className="pt-2 border-t border-gray-100">
+              <div className="flex justify-between items-center">
+                <span className="text-xs md:text-sm text-gray-600">Remaining</span>
+                <span className="text-sm md:text-base font-bold text-gray-900">₹{((totalBudget - budgetUtilized) / 10000000).toFixed(1)}Cr</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="space-y-4">
-          {schemes.map((scheme) => (
+        {/* Citizen Feedback */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-gray-900 text-sm md:text-base">Citizen Feedback</h3>
+            <Users size={20} className="text-purple-600" />
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-2xl md:text-3xl font-bold text-gray-900">{totalFeedback}</div>
+                <div className="text-xs md:text-sm text-gray-500">Total Reviews</div>
+              </div>
+              <div className="text-right">
+                <div className="flex items-center space-x-1">
+                  <Star size={20} className="text-yellow-500 fill-yellow-500" />
+                  <span className="text-2xl md:text-3xl font-bold text-gray-900">{avgRating}</span>
+                </div>
+                <div className="text-xs md:text-sm text-gray-500 ml-1">Avg Rating</div>
+              </div>
+            </div>
+            <div className="pt-2 border-t border-gray-100">
+              <div className="text-xs md:text-sm text-gray-600">
+                <span className="text-green-600 font-semibold">{Math.round((schemes.filter(s => s.citizenRating >= 4).length / schemes.length) * 100)}%</span> schemes rated 4+ stars
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-gray-900 text-sm md:text-base">Quick Actions</h3>
+            <Zap size={20} className="text-orange-600" />
+          </div>
+          <div className="space-y-2">
+            <button 
+              onClick={() => setActiveView('schemes')}
+              className="w-full text-left px-3 py-2 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors text-xs md:text-sm text-purple-700 font-medium"
+            >
+              📊 View All Schemes
+            </button>
+            <button 
+              onClick={() => setActiveView('analytics')}
+              className="w-full text-left px-3 py-2 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-xs md:text-sm text-blue-700 font-medium"
+            >
+              📈 Analytics Dashboard
+            </button>
+            <button 
+              onClick={() => setActiveView('reports')}
+              className="w-full text-left px-3 py-2 bg-green-50 hover:bg-green-100 rounded-lg transition-colors text-xs md:text-sm text-green-700 font-medium"
+            >
+              💬 Citizen Reports
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Category Breakdown & Alerts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
+        {/* Category Distribution */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-5">
+          <h3 className="font-semibold text-gray-900 mb-3 text-sm md:text-base">Schemes by Category</h3>
+          <div className="space-y-2">
+            {Object.entries(categoryBreakdown).map(([category, count]) => {
+              const percentage = Math.round((count / totalSchemes) * 100);
+              const budget = budgetByCategory[category];
+              // Removed the unused budgetUsed variable calculation
+              return (
+                <div key={category} className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-lg md:text-xl">{categoryIcons[category] || '📋'}</span>
+                      <span className="text-xs md:text-sm font-medium text-gray-700">{category}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs md:text-sm font-bold text-gray-900">{count}</span>
+                      <span className="text-xs text-gray-500 ml-1">({percentage}%)</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full ${categoryColors[category] || 'bg-gray-500'} transition-all`}
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-gray-500 w-12 text-right">₹{budget ? (budget.used / 100000).toFixed(0) : 0}L</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Priority Alerts */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-gray-900 text-sm md:text-base">⚠️ Priority Alerts</h3>
+            <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full">
+              {needsAttention.length}
+            </span>
+          </div>
+          <div className="space-y-2">
+            {needsAttention.length > 0 ? (
+              needsAttention.map((scheme) => (
+                <div 
+                  key={scheme.id}
+                  onClick={() => setActiveView('schemes')}
+                  className="p-3 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-start justify-between mb-1">
+                    <div className="flex items-center space-x-2 flex-1">
+                      <span className="text-base md:text-lg">{categoryIcons[scheme.category]}</span>
+                      <span className="text-xs md:text-sm font-medium text-gray-900 line-clamp-1">{scheme.name}</span>
+                    </div>
+                    <StatusBadge status={scheme.status} />
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-gray-600 ml-6">
+                    <span>{scheme.village}</span>
+                    <span className="text-red-600 font-medium">{scheme.discrepancies.length} issues</span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-400">
+                <CheckCircle size={32} className="mx-auto mb-2 text-green-500" />
+                <p className="text-xs md:text-sm">No critical issues! 🎉</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Top Performers */}
+      {topPerformers.length > 0 && (
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl shadow-sm border border-green-200 p-4 md:p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-gray-900 text-sm md:text-base">🏆 Top Performing Schemes</h3>
+            <span className="text-xs md:text-sm text-green-700 font-medium">Progress ≥75% • Rating ≥4.0</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {topPerformers.map((scheme) => (
+              <div 
+                key={scheme.id}
+                onClick={() => setActiveView('schemes')}
+                className="bg-white rounded-lg p-3 border border-green-200 hover:shadow-md transition-all cursor-pointer"
+              >
+                <div className="flex items-center space-x-2 mb-2">
+                  <span className="text-xl md:text-2xl">{categoryIcons[scheme.category]}</span>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-xs md:text-sm font-bold text-gray-900 line-clamp-1">{scheme.name}</h4>
+                    <p className="text-xs text-gray-500">{scheme.village}</p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-1">
+                    <div className="text-lg md:text-xl font-bold text-green-600">{scheme.overallProgress}%</div>
+                    <TrendingUp size={14} className="text-green-600" />
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Star size={14} className="text-yellow-500 fill-yellow-500" />
+                    <span className="text-xs md:text-sm font-bold text-gray-900">{scheme.citizenRating.toFixed(1)}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Recent Schemes Preview */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
+        <div className="flex items-center justify-between mb-4 md:mb-6">
+          <div>
+            <h2 className="text-lg md:text-xl font-bold text-gray-900">Recent Schemes</h2>
+            <p className="text-xs md:text-sm text-gray-500 mt-1">
+              Showing {displayedSchemes.length} of {schemes.length} schemes
+            </p>
+          </div>
+          {hasMoreSchemes && (
+            <button
+              onClick={() => setActiveView('schemes')}
+              className="px-3 md:px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-indigo-700 transition-all flex items-center space-x-2 shadow-md text-xs md:text-sm"
+            >
+              <span>View All {schemes.length}</span>
+              <ArrowRight size={16} />
+            </button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 md:gap-4">
+          {displayedSchemes.map((scheme) => (
             <div
               key={scheme.id}
-              className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
+              onClick={() => setActiveView('schemes')}
+              className="bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-200 hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden group"
             >
-              {/* Scheme Preview */}
-              <div
-                onClick={() => toggleExpand(scheme.id)}
-                className="p-5 cursor-pointer hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-start space-x-3 mb-3">
-                      <div className="text-3xl">
-                        {scheme.category === 'Sanitation' && '🧹'}
-                        {scheme.category === 'Water Supply' && '💧'}
-                        {scheme.category === 'Housing' && '🏠'}
-                        {scheme.category === 'Employment' && '👷'}
-                        {scheme.category === 'Power' && '⚡'}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-lg font-bold text-gray-900 mb-2">{scheme.name}</h3>
-                        <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
-                          <div className="flex items-center space-x-1">
-                            <MapPin size={14} />
-                            <span>{scheme.village}, {scheme.district}</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <Calendar size={14} />
-                            <span>{new Date(scheme.startDate).toLocaleDateString()} - {new Date(scheme.endDate).toLocaleDateString()}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-3">
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(scheme.status)}`}>
-                            {scheme.status.replace('-', ' ').toUpperCase()}
-                          </span>
-                          <span className="text-sm text-gray-600">{scheme.category}</span>
-                        </div>
-                      </div>
+              {/* Header Section with Gradient */}
+              <div className="bg-gradient-to-r from-purple-50 via-blue-50 to-indigo-50 p-3 md:p-6 border-b border-gray-100">
+                <div className="flex items-start justify-between gap-3 md:gap-4">
+                  <div className="flex items-start space-x-2 md:space-x-4 flex-1">
+                    {/* Category Icon */}
+                    <div className="flex-shrink-0 w-10 h-10 md:w-14 md:h-14 bg-white rounded-lg md:rounded-xl shadow-sm flex items-center justify-center text-xl md:text-3xl">
+                      {categoryIcons[scheme.category] || '📋'}
                     </div>
-
-                    {/* Progress Bar */}
-                    <div className="mb-3">
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="text-gray-600">Overall Progress</span>
-                        <span className="font-bold text-gray-900">{scheme.overallProgress}%</span>
+                    
+                    {/* Title and Meta */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base md:text-xl font-bold text-gray-900 mb-1 md:mb-2 line-clamp-2 group-hover:text-purple-700 transition-colors">
+                        {scheme.name}
+                      </h3>
+                      
+                      <div className="flex flex-wrap items-center gap-1.5 md:gap-3 mb-2 md:mb-3">
+                        <StatusBadge status={scheme.status} />
+                        <span className="px-2 py-0.5 md:px-2.5 md:py-1 bg-white rounded-full text-xs font-medium text-gray-700 border border-gray-200">
+                          {scheme.category}
+                        </span>
                       </div>
-                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <div
-                          className={`h-2 transition-all ${getProgressColor(scheme.status)}`}
-                          style={{ width: `${scheme.overallProgress}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Quick Stats */}
-                    <div className="grid grid-cols-4 gap-4">
-                      <div className="bg-blue-50 rounded-lg p-2">
-                        <div className="text-xs text-blue-700 mb-1">Budget</div>
-                        <div className="text-sm font-bold text-blue-900">₹{(scheme.totalBudget / 100000).toFixed(1)}L</div>
-                      </div>
-                      <div className="bg-green-50 rounded-lg p-2">
-                        <div className="text-xs text-green-700 mb-1">Utilized</div>
-                        <div className="text-sm font-bold text-green-900">₹{(scheme.budgetUtilized / 100000).toFixed(1)}L</div>
-                      </div>
-                      <div className="bg-yellow-50 rounded-lg p-2">
-                        <div className="text-xs text-yellow-700 mb-1">Feedback</div>
-                        <div className="text-sm font-bold text-yellow-900">{scheme.feedbackCount}</div>
-                      </div>
-                      <div className="bg-purple-50 rounded-lg p-2">
-                        <div className="text-xs text-purple-700 mb-1">Rating</div>
+                      
+                      <div className="flex flex-wrap items-center gap-x-2 md:gap-x-4 gap-y-1 text-xs text-gray-600">
                         <div className="flex items-center space-x-1">
-                          <Star size={12} className="text-yellow-500 fill-yellow-500" />
-                          <span className="text-sm font-bold text-purple-900">{scheme.citizenRating.toFixed(1)}</span>
+                          <MapPin size={12} className="md:hidden flex-shrink-0 text-gray-400" />
+                          <MapPin size={14} className="hidden md:block flex-shrink-0 text-gray-400" />
+                          <span className="truncate">{scheme.village}, {scheme.district}</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Calendar size={12} className="md:hidden flex-shrink-0 text-gray-400" />
+                          <Calendar size={14} className="hidden md:block flex-shrink-0 text-gray-400" />
+                          <span className="font-mono">{scheme.id}</span>
                         </div>
                       </div>
                     </div>
-
-                    {/* Discrepancies Alert */}
-                    {scheme.discrepancies.length > 0 && (
-                      <div className="mt-3 bg-red-50 border border-red-200 rounded-lg p-3">
-                        <div className="flex items-center space-x-2">
-                          <AlertTriangle size={16} className="text-red-600 flex-shrink-0" />
-                          <div className="text-sm font-bold text-red-900">
-                            {scheme.discrepancies.length} Critical Issue{scheme.discrepancies.length > 1 ? 's' : ''} Detected
-                          </div>
-                        </div>
-                      </div>
-                    )}
                   </div>
-
-                  {/* Expand Button */}
-                  <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                    {expandedScheme === scheme.id ? (
-                      <ChevronUp size={20} className="text-gray-600" />
-                    ) : (
-                      <ChevronDown size={20} className="text-gray-600" />
-                    )}
-                  </button>
+                  
+                  {/* Progress Circle */}
+                  <div className="flex-shrink-0">
+                    <div className="relative w-14 h-14 md:w-20 md:h-20">
+                      <svg className="transform -rotate-90 w-full h-full">
+                        <circle
+                          cx="50%"
+                          cy="50%"
+                          r="30%"
+                          stroke="#e5e7eb"
+                          strokeWidth="8"
+                          fill="none"
+                        />
+                        <circle
+                          cx="50%"
+                          cy="50%"
+                          r="30%"
+                          stroke={
+                            scheme.status === 'on-track' ? '#10b981' :
+                            scheme.status === 'delayed' ? '#f59e0b' :
+                            scheme.status === 'discrepant' ? '#ef4444' :
+                            '#3b82f6'
+                          }
+                          strokeWidth="8"
+                          fill="none"
+                          strokeDasharray={`${scheme.overallProgress * 1.88} 188`}
+                          strokeLinecap="round"
+                          className="transition-all duration-500"
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-base md:text-xl font-bold text-gray-900">{scheme.overallProgress}%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 p-3 md:p-6 bg-gray-50">
+                <div className="text-center p-2 md:p-3 bg-white rounded-lg md:rounded-xl border border-gray-100">
+                  <div className="text-xs text-gray-500 mb-1">Budget</div>
+                  <div className="text-sm md:text-base font-bold text-gray-900">
+                    ₹{(scheme.totalBudget / 100000).toFixed(1)}L
+                  </div>
+                  <div className="text-[10px] text-gray-400 mt-0.5">
+                    {Math.round((scheme.budgetUtilized / scheme.totalBudget) * 100)}% used
+                  </div>
+                </div>
+                
+                <div className="text-center p-2 md:p-3 bg-white rounded-lg md:rounded-xl border border-gray-100">
+                  <div className="text-xs text-gray-500 mb-1">Utilized</div>
+                  <div className="text-sm md:text-base font-bold text-green-600">
+                    ₹{(scheme.budgetUtilized / 100000).toFixed(1)}L
+                  </div>
+                  <div className="text-[10px] text-gray-400 mt-0.5">
+                    ₹{((scheme.totalBudget - scheme.budgetUtilized) / 100000).toFixed(1)}L left
+                  </div>
+                </div>
+                
+                <div className="text-center p-2 md:p-3 bg-white rounded-lg md:rounded-xl border border-gray-100">
+                  <div className="text-xs text-gray-500 mb-1">Rating</div>
+                  <div className="flex items-center justify-center space-x-1">
+                    <Star size={14} className="text-yellow-500 fill-yellow-500" />
+                    <span className="text-sm md:text-base font-bold text-gray-900">{scheme.citizenRating.toFixed(1)}</span>
+                  </div>
+                  <div className="text-[10px] text-gray-400 mt-0.5">
+                    {scheme.feedbackCount} reviews
+                  </div>
+                </div>
+                
+                <div className="text-center p-2 md:p-3 bg-white rounded-lg md:rounded-xl border border-gray-100">
+                  <div className="text-xs text-gray-500 mb-1">Timeline</div>
+                  <div className="text-sm md:text-base font-bold text-gray-900">
+                    {(() => {
+                      const end = new Date(scheme.endDate);
+                      const now = new Date();
+                      const daysLeft = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                      return daysLeft > 0 ? `${daysLeft}d` : 'Complete';
+                    })()}
+                  </div>
+                  <div className="text-[10px] text-gray-400 mt-0.5">
+                    {new Date(scheme.endDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                  </div>
                 </div>
               </div>
 
-              {/* Expanded Details */}
-              {expandedScheme === scheme.id && (
-                <div className="border-t border-gray-200 bg-gray-50 p-5 space-y-4">
-                  {/* Description */}
-                  <div>
-                    <h4 className="font-bold text-gray-900 mb-2">Description</h4>
-                    <p className="text-sm text-gray-700">{scheme.description}</p>
-                  </div>
-
-                  {/* Phases */}
-                  <div>
-                    <h4 className="font-bold text-gray-900 mb-3">Project Phases</h4>
-                    <div className="space-y-2">
-                      {scheme.phases.map((phase, idx) => (
-                        <div key={phase.id} className="bg-white rounded-lg p-3 border border-gray-200">
-                          <div className="flex items-start justify-between mb-2">
-                            <div>
-                              <div className="font-medium text-gray-900 text-sm">Phase {idx + 1}: {phase.name}</div>
-                              <div className="text-xs text-gray-500">
-                                {new Date(phase.startDate).toLocaleDateString()} - {new Date(phase.endDate).toLocaleDateString()}
-                              </div>
-                            </div>
-                            <span className={`px-2 py-1 rounded text-xs font-medium ${
-                              phase.status === 'completed' ? 'bg-green-100 text-green-800' :
-                              phase.status === 'on-track' ? 'bg-blue-100 text-blue-800' :
-                              phase.status === 'delayed' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {phase.status.replace('-', ' ').toUpperCase()}
-                            </span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <div className="flex-1 h-1.5 bg-gray-200 rounded-full">
-                              <div
-                                className={`h-1.5 rounded-full ${
-                                  phase.status === 'completed' ? 'bg-green-500' :
-                                  phase.status === 'on-track' ? 'bg-blue-500' :
-                                  phase.status === 'delayed' ? 'bg-yellow-500' :
-                                  'bg-gray-400'
-                                }`}
-                                style={{ width: `${phase.progress}%` }}
-                              />
-                            </div>
-                            <span className="text-xs font-medium text-gray-900 w-12 text-right">{phase.progress}%</span>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2 mt-2">
-                            <div className="text-xs text-gray-600">
-                              Budget: ₹{(phase.budget / 100000).toFixed(1)}L
-                            </div>
-                            <div className="text-xs text-gray-600">
-                              Spent: ₹{(phase.spent / 100000).toFixed(1)}L
-                            </div>
+              {/* Alerts Section - Only show if there are issues */}
+              {(scheme.discrepancies.length > 0 || 
+                (scheme.vendorReports && scheme.vendorReports.length > 0 && 
+                 (() => {
+                   const latestReport = scheme.vendorReports[scheme.vendorReports.length - 1];
+                   return (latestReport.complianceAnalysis?.discrepancies?.length ?? 0) > 0 ||
+                          (latestReport.complianceAnalysis?.overdueWork?.length ?? 0) > 0;
+                 })())) && (
+                <div className="px-3 md:px-6 pb-3 md:pb-4 space-y-2">
+                  {/* Vendor Report Issues */}
+                  {scheme.vendorReports && scheme.vendorReports.length > 0 && (() => {
+                    const latestReport = scheme.vendorReports[scheme.vendorReports.length - 1];
+                    const discCount = latestReport.complianceAnalysis?.discrepancies?.length ?? 0;
+                    const overdueCount = latestReport.complianceAnalysis?.overdueWork?.length ?? 0;
+                    
+                    return (discCount > 0 || overdueCount > 0) ? (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-2 md:p-3 flex items-center space-x-2">
+                        <AlertTriangle size={14} className="md:hidden text-red-600 flex-shrink-0" />
+                        <AlertTriangle size={16} className="hidden md:block text-red-600 flex-shrink-0" />
+                        <div className="flex-1">
+                          <div className="text-xs font-semibold text-red-900">
+                            {discCount > 0 && `${discCount} Discrepancies`}
+                            {discCount > 0 && overdueCount > 0 && ' • '}
+                            {overdueCount > 0 && `${overdueCount} Overdue Tasks`}
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* AI-Processed Citizen Feedback */}
-                  {scheme.feedbackCount > 0 && (
-                    <div>
-                      <h4 className="font-bold text-gray-900 mb-3 flex items-center space-x-2">
-                        <MessageSquare size={16} className="text-blue-600" />
-                        <span>AI-Processed Citizen Feedback</span>
-                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Anonymous</span>
-                      </h4>
-                      
-                      {/* Overall Rating Summary */}
-                      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200 mb-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center space-x-2">
-                            <Star size={20} className="text-yellow-500 fill-yellow-500" />
-                            <span className="text-2xl font-bold text-gray-900">{scheme.citizenRating.toFixed(1)}</span>
-                            <span className="text-sm text-gray-600">/ 5.0</span>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-xs text-gray-600">Total Responses</div>
-                            <div className="text-lg font-bold text-gray-900">{scheme.feedbackCount}</div>
-                          </div>
-                        </div>
-                        
-                        {/* Overall Sentiment Distribution */}
-                        {scheme.feedbackHistory && scheme.feedbackHistory.length > 0 && (() => {
-                          const sentimentCounts: Record<string, number> = scheme.feedbackHistory.reduce((acc: Record<string, number>, fb: any) => {
-                            acc[fb.sentiment] = (acc[fb.sentiment] || 0) + 1;
-                            return acc;
-                          }, {});
-                          const total = scheme.feedbackHistory.length;
-                          
-                          // Calculate overall sentiment
-                          const getOverallSentiment = () => {
-                            const positive = sentimentCounts['Positive'] || 0;
-                            const negative = sentimentCounts['Negative'] || 0;
-                            const critical = sentimentCounts['Critical'] || 0;
-                            
-                            if (critical > total * 0.3) return { label: 'Critical', emoji: '🔴', color: 'text-red-600', bg: 'bg-red-100' };
-                            if (negative > total * 0.4) return { label: 'Mostly Negative', emoji: '😟', color: 'text-orange-600', bg: 'bg-orange-100' };
-                            if (positive > total * 0.6) return { label: 'Mostly Positive', emoji: '😊', color: 'text-green-600', bg: 'bg-green-100' };
-                            if (positive > negative + critical) return { label: 'Positive', emoji: '🙂', color: 'text-green-600', bg: 'bg-green-100' };
-                            return { label: 'Mixed/Neutral', emoji: '😐', color: 'text-gray-600', bg: 'bg-gray-100' };
-                          };
-                          
-                          const overallSentiment = getOverallSentiment();
-                          
-                          return (
-                            <div className="mt-3 pt-3 border-t border-blue-200">
-                              {/* Overall Combined Sentiment */}
-                              <div className={`${overallSentiment.bg} rounded-lg p-3 mb-3 border-2 border-current ${overallSentiment.color}`}>
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center space-x-3">
-                                    <span className="text-4xl">{overallSentiment.emoji}</span>
-                                    <div>
-                                      <div className="text-xs font-medium opacity-75">Overall Sentiment</div>
-                                      <div className="text-lg font-bold">{overallSentiment.label}</div>
-                                    </div>
-                                  </div>
-                                  <div className="text-right">
-                                    <div className="text-xs opacity-75">Based on</div>
-                                    <div className="text-2xl font-bold">{total}</div>
-                                    <div className="text-xs opacity-75">responses</div>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              {/* Sentiment Breakdown */}
-                              <div className="text-xs font-medium text-gray-700 mb-2">Sentiment Breakdown:</div>
-                              <div className="grid grid-cols-4 gap-2">
-                                {[
-                                  { name: 'Positive', emoji: '😊', color: 'bg-green-500' },
-                                  { name: 'Neutral', emoji: '😐', color: 'bg-gray-400' },
-                                  { name: 'Negative', emoji: '😟', color: 'bg-yellow-500' },
-                                  { name: 'Critical', emoji: '🔴', color: 'bg-red-500' }
-                                ].map(({ name, emoji, color }) => {
-                                  const count = sentimentCounts[name] || 0;
-                                  const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
-                                  
-                                  return (
-                                    <div key={name} className="text-center">
-                                      <div className="text-xl mb-1">{emoji}</div>
-                                      <div className="text-xs text-gray-600 mb-1">{name}</div>
-                                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                        <div 
-                                          className={`h-full ${color} transition-all`}
-                                          style={{ width: `${percentage}%` }}
-                                        />
-                                      </div>
-                                      <div className="text-xs font-bold text-gray-800 mt-1">
-                                        {count} ({percentage}%)
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          );
-                        })()}
-                        
-                        <div className="text-xs text-gray-500 mt-2">
-                          Last updated: {new Date(scheme.lastUpdated).toLocaleString()}
-                        </div>
+                        <span className="text-[10px] text-red-700 px-2 py-1 bg-red-100 rounded-full font-medium">
+                          Action Needed
+                        </span>
                       </div>
-
-                      {/* Individual Anonymized Feedback Messages */}
-                      {scheme.feedbackHistory && scheme.feedbackHistory.length > 0 && (
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between mb-2">
-                            <h5 className="font-bold text-gray-900 flex items-center space-x-2">
-                              <span>💬</span>
-                              <span>Citizen Feedback (Anonymized)</span>
-                            </h5>
-                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
-                              Latest {Math.min(10, scheme.feedbackHistory.length)} messages
-                            </span>
-                          </div>
-                          
-                          <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-                            {scheme.feedbackHistory.slice(-10).reverse().map((feedback: any, index: number) => {
-                              // Get sentiment emoji
-                              const sentimentEmoji = 
-                                feedback.sentiment === 'Positive' ? '😊' :
-                                feedback.sentiment === 'Neutral' ? '😐' :
-                                feedback.sentiment === 'Negative' ? '😟' :
-                                '🔴';
-                              
-                              const sentimentColor = 
-                                feedback.sentiment === 'Positive' ? 'border-green-300 bg-green-50' :
-                                feedback.sentiment === 'Neutral' ? 'border-gray-300 bg-gray-50' :
-                                feedback.sentiment === 'Negative' ? 'border-yellow-300 bg-yellow-50' :
-                                'border-red-300 bg-red-50';
-                              
-                              return (
-                                <div key={feedback._id || index} className={`border-l-4 ${sentimentColor} rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow`}>
-                                  {/* Anonymous User Header */}
-                                  <div className="flex items-center justify-between mb-3">
-                                    <div className="flex items-center space-x-2">
-                                      <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                                        👤
-                                      </div>
-                                      <div>
-                                        <div className="text-sm font-bold text-gray-900">Anonymous Citizen #{(scheme.feedbackHistory?.length || 0) - index}</div>
-                                        <div className="text-xs text-gray-500">
-                                          {new Date(feedback.createdAt || feedback.timestamp).toLocaleString()}
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                      <span className="text-2xl">{sentimentEmoji}</span>
-                                      <div className="flex items-center space-x-1">
-                                        {[1, 2, 3, 4, 5].map((star) => (
-                                          <Star
-                                            key={star}
-                                            size={12}
-                                            className={star <= feedback.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}
-                                          />
-                                        ))}
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  {/* AI-Processed Message */}
-                                  <div className="bg-white rounded-lg p-3 mb-2 border border-gray-200">
-                                    <div className="flex items-start space-x-2 mb-2">
-                                      <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium">
-                                        🤖 AI-Processed
-                                      </span>
-                                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                                        feedback.sentiment === 'Positive' ? 'bg-green-100 text-green-700' :
-                                        feedback.sentiment === 'Negative' ? 'bg-yellow-100 text-yellow-700' :
-                                        feedback.sentiment === 'Critical' ? 'bg-red-100 text-red-700' :
-                                        'bg-gray-100 text-gray-700'
-                                      }`}>
-                                        {feedback.sentiment}
-                                      </span>
-                                    </div>
-                                    <p className="text-sm text-gray-800 leading-relaxed font-medium">
-                                      "{feedback.aiSummary}"
-                                    </p>
-                                  </div>
-
-                                  {/* What Citizen Wants */}
-                                  {feedback.concerns && feedback.concerns.length > 0 && (
-                                    <div className="mb-2">
-                                      <div className="text-xs font-bold text-gray-700 mb-2 flex items-center space-x-1">
-                                        <span>💡</span>
-                                        <span>What citizen wants addressed:</span>
-                                      </div>
-                                      <ul className="space-y-1 bg-white rounded-lg p-2 border border-gray-200">
-                                        {feedback.concerns.map((concern: string, idx: number) => (
-                                          <li key={idx} className="text-xs text-gray-800 flex items-start space-x-2">
-                                            <span className="text-blue-600 font-bold mt-0.5">→</span>
-                                            <span className="flex-1">{concern}</span>
-                                          </li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                  )}
-
-                                  {/* Categories and Urgency Footer */}
-                                  <div className="flex items-center justify-between pt-2 border-t border-gray-200">
-                                    <div className="flex items-center space-x-1 flex-wrap gap-1">
-                                      {feedback.categories && feedback.categories.map((cat: string, idx: number) => (
-                                        <span key={idx} className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-medium">
-                                          {cat}
-                                        </span>
-                                      ))}
-                                    </div>
-                                    {feedback.isUrgent && (
-                                      <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded flex items-center space-x-1 font-bold">
-                                        <AlertTriangle size={12} />
-                                        <span>URGENT</span>
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                          
-                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3">
-                            <div className="flex items-start space-x-2">
-                              <span className="text-lg">🔒</span>
-                              <div className="text-xs text-blue-900">
-                                <div className="font-bold mb-1">100% Anonymous & AI-Processed</div>
-                                <div>All personal information has been removed by Gemini AI. Original messages are encrypted and never displayed.</div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* Common Themes Across All Feedback */}
-                      {scheme.feedbackHistory && scheme.feedbackHistory.length > 0 && (() => {
-                        // Aggregate all concerns
-                        const allConcerns = scheme.feedbackHistory.flatMap((fb: any) => fb.concerns || []);
-                        const allCategories = scheme.feedbackHistory.flatMap((fb: any) => fb.categories || []);
-                        
-                        // Count occurrences
-                        const concernCounts: Record<string, number> = allConcerns.reduce((acc: Record<string, number>, concern: string) => {
-                          acc[concern] = (acc[concern] || 0) + 1;
-                          return acc;
-                        }, {});
-                        
-                        const categoryCounts: Record<string, number> = allCategories.reduce((acc: Record<string, number>, cat: string) => {
-                          acc[cat] = (acc[cat] || 0) + 1;
-                          return acc;
-                        }, {});
-                        
-                        // Get top 5 concerns
-                        const topConcerns = Object.entries(concernCounts)
-                          .sort((a, b) => (b[1] as number) - (a[1] as number))
-                          .slice(0, 5);
-                        
-                        // Get top categories
-                        const topCategories = Object.entries(categoryCounts)
-                          .sort((a, b) => (b[1] as number) - (a[1] as number))
-                          .slice(0, 5);
-                        
-                        if (topConcerns.length === 0) return null;
-                        
-                        return (
-                          <div className="mt-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-200">
-                            <h5 className="font-bold text-purple-900 mb-3 flex items-center space-x-2">
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                              </svg>
-                              <span>Common Themes (AI Analysis)</span>
-                            </h5>
-                            
-                            {/* Top Categories */}
-                            <div className="mb-3">
-                              <div className="text-xs font-medium text-purple-700 mb-2">Most Frequent Issue Types:</div>
-                              <div className="flex flex-wrap gap-2">
-                                {topCategories.map(([category, count]) => (
-                                  <div key={category} className="bg-white border border-purple-200 rounded-lg px-3 py-1.5 flex items-center space-x-2">
-                                    <span className="text-sm font-medium text-gray-800">{category}</span>
-                                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-bold">
-                                      {count}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                            
-                            {/* Top Concerns */}
-                            <div>
-                              <div className="text-xs font-medium text-purple-700 mb-2">Most Mentioned Concerns:</div>
-                              <div className="space-y-2">
-                                {topConcerns.map(([concern, count], idx) => (
-                                  <div key={idx} className="bg-white border border-purple-200 rounded-lg p-2">
-                                    <div className="flex items-start justify-between">
-                                      <div className="flex items-start space-x-2 flex-1">
-                                        <span className="text-purple-600 font-bold text-sm mt-0.5">{idx + 1}.</span>
-                                        <span className="text-sm text-gray-800">{concern}</span>
-                                      </div>
-                                      <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full font-bold ml-2">
-                                        {count} times
-                                      </span>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                            
-                            <div className="mt-3 pt-3 border-t border-purple-200 text-xs text-purple-700">
-                              💡 All feedback is AI-processed to remove personal information and identify common patterns
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  )}
-
-                  {/* Discrepancies Details */}
+                    ) : null;
+                  })()}
+                  
+                  {/* Legacy Discrepancies */}
                   {scheme.discrepancies.length > 0 && (
-                    <div>
-                      <h4 className="font-bold text-red-900 mb-2 flex items-center space-x-2">
-                        <AlertTriangle size={16} />
-                        <span>Critical Issues</span>
-                      </h4>
-                      <div className="space-y-2">
-                        {scheme.discrepancies.map((disc, idx) => (
-                          <div key={idx} className="bg-red-50 border border-red-200 rounded-lg p-3">
-                            <div className="flex items-start space-x-2">
-                              <div className={`mt-1 w-2 h-2 rounded-full ${
-                                disc.severity === 'high' ? 'bg-red-600' :
-                                disc.severity === 'medium' ? 'bg-orange-500' :
-                                'bg-yellow-500'
-                              }`} />
-                              <div className="flex-1">
-                                <div className="font-medium text-red-900 text-sm mb-1">{disc.type}</div>
-                                <div className="text-xs text-red-700">{disc.description}</div>
-                                <div className="text-xs text-red-600 mt-1">
-                                  Reported: {new Date(disc.reportedDate || disc.date || Date.now()).toLocaleDateString()}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-2 md:p-3 flex items-center space-x-2">
+                      <AlertTriangle size={14} className="md:hidden text-orange-600 flex-shrink-0" />
+                      <AlertTriangle size={16} className="hidden md:block text-orange-600 flex-shrink-0" />
+                      <span className="text-xs font-semibold text-orange-900 flex-1">
+                        {scheme.discrepancies.length} Issue{scheme.discrepancies.length > 1 ? 's' : ''} Detected
+                      </span>
                     </div>
                   )}
                 </div>
@@ -646,6 +581,18 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
+
+      {/* RAG Query Modal */}
+      {showRagModal && (
+        <RagQueryModal
+          isOpen={showRagModal}
+          onClose={() => setShowRagModal(false)}
+          onHighlightCitation={(citation: Citation) => {
+            console.log('📍 Admin Dashboard - Highlight citation:', citation);
+            alert(`📍 Citation from AI:\n\nType: ${citation.type}\nSnippet: ${citation.snippet}\nScore: ${citation.score}`);
+          }}
+        />
+      )}
     </div>
   );
 }

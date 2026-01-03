@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { useVillageStore } from './store/villageStore';
 import LandingPage from './components/Landing/LandingPage';
 import LoginPage from './components/Auth/LoginPageNew';
@@ -27,6 +28,7 @@ import useWebSocket from './hooks/useWebSocket';
 function App() {
   const { activeView, sidebarCollapsed, infoPanelOpen, isAuthenticated, userRole } = useVillageStore();
   const [showLanding, setShowLanding] = useState(true);
+  const isMobile = Capacitor.isNativePlatform();
   useWebSocket();
 
   // Control body overflow based on authentication state
@@ -49,7 +51,7 @@ function App() {
 
   // Show login page if not authenticated
   if (!isAuthenticated) {
-    return <LoginPage />;
+    return <LoginPage onBack={() => setShowLanding(true)} />;
   }
 
   // Render appropriate view based on activeView and userRole
@@ -97,7 +99,10 @@ function App() {
     <div className="h-screen w-screen flex flex-col overflow-hidden bg-gray-50">
       <TopNav />
       
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden" style={{
+        marginTop: isMobile ? 'calc(64px + env(safe-area-inset-top, 0px))' : '64px',
+        marginBottom: isMobile ? 'calc(32px + env(safe-area-inset-bottom, 0px))' : '32px'
+      }}>
         <Sidebar />
         
         <main className={`flex-1 flex transition-all duration-300 ${
@@ -105,13 +110,13 @@ function App() {
         } ml-0`}>
           {/* Central Canvas */}
           <div className={`flex-1 relative transition-all duration-300 ${
-            infoPanelOpen ? 'lg:w-3/4' : 'w-full'
+            infoPanelOpen && !isMobile ? 'lg:w-3/4' : 'w-full'
           }`}>
             {renderView()}
           </div>
           
-          {/* Info Panel - Hidden on mobile and tablet */}
-          {infoPanelOpen && (
+          {/* Info Panel - Hidden on mobile in native app */}
+          {infoPanelOpen && !isMobile && (
             <div className="hidden lg:block w-1/4 min-w-[300px] max-w-[400px]">
               <InfoPanel />
             </div>
@@ -121,8 +126,8 @@ function App() {
       
       <StatusBar />
       
-      {/* Admin Control Panel - Floating (Only for Admin) */}
-      {userRole === 'admin' && <AdminControls />}
+      {/* Admin Control Panel - Floating (Only for Admin, hidden on mobile) */}
+      {userRole === 'admin' && !isMobile && <AdminControls />}
     </div>
   );
 }

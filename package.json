@@ -6,8 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:mobile": "npm run build && npx cap sync android",
     "preview": "vite preview",
-    "server": "node backend/server.js"
+    "server": "node backend/server.js",
+    "mobile:sync": "npx cap sync android",
+    "mobile:open": "npx cap open android",
+    "mobile:dev": "npm run build:mobile && npm run mobile:open"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.4",

@@ -242,7 +242,7 @@ export const useVillageStore = create<VillageState>((set) => ({
   activeView: 'dashboard',
   wsConnected: false,
   lastUpdate: null,
-  sidebarCollapsed: false,
+  sidebarCollapsed: true, // START COLLAPSED - fixes mobile sidebar glitch
   infoPanelOpen: false,
   
   // Authentication

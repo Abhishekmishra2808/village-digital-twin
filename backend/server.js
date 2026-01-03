@@ -5,11 +5,13 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { generateVillageData, updateSensorData, simulateScenario } from './utils/dataGenerator.js';
-import { processFeedbackWithAI } from './utils/geminiService.js';
+import { processFeedbackWithLocalLLM } from './utils/localLLMService.js';
 import { connectDatabase, seedDatabase } from './config/database.js';
 import authRoutes from './routes/auth.js';
 import schemesRoutes from './routes/schemes.js';
 import reportsRoutes from './routes/reports.js';
+import llmStatusRoutes from './routes/llmStatus.js';
+import ragRoutes from './routes/rag.js';
 import Scheme from './models/Scheme.js';
 import Feedback from './models/Feedback.js';
 
@@ -59,6 +61,8 @@ app.set('broadcast', (data) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/schemes', schemesRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/llm', llmStatusRoutes);
+app.use('/api/rag-query', ragRoutes);
 
 // Initialize village data (in-memory for real-time sensors, schemes from DB)
 let villageState = generateVillageData();
@@ -185,10 +189,10 @@ app.post('/api/feedback', async (req, res) => {
       return res.status(404).json({ error: 'Scheme not found' });
     }
 
-    console.log(`🤖 Processing feedback with Gemini AI...`);
+    console.log(`🤖 Processing feedback with LOCAL LLM (privacy-first)...`);
     
-    // Process with AI
-    const aiResult = await processFeedbackWithAI(
+    // Process with LOCAL LLM (not Gemini)
+    const aiResult = await processFeedbackWithLocalLLM(
       comment || 'No comment provided',
       rating,
       scheme.name
@@ -236,7 +240,7 @@ app.post('/api/feedback', async (req, res) => {
 
     await scheme.save();
 
-    console.log(`✅ Feedback processed and saved to database`);
+    console.log(`✅ Feedback processed with LOCAL LLM and saved to database`);
 
     // Broadcast update
     await loadSchemesFromDB();
@@ -249,7 +253,7 @@ app.post('/api/feedback', async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Feedback submitted successfully',
+      message: 'Feedback submitted successfully (processed locally)',
       aiProcessed: aiResult.success,
       scheme: {
         id: scheme.id,

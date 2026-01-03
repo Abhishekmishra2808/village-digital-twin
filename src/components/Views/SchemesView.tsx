@@ -14,10 +14,14 @@ import {
   X,
   Plus,
   Upload,
-  Loader
+  Loader,
+  ChevronRight,
+  Sparkles
 } from 'lucide-react';
 import { useVillageStore, type GovernmentScheme } from '../../store/villageStore';
 import { API_URL } from '../../config/api';
+import RagQueryModal from '../Rag/RagQueryModal';
+import type { Citation } from '../../hooks/useRagQuery';
 
 export default function SchemesView() {
   // Get schemes from store instead of mock data
@@ -32,6 +36,7 @@ export default function SchemesView() {
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showRagModal, setShowRagModal] = useState(false);
 
   // Calculate summary statistics
   const totalSchemes = schemes.length;
@@ -92,16 +97,26 @@ export default function SchemesView() {
                 <p className="text-sm md:text-base text-gray-600">Real-time monitoring of rural development projects</p>
               </div>
             </div>
-            {/* Only show "Add New Scheme" button to admins */}
-            {userRole === 'admin' && (
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <button
-                onClick={() => setShowAddSchemeModal(true)}
-                className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md flex items-center justify-center space-x-2"
+                onClick={() => setShowRagModal(true)}
+                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-cyan-700 transition-all shadow-md flex items-center justify-center space-x-2"
               >
-                <Plus size={20} />
-                <span>Add New Scheme</span>
+                <Sparkles size={20} />
+                <span>Ask AI</span>
               </button>
-            )}
+              {/* Only show "Add New Scheme" button to admins */}
+              {userRole === 'admin' && (
+                <button
+                  onClick={() => setShowAddSchemeModal(true)}
+                  className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md flex items-center justify-center space-x-2"
+                >
+                  <Plus size={20} />
+                  <span>Add New Scheme</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -211,188 +226,206 @@ export default function SchemesView() {
           {filteredSchemes.map((scheme) => (
             <div
               key={scheme.id}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6 hover:shadow-md transition-shadow"
+              onClick={() => {
+                setSelectedScheme(scheme);
+                setModalInitialTab('overview');
+                setShowDetailsModal(true);
+              }}
+              className="bg-white rounded-2xl shadow-sm border border-gray-200 hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden group"
             >
-              <div 
-                className="cursor-pointer"
-                onClick={() => {
-                  setSelectedScheme(scheme);
-                  setModalInitialTab('overview');
-                  setShowDetailsModal(true);
-                }}
-              >
-                <div className="flex flex-col sm:flex-row items-start justify-between mb-3 md:mb-4 gap-3">
-                  <div className="flex items-start space-x-3 md:space-x-4 flex-1 w-full">
-                    <div className="text-3xl md:text-4xl flex-shrink-0">{categoryIcons[scheme.category] || '📋'}</div>
+              {/* Header Section with Gradient */}
+              <div className="bg-gradient-to-r from-purple-50 via-blue-50 to-indigo-50 p-4 md:p-6 border-b border-gray-100">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start space-x-3 md:space-x-4 flex-1">
+                    {/* Category Icon */}
+                    <div className="flex-shrink-0 w-12 h-12 md:w-14 md:h-14 bg-white rounded-xl shadow-sm flex items-center justify-center text-2xl md:text-3xl">
+                      {categoryIcons[scheme.category] || '📋'}
+                    </div>
+                    
+                    {/* Title and Meta */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2 line-clamp-2">{scheme.name}</h3>
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-xs md:text-sm text-gray-600 mb-2 md:mb-3 space-y-1 sm:space-y-0">
+                      <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-purple-700 transition-colors">
+                        {scheme.name}
+                      </h3>
+                      
+                      <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-3">
+                        <StatusBadge status={scheme.status} />
+                        <span className="px-2.5 py-1 bg-white rounded-full text-xs font-medium text-gray-700 border border-gray-200">
+                          {scheme.category}
+                        </span>
+                      </div>
+                      
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-600">
                         <div className="flex items-center space-x-1">
-                          <MapPin size={12} className="md:hidden flex-shrink-0" />
-                          <MapPin size={14} className="hidden md:block flex-shrink-0" />
+                          <MapPin size={14} className="flex-shrink-0 text-gray-400" />
                           <span className="truncate">{scheme.village}, {scheme.district}</span>
                         </div>
-                        <div className="hidden lg:flex items-center space-x-1">
-                          <Calendar size={14} className="flex-shrink-0" />
-                          <span className="truncate">{new Date(scheme.startDate).toLocaleDateString()} - {new Date(scheme.endDate).toLocaleDateString()}</span>
-                        </div>
                         <div className="flex items-center space-x-1">
-                          <FileText size={12} className="md:hidden flex-shrink-0" />
-                          <FileText size={14} className="hidden md:block flex-shrink-0" />
-                          <span className="truncate">{scheme.id}</span>
+                          <FileText size={14} className="flex-shrink-0 text-gray-400" />
+                          <span className="font-mono">{scheme.id}</span>
                         </div>
-                      </div>
-                      <div className="flex items-center space-x-2 md:space-x-3 flex-wrap gap-1">
-                        <StatusBadge status={scheme.status} />
-                        <span className="text-xs md:text-sm text-gray-600">{scheme.category}</span>
                       </div>
                     </div>
                   </div>
-                  <div className="text-right sm:flex-shrink-0">
-                    <div className="text-xl md:text-2xl font-bold text-purple-600">{scheme.overallProgress}%</div>
-                    <div className="text-[10px] md:text-xs text-gray-500">Complete</div>
+                  
+                  {/* Progress Circle */}
+                  <div className="flex-shrink-0">
+                    <div className="relative w-16 h-16 md:w-20 md:h-20">
+                      <svg className="transform -rotate-90 w-full h-full">
+                        <circle
+                          cx="50%"
+                          cy="50%"
+                          r="30%"
+                          stroke="#e5e7eb"
+                          strokeWidth="8"
+                          fill="none"
+                        />
+                        <circle
+                          cx="50%"
+                          cy="50%"
+                          r="30%"
+                          stroke={
+                            scheme.status === 'on-track' ? '#10b981' :
+                            scheme.status === 'delayed' ? '#f59e0b' :
+                            scheme.status === 'discrepant' ? '#ef4444' :
+                            '#3b82f6'
+                          }
+                          strokeWidth="8"
+                          fill="none"
+                          strokeDasharray={`${scheme.overallProgress * 1.88} 188`}
+                          strokeLinecap="round"
+                          className="transition-all duration-500"
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-lg md:text-xl font-bold text-gray-900">{scheme.overallProgress}%</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-
-              {/* Progress Bar */}
-              <div className="mb-3 md:mb-4">
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div
-                    className={`h-2 transition-all ${
-                      scheme.status === 'on-track' ? 'bg-green-500' :
-                      scheme.status === 'delayed' ? 'bg-yellow-500' :
-                      scheme.status === 'discrepant' ? 'bg-red-500' :
-                      'bg-blue-500'
-                    }`}
-                    style={{ width: `${scheme.overallProgress}%` }}
-                  />
-                </div>
-              </div>
-
+              
               {/* Stats Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-3 md:mb-4">
-                <div>
-                  <div className="text-[10px] md:text-xs text-gray-600 mb-1">Budget Allocated</div>
-                  <div className="text-xs md:text-sm font-bold text-gray-900">₹{(scheme.totalBudget / 100000).toFixed(1)}L</div>
-                </div>
-                <div>
-                  <div className="text-[10px] md:text-xs text-gray-600 mb-1">Budget Utilized</div>
-                  <div className="text-xs md:text-sm font-bold text-gray-900">₹{(scheme.budgetUtilized / 100000).toFixed(1)}L</div>
-                </div>
-                <div>
-                  <div className="text-[10px] md:text-xs text-gray-600 mb-1">Citizen Rating</div>
-                  <div className="flex items-center space-x-1">
-                    <Star size={12} className="md:hidden text-yellow-500 fill-yellow-500" />
-                    <Star size={14} className="hidden md:block text-yellow-500 fill-yellow-500" />
-                    <span className="text-xs md:text-sm font-bold text-gray-900">{scheme.citizenRating.toFixed(1)}</span>
-                    <span className="text-[10px] md:text-xs text-gray-500">({scheme.feedbackCount})</span>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 md:p-6 bg-gray-50">
+                <div className="text-center p-3 bg-white rounded-xl border border-gray-100">
+                  <div className="text-xs text-gray-500 mb-1">Budget</div>
+                  <div className="text-sm md:text-base font-bold text-gray-900">
+                    ₹{(scheme.totalBudget / 100000).toFixed(1)}L
+                  </div>
+                  <div className="text-[10px] text-gray-400 mt-0.5">
+                    {Math.round((scheme.budgetUtilized / scheme.totalBudget) * 100)}% used
                   </div>
                 </div>
-                <div>
-                  <div className="text-[10px] md:text-xs text-gray-600 mb-1">Last Updated</div>
-                  <div className="text-xs md:text-sm font-bold text-gray-900">{new Date(scheme.lastUpdated).toLocaleDateString()}</div>
+                
+                <div className="text-center p-3 bg-white rounded-xl border border-gray-100">
+                  <div className="text-xs text-gray-500 mb-1">Utilized</div>
+                  <div className="text-sm md:text-base font-bold text-green-600">
+                    ₹{(scheme.budgetUtilized / 100000).toFixed(1)}L
+                  </div>
+                  <div className="text-[10px] text-gray-400 mt-0.5">
+                    ₹{((scheme.totalBudget - scheme.budgetUtilized) / 100000).toFixed(1)}L left
+                  </div>
+                </div>
+                
+                <div className="text-center p-3 bg-white rounded-xl border border-gray-100">
+                  <div className="text-xs text-gray-500 mb-1">Rating</div>
+                  <div className="flex items-center justify-center space-x-1">
+                    <Star size={14} className="text-yellow-500 fill-yellow-500" />
+                    <span className="text-sm md:text-base font-bold text-gray-900">{scheme.citizenRating.toFixed(1)}</span>
+                  </div>
+                  <div className="text-[10px] text-gray-400 mt-0.5">
+                    {scheme.feedbackCount} reviews
+                  </div>
+                </div>
+                
+                <div className="text-center p-3 bg-white rounded-xl border border-gray-100">
+                  <div className="text-xs text-gray-500 mb-1">Timeline</div>
+                  <div className="text-sm md:text-base font-bold text-gray-900">
+                    {(() => {
+                      const end = new Date(scheme.endDate);
+                      const now = new Date();
+                      const daysLeft = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                      return daysLeft > 0 ? `${daysLeft}d` : 'Complete';
+                    })()}
+                  </div>
+                  <div className="text-[10px] text-gray-400 mt-0.5">
+                    {new Date(scheme.endDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                  </div>
                 </div>
               </div>
 
-              {/* Vendor Report Summary - Show discrepancies and overdue work from latest report */}
-              {scheme.vendorReports && scheme.vendorReports.length > 0 && (() => {
-                const latestReport = scheme.vendorReports[scheme.vendorReports.length - 1];
-                const hasDiscrepancies = (latestReport.complianceAnalysis?.discrepancies?.length ?? 0) > 0;
-                const hasOverdueWork = (latestReport.complianceAnalysis?.overdueWork?.length ?? 0) > 0;
-                
-                return (hasDiscrepancies || hasOverdueWork) ? (
-                  <div className="mb-3 md:mb-4 space-y-2">
-                    {hasDiscrepancies && latestReport.complianceAnalysis?.discrepancies && (
-                      <div className="bg-red-50 border border-red-200 rounded-lg p-2 md:p-3">
-                        <div className="flex items-start space-x-2">
-                          <AlertTriangle size={14} className="md:hidden text-red-600 mt-0.5 flex-shrink-0" />
-                          <AlertTriangle size={16} className="hidden md:block text-red-600 mt-0.5 flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm font-bold text-red-900 mb-1">
-                              Vendor Discrepancies ({latestReport.complianceAnalysis.discrepancies.length})
-                            </div>
-                            <ul className="text-xs text-red-700 space-y-1">
-                              {latestReport.complianceAnalysis.discrepancies.slice(0, 2).map((disc: any, idx: number) => (
-                                <li key={idx}>• {disc.description}</li>
-                              ))}
-                              {latestReport.complianceAnalysis.discrepancies.length > 2 && (
-                                <li className="text-red-600 font-medium">+ {latestReport.complianceAnalysis.discrepancies.length - 2} more</li>
-                              )}
-                            </ul>
+              {/* Alerts Section - Only show if there are issues */}
+              {(scheme.discrepancies.length > 0 || 
+                (scheme.vendorReports && scheme.vendorReports.length > 0 && 
+                 (() => {
+                   const latestReport = scheme.vendorReports[scheme.vendorReports.length - 1];
+                   return (latestReport.complianceAnalysis?.discrepancies?.length ?? 0) > 0 ||
+                          (latestReport.complianceAnalysis?.overdueWork?.length ?? 0) > 0;
+                 })())) && (
+                <div className="px-4 md:px-6 pb-4 space-y-2">
+                  {/* Vendor Report Issues */}
+                  {scheme.vendorReports && scheme.vendorReports.length > 0 && (() => {
+                    const latestReport = scheme.vendorReports[scheme.vendorReports.length - 1];
+                    const discCount = latestReport.complianceAnalysis?.discrepancies?.length ?? 0;
+                    const overdueCount = latestReport.complianceAnalysis?.overdueWork?.length ?? 0;
+                    
+                    return (discCount > 0 || overdueCount > 0) ? (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center space-x-2">
+                        <AlertTriangle size={16} className="text-red-600 flex-shrink-0" />
+                        <div className="flex-1">
+                          <div className="text-xs font-semibold text-red-900">
+                            {discCount > 0 && `${discCount} Discrepancies`}
+                            {discCount > 0 && overdueCount > 0 && ' • '}
+                            {overdueCount > 0 && `${overdueCount} Overdue Tasks`}
                           </div>
                         </div>
+                        <span className="text-[10px] text-red-700 px-2 py-1 bg-red-100 rounded-full font-medium">
+                          Action Needed
+                        </span>
                       </div>
-                    )}
-                    {hasOverdueWork && latestReport.complianceAnalysis?.overdueWork && (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 md:p-3">
-                        <div className="flex items-start space-x-2">
-                          <AlertTriangle size={14} className="md:hidden text-yellow-600 mt-0.5 flex-shrink-0" />
-                          <AlertTriangle size={16} className="hidden md:block text-yellow-600 mt-0.5 flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm font-bold text-yellow-900 mb-1">
-                              Overdue Work ({latestReport.complianceAnalysis.overdueWork.length})
-                            </div>
-                            <ul className="text-xs text-yellow-700 space-y-1">
-                              {latestReport.complianceAnalysis.overdueWork.slice(0, 2).map((work: any, idx: number) => (
-                                <li key={idx}>• {work.task} ({work.delayDays} days late)</li>
-                              ))}
-                              {latestReport.complianceAnalysis.overdueWork.length > 2 && (
-                                <li className="text-yellow-600 font-medium">+ {latestReport.complianceAnalysis.overdueWork.length - 2} more</li>
-                              )}
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ) : null;
-              })()}
-
-              {/* Discrepancies Alert (Legacy - from scheme.discrepancies) */}
-              {scheme.discrepancies.length > 0 && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-                  <div className="flex items-start space-x-2">
-                    <AlertTriangle size={16} className="text-red-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <div className="text-sm font-bold text-red-900 mb-1">Discrepancies Detected</div>
-                      <ul className="text-xs text-red-700 space-y-1">
-                        {scheme.discrepancies.map((disc, idx) => (
-                          <li key={idx}>• {disc.description}</li>
-                        ))}
-                      </ul>
+                    ) : null;
+                  })()}
+                  
+                  {/* Legacy Discrepancies */}
+                  {scheme.discrepancies.length > 0 && (
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 flex items-center space-x-2">
+                      <AlertTriangle size={16} className="text-orange-600 flex-shrink-0" />
+                      <span className="text-xs font-semibold text-orange-900 flex-1">
+                        {scheme.discrepancies.length} Issue{scheme.discrepancies.length > 1 ? 's' : ''} Detected
+                      </span>
                     </div>
-                  </div>
+                  )}
                 </div>
               )}
 
-              {/* Quick Actions */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-3 md:pt-4 border-t border-gray-200">
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedScheme(scheme);
-                    setModalInitialTab('overview');
-                    setShowDetailsModal(true);
-                  }}
-                  className="px-3 py-2 bg-purple-100 text-purple-700 rounded-lg text-xs md:text-sm font-medium hover:bg-purple-200 transition-colors whitespace-nowrap"
-                >
-                  View Full Details
-                </button>
-                {userRole === 'admin' && (
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedScheme(scheme);
-                      setModalInitialTab('reports');
-                      setShowDetailsModal(true);
-                    }}
-                    className="px-3 py-2 bg-green-100 text-green-700 rounded-lg text-xs md:text-sm font-medium hover:bg-green-200 transition-colors flex items-center justify-center space-x-1 whitespace-nowrap"
+              {/* Action Footer */}
+              <div className="px-4 md:px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                <div className="text-[10px] md:text-xs text-gray-500">
+                  Updated {new Date(scheme.lastUpdated).toLocaleDateString()}
+                </div>
+                <div className="flex items-center space-x-2">
+                  {userRole === 'admin' && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedScheme(scheme);
+                        setModalInitialTab('reports');
+                        setShowDetailsModal(true);
+                      }}
+                      className="px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs font-medium hover:bg-green-200 transition-colors flex items-center space-x-1"
+                    >
+                      <Upload size={12} />
+                      <span className="hidden sm:inline">Upload Report</span>
+                      <span className="sm:hidden">Upload</span>
+                    </button>
+                  )}
+                  <button
+                    className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg text-xs font-medium hover:bg-purple-200 transition-colors flex items-center space-x-1 group-hover:bg-purple-600 group-hover:text-white"
                   >
-                    <Upload size={12} />
-                    <span>Upload Vendor Report</span>
+                    <span>View Details</span>
+                    <ChevronRight size={14} />
                   </button>
-                )}
+                </div>
               </div>
             </div>
           ))}
@@ -430,6 +463,20 @@ export default function SchemesView() {
             setShowAddSchemeModal(false);
             // Refresh schemes after adding
             await fetchSchemes();
+          }}
+        />
+      )}
+
+      {/* RAG Query Modal */}
+      {showRagModal && (
+        <RagQueryModal
+          isOpen={showRagModal}
+          onClose={() => setShowRagModal(false)}
+          onHighlightCitation={(citation: Citation) => {
+            console.log('📍 Highlight citation on map:', citation);
+            // TODO: Implement map highlighting when map instance is available
+            // For now, just show an alert
+            alert(`📍 Citation Location:\n\nType: ${citation.type}\nSnippet: ${citation.snippet}\nCoordinates: ${citation.geo?.lat}, ${citation.geo?.lon}`);
           }}
         />
       )}

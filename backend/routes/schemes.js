@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import multer from 'multer';
 import Scheme from '../models/Scheme.js';
 import Feedback from '../models/Feedback.js';
-import { processFeedbackWithAI } from '../utils/geminiService.js';
+import { processFeedbackWithLocalLLM } from '../utils/localLLMService.js';
 import { extractSchemeFromPDF, analyzeVendorReport } from '../utils/pdfService.js';
 
 const router = express.Router();
@@ -184,10 +184,10 @@ router.post('/:id/feedback', async (req, res) => {
       });
     }
 
-    console.log(`🤖 Processing feedback with Gemini AI for: ${scheme.name}`);
+    console.log(`🤖 Processing feedback with local LLM for: ${scheme.name}`);
 
-    // Process with AI
-    const aiResult = await processFeedbackWithAI(
+    // Process with local LLM
+    const aiResult = await processFeedbackWithLocalLLM(
       comment || 'No comment provided',
       rating,
       scheme.name
