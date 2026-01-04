@@ -43,10 +43,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
   const heroOpacity = useTransform(smoothProgress, [0, 0.5], [1, 0]);
   const heroY = useTransform(smoothProgress, [0, 0.5], ["0%", "-10%"]);
   
-  // 3. Content Layer Slide (Comes up over the hero)
-  const contentY = useTransform(smoothProgress, [0.15, 0.8], ["100vh", "0vh"]);
-  
-  // 4. Blur Effect for Background
+  // 3. Blur Effect for Background
   const bgBlur = useTransform(smoothProgress, [0, 0.8], ["blur(0px)", "blur(8px)"]);
 
   return (
