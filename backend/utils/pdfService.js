@@ -1,7 +1,5 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import pdfParse from 'pdf-parse-new';
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+import { extractSchemeWithLLM, analyzeVendorReport as analyzeWithHF } from './huggingfaceService.js';
 
 /**
  * Extract structured data using regex patterns
@@ -201,7 +199,7 @@ export async function extractSchemeFromPDF(pdfBuffer) {
     console.log('📄 PDF Text Length:', pdfText.length, 'characters');
 
     // Use LLM as PRIMARY method for accurate extraction
-    console.log('🤖 Using LLM (Gemini AI) for comprehensive extraction...');
+    console.log('🤖 Using LLM (Hugging Face Llama 3.1-8B) for comprehensive extraction...');
     const llmData = await extractSchemeWithLLM(pdfText);
 
     // Fallback: Use regex only if LLM fails
@@ -240,125 +238,10 @@ export async function extractSchemeFromPDF(pdfBuffer) {
   }
 }
 
-/**
- * Use LLM to extract ALL scheme details accurately
- */
-async function extractSchemeWithLLM(pdfText) {
-  try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
-    const prompt = `You are a government document analyzer. Extract COMPLETE and ACCURATE details from this scheme document.
-
-CRITICAL INSTRUCTIONS FOR BUDGET:
-- Look for "Total Budget", "Total Allocation", "Project Cost", "Outlay"
-- Budget format: "Rs. 75,00,000" or "₹75 lakh" or "75 lakhs" or "7.5 crore"
-- Convert ALL amounts to RUPEES (multiply lakhs by 100000, crores by 10000000)
-- Return ONLY the final rupee amount as a NUMBER (no commas, no text)
-- Example: "Rs. 75,00,000" → return 7500000
-- Example: "75 lakh rupees" → return 7500000
-- Example: "7.5 crore" → return 75000000
-
-CRITICAL INSTRUCTIONS FOR SCHEME NAME:
-- Extract the EXACT official scheme name
-- Usually appears near the top as "SCHEME NAME:", "PROJECT:", "SCHEME:"
-- Do NOT extract descriptions, summaries, or lines with "=====" symbols
-- Should be a proper title, typically 3-15 words
-
-CRITICAL INSTRUCTIONS FOR PHASES:
-- Look for "PHASE 1", "PHASE 2", "Phase-wise", "Implementation Plan"
-- Extract phase number, timeline, budget, and planned work/activities
-- Each phase should have: id, name, timeline, budget, plannedWork
-
-Document Text:
-${pdfText.substring(0, 15000)}
-
-Return ONLY valid JSON in this EXACT format (no additional text):
-{
-  "name": "Full exact scheme name from document",
-  "category": "One of: Sanitation, Water Supply, Housing, Employment, Power, Roads, Healthcare, Education, Agriculture, Other",
-  "description": "Brief 2-3 sentence description of the scheme objectives",
-  "village": "Village name",
-  "district": "District name",
-  "totalBudget": 7500000,
-  "startDate": "2025-01-01",
-  "endDate": "2025-12-31",
-  "phases": [
-    {
-      "id": 1,
-      "name": "Phase 1",
-      "timeline": "Jan-Mar 2025",
-      "budget": 2000000,
-      "plannedWork": "Detailed description of Phase 1 activities, deliverables, milestones",
-      "startDate": "2025-01-01",
-      "endDate": "2025-03-31"
-    }
-  ]
-}
-
-IMPORTANT:
-- totalBudget MUST be a pure number in rupees (no commas, no text)
-- Dates in YYYY-MM-DD format
-- If budget is in lakhs/crores, convert to rupees
-- Extract ALL phases mentioned in document
-- Be accurate, don't make up information`;
-
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
-
-    console.log('🤖 LLM Raw Response:', text.substring(0, 500));
-
-    let jsonText = text.trim();
-    if (jsonText.startsWith('```json')) {
-      jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    } else if (jsonText.startsWith('```')) {
-      jsonText = jsonText.replace(/```\n?/g, '').trim();
-    }
-
-    const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const extracted = JSON.parse(jsonMatch[0]);
-      
-      // Ensure totalBudget is a number
-      if (extracted.totalBudget && typeof extracted.totalBudget === 'string') {
-        extracted.totalBudget = parseInt(extracted.totalBudget.replace(/,/g, ''));
-      }
-      
-      // Ensure phase budgets are numbers
-      if (extracted.phases && Array.isArray(extracted.phases)) {
-        extracted.phases = extracted.phases.map(phase => ({
-          ...phase,
-          budget: typeof phase.budget === 'string' ? 
-                  parseInt(phase.budget.replace(/,/g, '')) : phase.budget,
-          spent: 0,
-          progress: 0,
-          status: 'not-started'
-        }));
-      }
-
-      console.log('✅ LLM Extracted - Name:', extracted.name, '| Budget:', extracted.totalBudget);
-      return extracted;
-    }
-
-    throw new Error('Could not parse LLM response');
-  } catch (error) {
-    console.error('❌ LLM Extraction Error:', error.message);
-    return {
-      name: null,
-      category: null,
-      description: null,
-      village: null,
-      district: null,
-      totalBudget: null,
-      startDate: null,
-      endDate: null,
-      phases: []
-    };
-  }
-}
+// Removed - now using Hugging Face Llama 3.1-8B in huggingfaceService.js
 
 /**
- * Analyze vendor report against government plan
+ * Analyze vendor report against government plan using Hugging Face Llama
  */
 export async function analyzeVendorReport(pdfBuffer, governmentPlan) {
   try {
@@ -368,139 +251,14 @@ export async function analyzeVendorReport(pdfBuffer, governmentPlan) {
 
     console.log('📄 Vendor Report PDF Length:', vendorReportText.length, 'characters');
 
-    // Use Gemini AI to compare and analyze
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    // Use Hugging Face Llama 3.1-8B for analysis
+    const analysisData = await analyzeWithHF(vendorReportText, governmentPlan);
 
-    const prompt = `You are a government compliance auditor analyzing a vendor's progress report against the original government plan.
-
-GOVERNMENT'S ORIGINAL PLAN:
-Scheme: ${governmentPlan.name}
-Total Budget: ₹${governmentPlan.totalBudget}
-Timeline: ${governmentPlan.startDate} to ${governmentPlan.endDate}
-
-PHASE-WISE PLAN:
-${governmentPlan.phases.map((phase, idx) => `
-Phase ${phase.id}: ${phase.name}
-- Budget: ₹${phase.budget}
-- Timeline: ${phase.startDate} to ${phase.endDate}
-- Planned Work: ${phase.plannedWork || 'Not specified'}
-- Milestones: ${phase.milestones?.join(', ') || 'None'}
-- Deliverables: ${phase.deliverables?.join(', ') || 'None'}
-`).join('\n')}
-
-VENDOR'S SUBMITTED REPORT:
-${vendorReportText.substring(0, 20000)}
-
-CRITICAL ANALYSIS INSTRUCTIONS:
-
-1. BUDGET PARSING:
-   - Look for "Total Expenses", "Amount Claimed", "Budget Utilized", "Actual Spending"
-   - Convert lakhs/crores to rupees: 1 lakh = 100,000, 1 crore = 10,000,000
-   - Return pure numbers (no commas, no text)
-   - Example: "Rs. 8,50,000" → 850000
-   - Example: "29.80 lakh" → 2980000
-
-2. COMPLIANCE SCORING:
-   - 90-100%: Excellent compliance, minor/no issues
-   - 70-89%: Good compliance, some delays/issues
-   - 50-69%: Moderate compliance, significant issues
-   - Below 50%: Poor compliance, major problems
-
-3. DISCREPANCY DETECTION:
-   - Compare planned vs actual for: budget, timeline, quality, scope
-   - Severity: critical (project risk), high (major concern), medium (notable), low (minor)
-   - Be specific with numbers and dates
-
-4. OVERDUE WORK:
-   - Calculate actual delay in days from planned date
-   - Current status: completed, in-progress, not-started, delayed
-
-Analyze thoroughly and provide COMPLETE JSON (no additional text):
-
-{
-  "overallCompliance": 75,
-  "vendorName": "Exact vendor name from report",
-  "reportDate": "YYYY-MM-DD",
-  "phase": 1,
-  "workCompleted": "Detailed summary of what vendor claims completed",
-  "expenseClaimed": 2980000,
-  "matchingItems": [
-    "Specific item/task completed as per plan",
-    "Another matching deliverable"
-  ],
-  "discrepancies": [
-    {
-      "category": "budget",
-      "severity": "high",
-      "description": "Clear description of budget issue",
-      "plannedValue": "₹25,00,000",
-      "actualValue": "₹29,80,000"
-    },
-    {
-      "category": "timeline",
-      "severity": "medium",
-      "description": "Delay in completion",
-      "plannedValue": "June 30, 2025",
-      "actualValue": "August 15, 2025 (45 days delay)"
-    },
-    {
-      "category": "quality",
-      "severity": "critical",
-      "description": "Units failed inspection",
-      "plannedValue": "100% pass rate",
-      "actualValue": "3 units demolished due to quality issues"
-    }
-  ],
-  "overdueWork": [
-    {
-      "task": "Specific task name",
-      "plannedDate": "2025-06-15",
-      "currentStatus": "in-progress",
-      "delayDays": 30
-    }
-  ],
-  "budgetAnalysis": {
-    "plannedBudget": 2500000,
-    "claimedExpense": 2980000,
-    "variance": 480000,
-    "variancePercentage": 19.2
-  },
-  "aiSummary": "Comprehensive executive summary covering: 1) Overall progress status 2) Major achievements 3) Critical issues/risks 4) Budget concerns 5) Recommendations"
-}
-
-IMPORTANT:
-- All budget amounts as NUMBERS in rupees (no commas)
-- Dates in YYYY-MM-DD format
-- Be thorough - identify ALL discrepancies mentioned
-- Compare actual vs planned carefully
-- Provide actionable insights`;
-
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
-
-    console.log('🤖 Gemini AI Response (Vendor Analysis):', text.substring(0, 500));
-
-    // Extract JSON from response
-    let jsonText = text.trim();
-    if (jsonText.startsWith('```json')) {
-      jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    } else if (jsonText.startsWith('```')) {
-      jsonText = jsonText.replace(/```\n?/g, '').trim();
-    }
-
-    const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const analysisData = JSON.parse(jsonMatch[0]);
-
-      return {
-        success: true,
-        analysis: analysisData,
-        aiProcessed: true
-      };
-    }
-
-    throw new Error('Could not parse AI response');
+    return {
+      success: true,
+      analysis: analysisData,
+      aiProcessed: true
+    };
 
   } catch (error) {
     console.error('❌ Vendor Report Analysis Error:', error.message);

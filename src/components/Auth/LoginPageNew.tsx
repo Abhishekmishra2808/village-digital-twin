@@ -400,7 +400,7 @@ export default function LoginPage({ onBack }: LoginPageProps) {
           className="text-center mt-8 shrink-0"
         >
           <p className="text-[10px] text-slate-500 uppercase tracking-widest">
-            Powered by MongoDB · Gemini AI · WebSocket
+            Powered by MongoDB · Runanywhere · WebSocket
           </p>
         </motion.div>
       </div>
