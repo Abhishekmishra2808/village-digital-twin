@@ -1,30 +1,23 @@
 import { useState, useEffect } from 'react';
 import { 
   Briefcase, 
-  Star,
+  CheckCircle,
+  Clock,
   MessageSquare,
-  ChevronDown,
-  ChevronUp,
-  Calendar,
-  MapPin,
-  TrendingUp,
+  ThumbsUp,
+  ArrowRight,
+  Sparkles,
+  Activity,
+  Star,
+  X,
   Send,
   Flag,
-  Users,
-  CheckCircle,
-  X,
-  Smartphone,
-  Download,
   Loader,
-  Cpu,
-  Shield,
-  Sparkles
+  Cpu
 } from 'lucide-react';
 import { useVillageStore, type GovernmentScheme } from '../../store/villageStore';
 import { API_URL } from '../../config/api';
 import { Capacitor } from '@capacitor/core';
-import RagQueryModal from '../Rag/RagQueryModal';
-import type { Citation } from '../../hooks/useRagQuery';
 
 // Define LocalLLM plugin
 const LocalLLM = Capacitor.isNativePlatform() ? {
@@ -35,15 +28,15 @@ const LocalLLM = Capacitor.isNativePlatform() ? {
 
 export default function CitizenDashboard() {
   const schemes = useVillageStore((state) => state.schemes);
+  const setActiveView = useVillageStore((state) => state.setActiveView);
   const username = useVillageStore((state) => state.username);
-  const [expandedScheme, setExpandedScheme] = useState<string | null>(null);
+
   const [feedbackScheme, setFeedbackScheme] = useState<GovernmentScheme | null>(null);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [isUrgent, setIsUrgent] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showRagModal, setShowRagModal] = useState(false);
   
   // AI Processing Status
   const [aiStatus, setAiStatus] = useState<{
@@ -75,10 +68,6 @@ export default function CitizenDashboard() {
       }
     };
   }, []);
-
-  const toggleExpand = (schemeId: string) => {
-    setExpandedScheme(expandedScheme === schemeId ? null : schemeId);
-  };
 
   const openFeedbackModal = (scheme: GovernmentScheme, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -114,7 +103,7 @@ export default function CitizenDashboard() {
         userId
       };
 
-      // Submit feedback to backend (RunAnywhereAI will process it locally)
+      // Submit feedback to backend
       const response = await fetch(`${API_URL}/api/schemes/${feedbackScheme.id}/feedback`, {
         method: 'POST',
         headers: {
@@ -125,15 +114,12 @@ export default function CitizenDashboard() {
 
       if (!response.ok) {
         const error = await response.json();
-        
-        // Handle rate limiting error (429)
         if (response.status === 429) {
           alert(error.message || 'You have already submitted feedback recently. Please try again later.');
           setIsProcessing(false);
           closeFeedbackModal();
           return;
         }
-        
         throw new Error(error.error || 'Failed to submit feedback');
       }
 
@@ -141,7 +127,6 @@ export default function CitizenDashboard() {
       console.log('✅ Feedback submitted successfully:', result);
 
       setIsProcessing(false);
-      // Show success state
       setSubmitted(true);
 
       // Reset and close after 2 seconds
@@ -158,549 +143,376 @@ export default function CitizenDashboard() {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'on-track': return 'bg-green-100 text-green-800 border-green-200';
-      case 'delayed': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'discrepant': return 'bg-red-100 text-red-800 border-red-200';
-      case 'completed': return 'bg-blue-100 text-blue-800 border-blue-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  const getProgressColor = (status: string) => {
-    switch (status) {
-      case 'on-track': return 'bg-green-500';
-      case 'delayed': return 'bg-yellow-500';
-      case 'discrepant': return 'bg-red-500';
-      case 'completed': return 'bg-blue-500';
-      default: return 'bg-gray-500';
-    }
-  };
-
-  // Calculate stats for citizen view
-  const totalSchemes = schemes.length;
-  const completedSchemes = schemes.filter(s => s.status === 'completed').length;
-  const avgRating = schemes.length > 0 ? (schemes.reduce((sum, s) => sum + s.citizenRating, 0) / schemes.length).toFixed(1) : '0.0';
-  const totalFeedback = schemes.reduce((sum, s) => sum + s.feedbackCount, 0);
+  // Get active schemes (not completed)
+  const activeSchemes = schemes.filter(s => s.status !== 'completed');
+  
+  // Get recent updates (simulated from scheme phases)
+  const recentUpdates = schemes
+    .flatMap(s => s.phases.map(p => ({
+      schemeName: s.name,
+      phaseName: p.name,
+      status: p.status,
+      date: p.endDate, // Using end date as a proxy for update time
+      id: `${s.id}-${p.id}`
+    })))
+    .filter(u => u.status === 'completed' || u.status === 'on-track' || u.status === 'delayed')
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 4);
 
   return (
-    <div className="h-full overflow-y-auto p-6 space-y-6 bg-transparent">
-      {/* Header */}
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Government Schemes</h1>
-          <p className="text-slate-400">Track development projects in your village and share your feedback</p>
-        </div>
-        <button
-          onClick={() => setShowRagModal(true)}
-          className="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-cyan-700 transition-all shadow-md flex items-center space-x-2"
-        >
-          <Sparkles size={18} />
-          <span className="hidden sm:inline">Ask AI</span>
-        </button>
-      </div>
-
-      {/* Citizen KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-slate-900/50 backdrop-blur-md rounded-xl shadow-sm border border-white/10 p-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-sm font-medium text-slate-400">Active Schemes</div>
-            <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
-              <Briefcase size={20} className="text-purple-400" />
-            </div>
-          </div>
-          <div className="text-3xl font-bold text-white mb-2">{totalSchemes}</div>
-          <div className="text-sm text-emerald-400 font-medium">
-            {completedSchemes} completed
-          </div>
-        </div>
-
-        <div className="bg-slate-900/50 backdrop-blur-md rounded-xl shadow-sm border border-white/10 p-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-sm font-medium text-slate-400">Community Rating</div>
-            <div className="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-              <Star size={20} className="text-yellow-400" />
-            </div>
-          </div>
-          <div className="flex items-center space-x-2 mb-2">
-            <div className="text-3xl font-bold text-white">{avgRating}</div>
-            <Star size={20} className="text-yellow-400 fill-yellow-400" />
-          </div>
-          <div className="text-sm text-slate-400">Average rating</div>
-        </div>
-
-        <div className="bg-slate-900/50 backdrop-blur-md rounded-xl shadow-sm border border-white/10 p-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-sm font-medium text-slate-400">Total Feedback</div>
-            <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-              <MessageSquare size={20} className="text-blue-400" />
-            </div>
-          </div>
-          <div className="text-3xl font-bold text-white mb-2">{totalFeedback}</div>
-          <div className="text-sm text-blue-400 font-medium">
-            Citizens participated
-          </div>
-        </div>
-
-        <div className="bg-slate-900/50 backdrop-blur-md rounded-xl shadow-sm border border-white/10 p-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-sm font-medium text-slate-400">Your Voice Matters</div>
-            <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
-              <Users size={20} className="text-emerald-400" />
-            </div>
-          </div>
-          <div className="text-lg font-bold text-white mb-2">100% Anonymous</div>
-          <div className="text-xs text-slate-400">Share honest feedback safely</div>
-        </div>
-      </div>
-
-      {/* Info Banner */}
-      <div className="bg-gradient-to-r from-blue-600/80 to-indigo-600/80 backdrop-blur-md border border-white/10 rounded-xl p-6 text-white">
-        <div className="flex items-start space-x-4">
-          <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0">
-            <MessageSquare size={24} />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold mb-2">Your Feedback Helps Improve Projects</h3>
-            <p className="text-sm text-blue-100 mb-3">
-              Rate schemes, report issues, and help ensure government projects serve your community better. 
-              All feedback is completely anonymous.
-            </p>
-            <div className="flex items-center space-x-2 text-sm">
-              <CheckCircle size={16} />
-              <span>Anonymous</span>
-              <span>•</span>
-              <CheckCircle size={16} />
-              <span>Direct to authorities</span>
-              <span>•</span>
-              <CheckCircle size={16} />
-              <span>Real impact</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Schemes List */}
-      <div className="space-y-4">
-        {schemes.map((scheme) => (
-          <div
-            key={scheme.id}
-            className="bg-slate-900/50 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden hover:border-white/20 transition-all"
-          >
-            {/* Scheme Preview */}
-            <div
-              onClick={() => toggleExpand(scheme.id)}
-              className="p-5 cursor-pointer hover:bg-white/5 transition-colors"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-start space-x-3 mb-3">
-                    <div className="text-3xl">
-                      {scheme.category === 'Sanitation' && '🧹'}
-                      {scheme.category === 'Water Supply' && '💧'}
-                      {scheme.category === 'Housing' && '🏠'}
-                      {scheme.category === 'Employment' && '👷'}
-                      {scheme.category === 'Power' && '⚡'}
+    <div className="h-full overflow-y-auto">
+      <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-6 pb-24">
+        {/* Welcome Hero */}
+        <div className="relative overflow-hidden rounded-xl border border-slate-700/50 bg-slate-800/40 p-5 shadow-sm backdrop-blur-sm">
+          <div className="absolute right-0 top-0 -mt-10 -mr-10 h-32 w-32 rounded-full bg-blue-500/10 blur-3xl"></div>
+          
+          <div className="relative z-10">
+            <div className="flex items-start justify-between">
+              <div>
+                <h1 className="text-xl font-bold text-white">Welcome back, Citizen!</h1>
+                <p className="mt-1 max-w-xl text-slate-400 text-sm">
+                  Stay updated with the latest development projects in your village. 
+                  Your feedback helps us build a better community together.
+                </p>
+                <button 
+                  onClick={() => setActiveView('schemes')}
+                  className="mt-3 flex items-center gap-2 rounded-lg bg-blue-600/10 px-3 py-1.5 text-sm font-medium text-blue-400 hover:bg-blue-600/20 transition-colors"
+                >
+                  View All Schemes
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              <div className="hidden lg:block">
+                <div className="rounded-lg bg-slate-900/50 p-2.5 border border-slate-700/50">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400">
+                      <Sparkles className="h-4 w-4" />
                     </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-bold text-white mb-2">{scheme.name}</h3>
-                      <div className="flex items-center space-x-4 text-sm text-slate-400 mb-3">
-                        <div className="flex items-center space-x-1">
-                          <MapPin size={14} />
-                          <span>{scheme.village}, {scheme.district}</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <Calendar size={14} />
-                          <span>Ends: {new Date(scheme.endDate).toLocaleDateString()}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3 mb-3">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(scheme.status)}`}>
-                          {scheme.status.replace('-', ' ').toUpperCase()}
-                        </span>
-                        <span className="text-sm text-slate-400">{scheme.category}</span>
-                      </div>
+                    <div>
+                      <p className="text-[10px] text-slate-400">Community Impact</p>
+                      <p className="font-bold text-sm text-emerald-400">High Engagement</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-                      {/* Community Rating */}
-                      <div className="flex items-center space-x-4">
-                        <div className="flex items-center space-x-1">
-                          <Star size={16} className="text-yellow-400 fill-yellow-400" />
-                          <span className="font-bold text-white">{scheme.citizenRating.toFixed(1)}</span>
-                          <span className="text-sm text-slate-400">({scheme.feedbackCount} ratings)</span>
-                        </div>
-                        <button
-                          onClick={(e) => openFeedbackModal(scheme, e)}
-                          className="px-3 py-1.5 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg text-xs font-medium hover:bg-blue-500/30 transition-colors flex items-center space-x-1"
-                        >
-                          <MessageSquare size={12} />
-                          <span>Rate This Scheme</span>
-                        </button>
+      {/* Stats Overview */}
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div className="rounded-xl border border-slate-700/50 bg-slate-800/50 p-4 backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/20 text-blue-400">
+              <Briefcase className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-400">Active Schemes</p>
+              <p className="text-xl font-bold text-white">{activeSchemes.length}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="rounded-xl border border-slate-700/50 bg-slate-800/50 p-4 backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/20 text-green-400">
+              <CheckCircle className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-400">Completed</p>
+              <p className="text-xl font-bold text-white">
+                {schemes.filter(s => s.status === 'completed').length}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-slate-700/50 bg-slate-800/50 p-4 backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/20 text-amber-400">
+              <Clock className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-400">In Progress</p>
+              <p className="text-xl font-bold text-white">
+                {schemes.filter(s => s.status === 'on-track' || s.status === 'delayed').length}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-slate-700/50 bg-slate-800/50 p-4 backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-500/20 text-purple-400">
+              <MessageSquare className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-400">Your Feedback</p>
+              <p className="text-xl font-bold text-white">12</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Active Schemes List */}
+        <div className="lg:col-span-2">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+              <Activity className="h-5 w-5 text-blue-400" />
+              Ongoing Projects
+            </h2>
+            <button 
+              onClick={() => setActiveView('schemes')}
+              className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+            >
+              View All
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            {activeSchemes.slice(0, 3).map((scheme) => (
+              <div 
+                key={scheme.id}
+                className="group relative overflow-hidden rounded-xl border border-slate-700/50 bg-slate-800/50 p-5 transition-all hover:border-blue-500/30 hover:bg-slate-800/80"
+              >
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-start gap-4">
+                    <div className={`mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
+                      scheme.status === 'on-track' ? 'bg-emerald-500/20 text-emerald-400' :
+                      scheme.status === 'delayed' ? 'bg-amber-500/20 text-amber-400' :
+                      'bg-red-500/20 text-red-400'
+                    }`}>
+                      <Briefcase className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-white group-hover:text-blue-400 transition-colors">
+                        {scheme.name}
+                      </h3>
+                      <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-slate-400">
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3.5 w-3.5" />
+                          Due: {new Date(scheme.endDate).toLocaleDateString()}
+                        </span>
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                          scheme.status === 'on-track' ? 'bg-emerald-500/10 text-emerald-400' :
+                          scheme.status === 'delayed' ? 'bg-amber-500/10 text-amber-400' :
+                          'bg-red-500/10 text-red-400'
+                        }`}>
+                          {scheme.status.replace('-', ' ')}
+                        </span>
                       </div>
                     </div>
                   </div>
-
-                  {/* Progress Bar */}
-                  <div className="mb-3">
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-slate-400">Progress</span>
-                      <span className="font-bold text-white">{scheme.overallProgress}%</span>
+                  
+                  <div className="flex items-center gap-4 sm:flex-col sm:items-end sm:gap-1">
+                    <div className="text-right">
+                      <span className="text-2xl font-bold text-white">{scheme.overallProgress}%</span>
+                      <span className="ml-1 text-xs text-slate-500">complete</span>
                     </div>
-                    <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-                      <div
-                        className={`h-2 transition-all ${getProgressColor(scheme.status)}`}
+                    <div className="h-1.5 w-full min-w-[100px] overflow-hidden rounded-full bg-slate-700 sm:w-24">
+                      <div 
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          scheme.overallProgress >= 75 ? 'bg-emerald-500' :
+                          scheme.overallProgress >= 40 ? 'bg-blue-500' :
+                          'bg-amber-500'
+                        }`}
                         style={{ width: `${scheme.overallProgress}%` }}
                       />
                     </div>
-                  </div>
-                </div>
-
-                {/* Expand Button */}
-                <button className="p-2 hover:bg-white/10 rounded-lg transition-colors">
-                  {expandedScheme === scheme.id ? (
-                    <ChevronUp size={20} className="text-slate-400" />
-                  ) : (
-                    <ChevronDown size={20} className="text-slate-400" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Expanded Details */}
-            {expandedScheme === scheme.id && (
-              <div className="border-t border-white/10 bg-slate-900/30 p-5 space-y-4">
-                {/* Description */}
-                <div>
-                  <h4 className="font-bold text-white mb-2">About This Scheme</h4>
-                  <p className="text-sm text-slate-300">{scheme.description}</p>
-                </div>
-
-                {/* Budget Info */}
-                <div>
-                  <h4 className="font-bold text-white mb-3">Budget Information</h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-slate-800/50 rounded-lg p-3 border border-white/5">
-                      <div className="text-xs text-slate-400 mb-1">Total Budget</div>
-                      <div className="text-lg font-bold text-white">₹{(scheme.totalBudget / 100000).toFixed(1)}L</div>
-                    </div>
-                    <div className="bg-slate-800/50 rounded-lg p-3 border border-white/5">
-                      <div className="text-xs text-slate-400 mb-1">Utilized</div>
-                      <div className="text-lg font-bold text-white">₹{(scheme.budgetUtilized / 100000).toFixed(1)}L</div>
-                      <div className="text-xs text-emerald-400">
-                        {Math.round((scheme.budgetUtilized / scheme.totalBudget) * 100)}% spent
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Timeline */}
-                <div>
-                  <h4 className="font-bold text-white mb-3">Timeline</h4>
-                  <div className="bg-slate-800/50 rounded-lg p-3 border border-white/5">
-                    <div className="flex justify-between text-sm">
-                      <div>
-                        <div className="text-xs text-slate-400 mb-1">Started</div>
-                        <div className="font-medium text-white">{new Date(scheme.startDate).toLocaleDateString()}</div>
-                      </div>
-                      <div className="flex items-center">
-                        <TrendingUp size={16} className="text-blue-400" />
-                      </div>
-                      <div className="text-right">
-                        <div className="text-xs text-slate-400 mb-1">Expected End</div>
-                        <div className="font-medium text-white">{new Date(scheme.endDate).toLocaleDateString()}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Phases Summary */}
-                <div>
-                  <h4 className="font-bold text-white mb-3">Project Phases</h4>
-                  <div className="space-y-2">
-                    {scheme.phases.map((phase, idx) => (
-                      <div key={phase.id} className="bg-slate-800/50 rounded-lg p-3 border border-white/5">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="font-medium text-sm text-white">
-                            Phase {idx + 1}: {phase.name}
-                          </div>
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${
-                            phase.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' :
-                            phase.status === 'on-track' ? 'bg-blue-500/20 text-blue-400' :
-                            phase.status === 'delayed' ? 'bg-yellow-500/20 text-yellow-400' :
-                            'bg-slate-700 text-slate-300'
-                          }`}>
-                            {phase.progress}%
-                          </span>
-                        </div>
-                        <div className="h-1.5 bg-slate-700 rounded-full">
-                          <div
-                            className={`h-1.5 rounded-full ${
-                              phase.status === 'completed' ? 'bg-emerald-500' :
-                              phase.status === 'on-track' ? 'bg-blue-500' :
-                              phase.status === 'delayed' ? 'bg-yellow-500' :
-                              'bg-slate-500'
-                            }`}
-                            style={{ width: `${phase.progress}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {schemes.length === 0 && (
-        <div className="bg-slate-900/50 backdrop-blur-md rounded-xl shadow-sm border border-white/10 p-12 text-center">
-          <Briefcase size={48} className="mx-auto mb-4 text-slate-600" />
-          <p className="text-slate-400">No schemes available at the moment.</p>
-        </div>
-      )}
-
-      {/* Feedback Modal */}
-      {feedbackScheme && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-900 border border-white/10 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            {isProcessing ? (
-              <div className="p-8">
-                {/* AI Processing Status Display */}
-                <div className="text-center mb-6">
-                  <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 relative">
-                    {aiStatus.status === 'downloading' && (
-                      <Download size={36} className="text-white animate-bounce" />
-                    )}
-                    {aiStatus.status === 'loading' && (
-                      <Loader size={36} className="text-white animate-spin" />
-                    )}
-                    {aiStatus.status === 'processing' && (
-                      <Cpu size={36} className="text-white animate-pulse" />
-                    )}
-                    {(aiStatus.status === 'checking' || aiStatus.status === 'starting') && (
-                      <Smartphone size={36} className="text-white animate-pulse" />
-                    )}
-                    {(aiStatus.status === 'complete' || aiStatus.status === 'loaded') && (
-                      <CheckCircle size={36} className="text-white" />
-                    )}
-                    {aiStatus.status === 'fallback' && (
-                      <Shield size={36} className="text-white" />
-                    )}
-                  </div>
-                  
-                  <h3 className="text-2xl font-bold text-white mb-2">
-                    {aiStatus.status === 'downloading' && 'Downloading AI Model'}
-                    {aiStatus.status === 'loading' && 'Loading AI Model'}
-                    {aiStatus.status === 'processing' && 'AI Processing'}
-                    {aiStatus.status === 'checking' && 'Checking Model'}
-                    {aiStatus.status === 'complete' && 'Complete!'}
-                    {aiStatus.status === 'fallback' && 'Using Fallback'}
-                    {aiStatus.status === 'starting' && 'Starting...'}
-                  </h3>
-                  
-                  <p className="text-slate-400 mb-4">{aiStatus.message}</p>
-                  
-                  {/* Progress Bar (for downloading) */}
-                  {aiStatus.status === 'downloading' && aiStatus.progress > 0 && (
-                    <div className="mb-4">
-                      <div className="flex justify-between text-sm text-slate-400 mb-2">
-                        <span>Downloading SmolLM2 360M (119 MB)</span>
-                        <span className="font-bold">{Math.round(aiStatus.progress * 100)}%</span>
-                      </div>
-                      <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
-                        <div 
-                          className="h-3 bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-300 ease-out"
-                          style={{ width: `${aiStatus.progress * 100}%` }}
-                        />
-                      </div>
-                      <p className="text-xs text-slate-500 mt-2">First-time only • Stored locally on your device</p>
-                    </div>
-                  )}
-                  
-                  {/* Status Indicators */}
-                  <div className="space-y-2 mt-6">
-                    <div className={`flex items-center justify-between p-3 rounded-lg ${
-                      aiStatus.status === 'checking' || aiStatus.status === 'downloaded' || 
-                      aiStatus.status === 'loading' || aiStatus.status === 'processing' || 
-                      aiStatus.status === 'complete' ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-slate-800/50 border border-white/5'
-                    }`}>
-                      <span className="text-sm text-slate-300">Model Check</span>
-                      {(aiStatus.status === 'checking' || aiStatus.status === 'downloaded' || 
-                        aiStatus.status === 'loading' || aiStatus.status === 'processing' || 
-                        aiStatus.status === 'complete') && (
-                        <CheckCircle size={16} className="text-emerald-400" />
-                      )}
-                    </div>
-                    
-                    {aiStatus.status === 'downloading' && (
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                        <span className="text-sm text-slate-300">Downloading</span>
-                        <Loader size={16} className="text-blue-400 animate-spin" />
-                      </div>
-                    )}
-                    
-                    {(aiStatus.status === 'downloaded' || aiStatus.status === 'loading' || 
-                      aiStatus.status === 'processing' || aiStatus.status === 'complete') && (
-                      <div className={`flex items-center justify-between p-3 rounded-lg ${
-                        aiStatus.status === 'loading' || aiStatus.status === 'processing' || 
-                        aiStatus.status === 'complete' ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-slate-800/50 border border-white/5'
-                      }`}>
-                        <span className="text-sm text-slate-300">Model Loading</span>
-                        {aiStatus.status === 'loading' && <Loader size={16} className="text-blue-400 animate-spin" />}
-                        {(aiStatus.status === 'processing' || aiStatus.status === 'complete') && (
-                          <CheckCircle size={16} className="text-emerald-400" />
-                        )}
-                      </div>
-                    )}
-                    
-                    {(aiStatus.status === 'processing' || aiStatus.status === 'complete') && (
-                      <div className={`flex items-center justify-between p-3 rounded-lg ${
-                        aiStatus.status === 'complete' ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-blue-500/10 border border-blue-500/20'
-                      }`}>
-                        <span className="text-sm text-slate-300">AI Anonymization</span>
-                        {aiStatus.status === 'processing' && <Loader size={16} className="text-blue-400 animate-spin" />}
-                        {aiStatus.status === 'complete' && <CheckCircle size={16} className="text-emerald-400" />}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="mt-6 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
-                    <div className="flex items-center justify-center space-x-2 text-sm text-emerald-400">
-                      <Shield size={14} />
-                      <span className="font-medium">100% On-Device • No Cloud • Private</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : submitted ? (
-              <div className="p-8 text-center">
-                <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle size={32} className="text-emerald-400" />
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-2">Thank You!</h3>
-                <p className="text-slate-300 mb-2">Your anonymous feedback has been processed by LOCAL AI (RunanywhereAI) running ON YOUR DEVICE and recorded. Your data never left your phone\!.</p>
-                <p className="text-sm text-slate-500">Admins will see a professional summary without your identity. All AI processing happened locally on your device\!.</p>
-              </div>
-            ) : (
-              <>
-                {/* Header */}
-                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white rounded-t-2xl">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h2 className="text-xl font-bold mb-1">Share Your Feedback</h2>
-                      <p className="text-sm opacity-90">{feedbackScheme.name}</p>
-                    </div>
-                    <button 
-                      onClick={closeFeedbackModal}
-                      className="p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
+                    <button
+                      onClick={(e) => openFeedbackModal(scheme, e)}
+                      className="mt-2 flex items-center gap-1 rounded-lg bg-slate-700/50 px-3 py-1.5 text-xs font-medium text-blue-300 hover:bg-blue-500/20 hover:text-blue-200 transition-colors"
                     >
-                      <X size={20} />
+                      <Star className="h-3 w-3" />
+                      Rate Scheme
                     </button>
                   </div>
                 </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
-                <div className="p-6">
-                  {/* Anonymous Notice */}
-                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 mb-6 flex items-start space-x-2">
-                    <Users size={16} className="text-blue-400 mt-0.5 flex-shrink-0" />
-                    <div className="text-sm text-blue-200">
-                      <div className="font-medium mb-1 text-blue-300">100% Anonymous</div>
-                      <div className="text-xs text-blue-400/80">Your identity will never be revealed. Feel free to share honest feedback.</div>
+        {/* Community Pulse / Recent Updates */}
+        <div>
+          <h2 className="mb-4 text-lg font-semibold text-white flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-amber-400" />
+            Community Pulse
+          </h2>
+          
+          <div className="rounded-xl border border-slate-700/50 bg-slate-800/50 p-5 backdrop-blur-sm">
+            <div className="space-y-6">
+              {recentUpdates.map((update) => (
+                <div key={update.id} className="relative pl-6">
+                  <div className="absolute left-0 top-1.5 h-2.5 w-2.5 rounded-full bg-blue-500 ring-4 ring-blue-500/20"></div>
+                  <div className="absolute left-[4px] top-4 h-full w-0.5 bg-slate-700 last:hidden"></div>
+                  
+                  <div>
+                    <p className="text-sm font-medium text-white">{update.phaseName}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {update.schemeName}
+                    </p>
+                    <div className="mt-1.5 flex items-center gap-2">
+                      <span className={`text-xs px-1.5 py-0.5 rounded ${
+                        update.status === 'completed' ? 'bg-green-500/10 text-green-400' : 'bg-blue-500/10 text-blue-400'
+                      }`}>
+                        {update.status}
+                      </span>
+                      <span className="text-xs text-slate-500">
+                        {new Date(update.date).toLocaleDateString()}
+                      </span>
                     </div>
                   </div>
+                </div>
+              ))}
+              
+              {recentUpdates.length === 0 && (
+                <div className="text-center py-8 text-slate-500">
+                  <p>No recent updates available</p>
+                </div>
+              )}
+            </div>
 
-                  {/* Local AI Badge */}
-                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3 mb-6 flex items-start space-x-2">
-                    <Smartphone size={16} className="text-emerald-400 mt-0.5 flex-shrink-0" />
-                    <div className="text-sm text-emerald-200">
-                      <div className="font-medium mb-1 text-emerald-300">Local AI Processing (RunanywhereAI)</div>
-                      <div className="text-xs text-emerald-400/80">AI runs 100% ON YOUR DEVICE. Your data never leaves your phone. No cloud, no tracking\!</div>
-                    </div>
-                  </div>
+            <div className="mt-6 border-t border-slate-700 pt-4">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-400">Satisfaction Rate</span>
+                <div className="flex items-center gap-1 text-emerald-400">
+                  <ThumbsUp className="h-4 w-4" />
+                  <span className="font-bold">94%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-                  {/* Rating */}
-                  <div className="mb-6">
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Rate this scheme</label>
-                    <div className="flex space-x-2">
+      {/* Feedback Modal */}
+      {feedbackScheme && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md overflow-hidden rounded-2xl bg-slate-800 shadow-2xl ring-1 ring-white/10">
+            {/* Header */}
+            <div className="relative bg-gradient-to-r from-blue-600 to-indigo-600 p-6">
+              <button 
+                onClick={closeFeedbackModal}
+                className="absolute right-4 top-4 rounded-full bg-white/10 p-1 text-white hover:bg-white/20"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              <h3 className="text-xl font-bold text-white">Rate this Scheme</h3>
+              <p className="text-blue-100 text-sm mt-1">{feedbackScheme.name}</p>
+            </div>
+
+            {/* Body */}
+            <div className="p-6">
+              {!submitted ? (
+                <div className="space-y-6">
+                  {/* Rating Stars */}
+                  <div className="flex flex-col items-center gap-2">
+                    <label className="text-sm font-medium text-slate-300">How would you rate the progress?</label>
+                    <div className="flex gap-2">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <button
                           key={star}
                           onClick={() => setRating(star)}
-                          className="focus:outline-none transition-transform hover:scale-110"
+                          className={`transition-all hover:scale-110 ${
+                            rating >= star ? 'text-amber-400' : 'text-slate-600'
+                          }`}
                         >
-                          <Star
-                            size={32}
-                            className={star <= rating ? 'text-yellow-400 fill-yellow-400' : 'text-slate-600'}
-                          />
+                          <Star className={`h-8 w-8 ${rating >= star ? 'fill-current' : ''}`} />
                         </button>
                       ))}
                     </div>
+                    <p className="text-sm text-slate-400 h-5">
+                      {rating === 1 && "Very Dissatisfied"}
+                      {rating === 2 && "Dissatisfied"}
+                      {rating === 3 && "Neutral"}
+                      {rating === 4 && "Satisfied"}
+                      {rating === 5 && "Very Satisfied"}
+                    </p>
                   </div>
 
-                  {/* Comment */}
-                  <div className="mb-6">
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      Comments (Optional) - Write in any language
-                    </label>
-                    <div className="mb-2 flex items-center space-x-2 text-xs text-blue-400 bg-blue-500/10 p-2 rounded border border-blue-500/20">
-                      <MessageSquare size={14} />
-                      <span>Local AI (RunanywhereAI) will process your feedback ON YOUR DEVICE to protect your identity</span>
-                    </div>
+                  {/* Comment Area */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-300">Your Feedback (Optional)</label>
                     <textarea
                       value={comment}
                       onChange={(e) => setComment(e.target.value)}
-                      placeholder="Share your experience in your own words, any language... Local AI (RunanywhereAI) running ON YOUR DEVICE will analyze and anonymize your feedback - 100% private, no cloud."
-                      className="w-full bg-slate-800 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none placeholder-slate-500"
+                      placeholder="Share your thoughts on the implementation..."
+                      className="w-full rounded-xl border border-slate-600 bg-slate-900/50 p-3 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                       rows={4}
-                      maxLength={500}
                     />
-                    <div className="text-xs text-slate-500 mt-1">{comment.length}/500 characters</div>
                   </div>
 
-                  {/* Urgent Issue */}
-                  <div className="mb-6">
-                    <label className="flex items-center space-x-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={isUrgent}
-                        onChange={(e) => setIsUrgent(e.target.checked)}
-                        className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500 bg-slate-800 border-white/10"
-                      />
-                      <div className="flex items-center space-x-1">
-                        <Flag size={16} className="text-red-400" />
-                        <span className="text-sm text-slate-300">Mark as urgent/critical issue</span>
-                      </div>
-                    </label>
+                  {/* Urgency Toggle */}
+                  <div className="flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-900/30 p-3">
+                    <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${isUrgent ? 'bg-red-500/20 text-red-400' : 'bg-slate-700 text-slate-400'}`}>
+                      <Flag className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-white">Flag as Urgent Issue</p>
+                      <p className="text-xs text-slate-400">Mark if this requires immediate attention</p>
+                    </div>
+                    <button
+                      onClick={() => setIsUrgent(!isUrgent)}
+                      className={`relative h-6 w-11 rounded-full transition-colors ${isUrgent ? 'bg-red-500' : 'bg-slate-600'}`}
+                    >
+                      <span className={`absolute top-1 left-1 h-4 w-4 rounded-full bg-white transition-transform ${isUrgent ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </button>
                   </div>
 
                   {/* Submit Button */}
                   <button
                     onClick={handleSubmitFeedback}
-                    disabled={rating === 0}
-                    className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                    disabled={rating === 0 || isProcessing}
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 font-semibold text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Send size={18} />
-                    <span>Submit Feedback</span>
+                    {isProcessing ? (
+                      <>
+                        <Loader className="h-5 w-5 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-5 w-5" />
+                        Submit Feedback
+                      </>
+                    )}
                   </button>
+
+                  {/* AI Processing Status Indicator */}
+                  {isProcessing && (
+                    <div className="mt-4 rounded-lg bg-slate-900/50 p-3 border border-blue-500/30">
+                      <div className="flex items-center gap-3 mb-2">
+                        <Cpu className="h-4 w-4 text-blue-400 animate-pulse" />
+                        <span className="text-xs font-medium text-blue-300">AI Analysis in Progress</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-slate-700 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-blue-500 transition-all duration-300"
+                          style={{ width: `${aiStatus.progress}%` }}
+                        ></div>
+                      </div>
+                      <p className="text-xs text-slate-400 mt-2 text-center">{aiStatus.message}</p>
+                    </div>
+                  )}
                 </div>
-              </>
-            )}
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-500/20 text-green-400">
+                    <CheckCircle className="h-8 w-8" />
+                  </div>
+                  <h4 className="text-xl font-bold text-white">Thank You!</h4>
+                  <p className="mt-2 text-slate-400">
+                    Your feedback has been recorded and will be analyzed by our AI system to improve the scheme implementation.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
-
-      {/* RAG Query Modal */}
-      {showRagModal && (
-        <RagQueryModal
-          isOpen={showRagModal}
-          onClose={() => setShowRagModal(false)}
-          onHighlightCitation={(citation: Citation) => {
-            console.log('📍 Citizen Dashboard - AI Citation:', citation);
-            alert(`📍 AI Answer Citation:\n\nType: ${citation.type}\nSnippet: ${citation.snippet}\nRelevance: ${(citation.score * 100).toFixed(0)}%`);
-          }}
-        />
-      )}
+      </div>
     </div>
   );
 }
