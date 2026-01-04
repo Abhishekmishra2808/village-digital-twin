@@ -1,4 +1,5 @@
 import { Ollama } from 'ollama';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Initialize Ollama client
 const ollama = new Ollama({ host: process.env.OLLAMA_HOST || 'http://localhost:11434' });
@@ -19,6 +20,9 @@ export async function processFeedbackWithLocalLLM(rawComment, rating, schemeName
   try {
     console.log(`🤖 Processing feedback with LOCAL LLM (${DEFAULT_MODEL}) for: ${schemeName}`);
     
+    // Ensure model is available before processing
+    await ensureModelAvailable(DEFAULT_MODEL);
+
     const prompt = `You are analyzing citizen feedback for a government scheme. The citizen has rated the scheme ${rating}/5 stars and provided this comment:
 
 "${rawComment}"
@@ -115,19 +119,27 @@ Respond ONLY with the JSON object, no additional text.`;
 
   } catch (error) {
     console.error('❌ Local LLM Error:', error.message || error);
+    console.log('🔄 Falling back to Gemini AI...');
     
-    // Fallback to basic processing - NEVER expose raw comment
-    return {
-      success: false,
-      analysis: {
-        summary: `Feedback received with ${rating}/5 rating. Local LLM processing temporarily unavailable. General ${rating >= 4 ? 'positive' : rating >= 3 ? 'neutral' : 'negative'} sentiment detected.`,
-        concerns: ['Local LLM processing unavailable', 'Manual review required'],
-        sentiment: rating >= 4 ? 'Positive' : rating >= 3 ? 'Neutral' : 'Negative',
-        categories: ['Other'],
-        urgency: rating <= 2 ? 'High' : 'Medium',
-        suggestedRating: rating
-      }
-    };
+    // Fallback to Gemini AI
+    try {
+      return await processFeedbackWithGemini(rawComment, rating, schemeName);
+    } catch (geminiError) {
+      console.error('❌ Gemini AI Error:', geminiError.message);
+      
+      // Final fallback to basic processing - NEVER expose raw comment
+      return {
+        success: false,
+        analysis: {
+          summary: `Feedback received with ${rating}/5 rating. AI processing temporarily unavailable. General ${rating >= 4 ? 'positive' : rating >= 3 ? 'neutral' : 'negative'} sentiment detected.`,
+          concerns: ['AI processing unavailable', 'Manual review required'],
+          sentiment: rating >= 4 ? 'Positive' : rating >= 3 ? 'Neutral' : 'Negative',
+          categories: ['Other'],
+          urgency: rating <= 2 ? 'High' : 'Medium',
+          suggestedRating: rating
+        }
+      };
+    }
   }
 }
 
@@ -155,6 +167,71 @@ export async function checkLocalLLMStatus() {
       model: DEFAULT_MODEL
     };
   }
+}
+
+/**
+ * Process feedback using Gemini AI (fallback)
+ */
+async function processFeedbackWithGemini(rawComment, rating, schemeName) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY is missing in environment variables');
+  }
+
+  // Initialize Gemini lazily to ensure env vars are loaded
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  
+  const prompt = `You are analyzing citizen feedback for a government scheme. The citizen has rated the scheme ${rating}/5 stars and provided this comment:
+
+"${rawComment}"
+
+Scheme Name: ${schemeName}
+
+CRITICAL: You must completely anonymize this feedback by:
+- Removing ALL names (first names, last names, nicknames)
+- Removing ALL addresses (house numbers, street names, localities)
+- Removing ALL personal identifiers
+- Making the language neutral and professional
+- Converting "I" or personal pronouns to third-person descriptions
+
+Analyze and provide JSON response:
+{
+  "summary": "Brief professional summary - FULLY ANONYMIZED",
+  "concerns": ["concern 1", "concern 2"],
+  "sentiment": "Positive/Neutral/Negative/Critical",
+  "categories": ["Quality", "Delay"],
+  "urgency": "Low/Medium/High/Critical",
+  "suggestedRating": 3
+}
+
+Respond ONLY with valid JSON, no markdown.`;
+
+  const result = await model.generateContent(prompt);
+  let text = result.response.text().trim();
+  
+  // Clean JSON
+  text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  
+  if (jsonMatch) {
+    const aiAnalysis = JSON.parse(jsonMatch[0]);
+    console.log('✅ Gemini AI processed feedback successfully');
+    
+    return {
+      success: true,
+      analysis: {
+        summary: aiAnalysis.summary,
+        concerns: aiAnalysis.concerns || [],
+        sentiment: aiAnalysis.sentiment || 'Neutral',
+        categories: aiAnalysis.categories || ['Other'],
+        urgency: aiAnalysis.urgency || 'Medium',
+        suggestedRating: aiAnalysis.suggestedRating || rating
+      }
+    };
+  }
+  
+  throw new Error('Could not parse Gemini response');
 }
 
 /**

@@ -8,8 +8,8 @@ const getApiUrl = () => {
     // IMPORTANT: Replace YOUR_BACKEND_URL with your actual Render backend URL
     return import.meta.env.VITE_API_URL || 'https://village-digital-twin.onrender.com/';
   }
-  // Development - use localhost
-  return 'http://localhost:3001';
+  // Development - use local IP for mobile APK access
+  return 'http://192.168.29.179:3001';
 };
 
 const getWsUrl = () => {
@@ -20,8 +20,8 @@ const getWsUrl = () => {
     // Convert https to wss for WebSocket
     return apiUrl.replace('https://', 'wss://').replace('http://', 'ws://');
   }
-  // Development - use localhost
-  return 'ws://localhost:3001';
+  // Development - use local IP for mobile APK access
+  return 'ws://192.168.29.179:3001';
 };
 
 export const API_URL = getApiUrl();

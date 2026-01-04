@@ -7,9 +7,7 @@ body.mobile-app {
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
   touch-action: manipulation;
-  /* Safe area insets for notch/camera cutout */
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
+  /* Removed body padding to let App.tsx handle layout */
 }
 
 /* Better scrolling */
@@ -151,14 +149,14 @@ body.mobile-app {
   transition-duration: 200ms;
 }
 
-/* Mobile optimized scrollbar - thinner */
+/* Mobile optimized scrollbar - Hidden */
 .mobile-app ::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  display: none;
 }
 
-.mobile-app ::-webkit-scrollbar-thumb {
-  border-radius: 2px;
+.mobile-app {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
 }
 
 /* Mobile landscape mode adjustments */
@@ -245,4 +243,35 @@ body.mobile-app {
 .mobile-app [class*="ArrowLeft"] {
   min-height: 44px;
   min-width: 44px;
+}
+
+/* Disable text selection to feel like an app */
+.mobile-app {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Allow text selection on inputs only */
+.mobile-app input, 
+.mobile-app textarea {
+  user-select: text;
+  -webkit-user-select: text;
+  font-size: 16px !important; /* Stops iOS zooming */
+}
+
+/* Fix Map View on Mobile */
+.mobile-app .mapboxgl-canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Remove outlines on tap */
+.mobile-app * {
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+/* Smooth scrolling for lists */
+.mobile-app main {
+  -webkit-overflow-scrolling: touch;
 }

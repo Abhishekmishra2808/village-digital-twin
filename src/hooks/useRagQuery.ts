@@ -46,7 +46,7 @@ export default function useRagQuery(): UseRagQueryResult {
     setData(null);
 
     try {
-      const response = await fetch('http://localhost:3001/api/rag-query', {
+      const response = await fetch('http://192.168.29.179:3001/api/rag-query', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

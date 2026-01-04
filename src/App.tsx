@@ -24,6 +24,11 @@ import FloodView from './components/Views/FloodView';
 import SchemesView from './components/Views/SchemesView';
 import AdminControls from './components/ControlPanel/AdminControls';
 import useWebSocket from './hooks/useWebSocket';
+import MobileNav from './components/Layout/MobileNav';
+import MobileHeader from './components/Layout/MobileHeader';
+import MobileLandingPage from './components/Landing/MobileLandingPage';
+import MobileLoginPage from './components/Auth/MobileLoginPage';
+import MobileDashboard from './components/Dashboard/MobileDashboard';
 
 function App() {
   const { activeView, sidebarCollapsed, infoPanelOpen, isAuthenticated, userRole } = useVillageStore();
@@ -46,24 +51,30 @@ function App() {
 
   // Show landing page first
   if (showLanding && !isAuthenticated) {
+    if (isMobile) {
+      return <MobileLandingPage onGetStarted={() => setShowLanding(false)} />;
+    }
     return <LandingPage onGetStarted={() => setShowLanding(false)} />;
   }
 
   // Show login page if not authenticated
   if (!isAuthenticated) {
+    if (isMobile) {
+      return <MobileLoginPage onBack={() => setShowLanding(true)} />;
+    }
     return <LoginPage onBack={() => setShowLanding(true)} />;
   }
 
   // Render appropriate view based on activeView and userRole
   const renderView = () => {
     // Field Worker sees their dashboard by default
-    if (userRole === 'field_worker') {
+    if (userRole === 'field_worker' && !isMobile) {
       return <FieldWorkerView />;
     }
 
     switch (activeView) {
       case 'dashboard':
-        return <Dashboard />;
+        return isMobile ? <MobileDashboard /> : <Dashboard />;
       case 'map':
         return <MapView />;
       case 'schemes':
@@ -95,13 +106,74 @@ function App() {
     }
   };
 
+  // Mobile Layout (Android APK)
+  if (isMobile && isAuthenticated) {
+    return (
+      <div className="h-screen w-screen bg-slate-950 text-slate-200 flex flex-col">
+        {/* 1. Native-style Header */}
+        <MobileHeader />
+
+        {/* 2. Main Content Area (Scrollable) */}
+        <main 
+          className="flex-1 overflow-y-auto overflow-x-hidden scroll-smooth"
+          style={{
+            marginTop: 'calc(56px + env(safe-area-inset-top))', // Height of MobileHeader
+            paddingTop: '16px',
+            paddingLeft: '16px',
+            paddingRight: '16px',
+            paddingBottom: '80px' // 64px (Nav) + 16px (Spacing) - No extra safe area gap
+          }}
+        >
+          {renderView()}
+          
+          {/* Mobile Info Panel (Overlay if active) */}
+          {infoPanelOpen && (
+            <div className="fixed inset-0 z-50 bg-slate-900/95 pt-14 pb-16 overflow-y-auto animate-in slide-in-from-bottom-10">
+              <InfoPanel />
+            </div>
+          )}
+        </main>
+
+        {/* 3. Native-style Bottom Tabs */}
+        <MobileNav />
+        
+        {/* 4. Overlay Sidebar (Only when 'More' is clicked) */}
+        {!sidebarCollapsed && (
+          <div className="fixed inset-0 z-[60]">
+            {/* Click backdrop to close */}
+            <div 
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={useVillageStore.getState().toggleSidebar}
+            />
+            <div className="absolute right-0 top-0 bottom-0 w-64 bg-slate-900 border-l border-white/10 p-4 pt-16 animate-in slide-in-from-right">
+              <h3 className="text-white font-bold mb-4 text-lg">Menu</h3>
+              {/* You can reuse specific Sidebar items here manually or import Sidebar list */}
+              <button 
+                onClick={() => { useVillageStore.getState().setActiveView('settings'); useVillageStore.getState().toggleSidebar(); }}
+                className="w-full text-left p-3 text-slate-300 hover:bg-white/10 rounded-lg"
+              >
+                Settings
+              </button>
+              <button 
+                onClick={() => { useVillageStore.getState().logout(); }}
+                className="w-full text-left p-3 text-red-400 hover:bg-red-500/10 rounded-lg mt-2"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden bg-slate-950 text-slate-200">
       <TopNav />
       
       <div className="flex-1 flex overflow-hidden" style={{
-        marginTop: isMobile ? 'calc(64px + env(safe-area-inset-top, 0px))' : '64px',
-        marginBottom: isMobile ? 'calc(32px + env(safe-area-inset-bottom, 0px))' : '32px'
+        marginTop: '64px',
+        marginBottom: '32px'
       }}>
         <Sidebar />
         
@@ -110,13 +182,13 @@ function App() {
         } ml-0`}>
           {/* Central Canvas */}
           <div className={`flex-1 relative transition-all duration-300 ${
-            infoPanelOpen && !isMobile ? 'lg:w-3/4' : 'w-full'
+            infoPanelOpen ? 'lg:w-3/4' : 'w-full'
           }`}>
             {renderView()}
           </div>
           
-          {/* Info Panel - Hidden on mobile in native app */}
-          {infoPanelOpen && !isMobile && (
+          {/* Info Panel */}
+          {infoPanelOpen && (
             <div className="hidden lg:block w-1/4 min-w-[300px] max-w-[400px]">
               <InfoPanel />
             </div>
@@ -126,8 +198,8 @@ function App() {
       
       <StatusBar />
       
-      {/* Admin Control Panel - Floating (Only for Admin, hidden on mobile) */}
-      {userRole === 'admin' && !isMobile && <AdminControls />}
+      {/* Admin Control Panel - Floating (Only for Admin) */}
+      {userRole === 'admin' && <AdminControls />}
     </div>
   );
 }

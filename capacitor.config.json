@@ -2,5 +2,11 @@
   "appId": "com.yourorg.ruralens",
   "appName": "rura-lens",
   "webDir": "dist",
-  "bundledWebRuntime": false
+  "bundledWebRuntime": false,
+  "server": {
+    "cleartext": true,
+    "allowNavigation": [
+      "192.168.29.179"
+    ]
+  }
 }
