@@ -4,7 +4,6 @@ import {
   Zap, 
   Sprout,
   Bell,
-  Users,
   BarChart3,
   Settings,
   ChevronLeft,
@@ -12,7 +11,8 @@ import {
   Map,
   Leaf,
   CloudRain,
-  Briefcase
+  Briefcase,
+  Shield
 } from 'lucide-react';
 import { useVillageStore } from '../../store/villageStore';
 
@@ -26,7 +26,7 @@ const menuItems = [
   { id: 'environment', icon: Leaf, label: 'Environment Monitor' },
   { id: 'flood', icon: CloudRain, label: 'Flood Prediction' },
   { id: 'alerts', icon: Bell, label: 'Alerts & Notifications' },
-  { id: 'reports', icon: Users, label: 'Citizen Reports' },
+  { id: 'anonymous-reports', icon: Shield, label: 'Citizen Reports' },
   { id: 'analytics', icon: BarChart3, label: 'Analytics' },
   { id: 'settings', icon: Settings, label: 'Settings' },
 ];
@@ -41,13 +41,13 @@ export default function Sidebar() {
     if (userRole === 'field_worker') {
       // Field workers see limited menu
       return menuItems.filter(item => 
-        ['dashboard', 'map', 'settings'].includes(item.id)
+        ['dashboard', 'map', 'anonymous-reports', 'settings'].includes(item.id)
       );
     }
     if (userRole === 'user') {
-      // Citizens see basic menu
+      // Citizens see basic menu including anonymous reports
       return menuItems.filter(item => 
-        ['dashboard', 'map', 'schemes', 'water', 'power', 'environment', 'flood', 'reports', 'settings'].includes(item.id)
+        ['dashboard', 'map', 'schemes', 'water', 'power', 'environment', 'flood', 'anonymous-reports', 'settings'].includes(item.id)
       );
     }
     // Admin sees all

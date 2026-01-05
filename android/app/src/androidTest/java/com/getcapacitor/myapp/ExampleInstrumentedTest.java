@@ -1,4 +1,4 @@
-package com.getcapacitor.myapp;
+powershell -Command "& 'C:\Users\abhis\Desktop\Projects\vilage twin\backend\test-rag2.ps1'"package com.getcapacitor.myapp;
 
 import static org.junit.Assert.*;
 

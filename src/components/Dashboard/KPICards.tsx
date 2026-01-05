@@ -2,7 +2,7 @@ import { TrendingUp, TrendingDown, Activity, AlertCircle, Clock } from 'lucide-r
 import { useVillageStore } from '../../store/villageStore';
 
 export default function KPICards() {
-  const { kpis, citizenReports } = useVillageStore();
+  const { kpis } = useVillageStore();
 
   const cards = [
     {
@@ -21,9 +21,9 @@ export default function KPICards() {
       color: kpis.offlineSensors > 0 ? 'text-warning' : 'text-success',
     },
     {
-      title: 'Citizen Reports',
-      value: citizenReports.length,
-      subtext: `${kpis.pendingReports} pending`,
+      title: 'Pending Reports',
+      value: kpis.pendingReports,
+      subtext: 'Anonymous reports',
       icon: AlertCircle,
       color: kpis.pendingReports > 3 ? 'text-danger' : 'text-warning',
     },

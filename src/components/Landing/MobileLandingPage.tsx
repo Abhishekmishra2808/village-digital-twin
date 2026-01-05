@@ -1,5 +1,164 @@
-import React from 'react';
-import { ArrowRight, Bell, ShieldCheck, Map } from 'lucide-react';
+import { 
+  ArrowRight, 
+  Menu,
+  ShieldCheck,
+  MessageSquare,
+  AlertCircle,
+  LucideIcon
+} from 'lucide-react';
+
+// --- Constants ---
+const IMAGES = {
+  hero: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1000&auto=format&fit=crop", 
+  // Audit AI - Financial/document analysis image
+  auditAI: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=800&auto=format&fit=crop",
+  // Scheme Bot - AI/chatbot/conversation image  
+  schemeBot: "https://images.unsplash.com/photo-1531746790731-6c087fecd65a?q=80&w=800&auto=format&fit=crop",
+  // Anonymous - Privacy/security/shield image
+  anonymous: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?q=80&w=800&auto=format&fit=crop",
+  drone: "https://images.unsplash.com/photo-1473968512647-3e447244af8f?q=80&w=800&auto=format&fit=crop"
+};
+
+// --- Types ---
+interface FeatureCardProps {
+  title: string;
+  subtitle: string;
+  img: string;
+  icon: LucideIcon;
+  colorClass: string;
+}
+
+interface LandingScreenProps {
+  onStart: () => void;
+}
+
+// --- Sub-components ---
+
+const FeatureCard = ({ title, subtitle, img, icon: Icon, colorClass }: FeatureCardProps) => (
+  <div className="relative min-w-[240px] h-[160px] rounded-2xl overflow-hidden snap-center border border-white/20 shadow-2xl shrink-0 group">
+    {/* Background Image with Overlay */}
+    <img src={img} alt={title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+    <div className="absolute inset-0 bg-slate-900/60 group-hover:bg-slate-900/50 transition-colors" />
+    
+    {/* Content */}
+    <div className="absolute inset-0 p-5 flex flex-col justify-between">
+      <div className={`w-8 h-8 rounded-full ${colorClass} flex items-center justify-center backdrop-blur-md bg-opacity-80`}>
+        <Icon size={16} className="text-white" />
+      </div>
+      <div>
+        <h3 className="text-white font-bold text-lg leading-tight mb-1">{title}</h3>
+        <p className="text-white/70 text-xs font-medium">{subtitle}</p>
+      </div>
+    </div>
+  </div>
+);
+
+// --- Main Views ---
+
+const LandingScreen = ({ onStart }: LandingScreenProps) => {
+  return (
+    <div className="relative h-[100dvh] w-full overflow-hidden bg-slate-900 font-sans">
+      
+      {/* 1. IMMERSIVE BACKGROUND */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src={IMAGES.hero} 
+          alt="Rural Landscape" 
+          className="w-full h-full object-cover animate-slow-zoom opacity-90"
+        />
+        {/* Cinematic Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/30 via-transparent to-slate-900" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/80 to-transparent" />
+      </div>
+
+      {/* 2. TOP BAR (Floating) */}
+      <header className="absolute top-0 left-0 right-0 z-20 px-6 py-6 flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <img 
+            src="/ruralens-logo.png" 
+            alt="RuraLens Logo" 
+            className="w-9 h-9 object-contain drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]"
+          />
+          <span className="text-white font-bold text-lg tracking-tight drop-shadow-md">RuraLens</span>
+        </div>
+        <button className="text-white/90 hover:text-white p-2 bg-white/10 backdrop-blur-md rounded-full">
+          <Menu size={20} />
+        </button>
+      </header>
+
+      {/* 3. MAIN VISUAL DECORATION (Floating Data Tags) */}
+      <div className="absolute top-[20%] left-6 z-10 animate-fade-in-delayed">
+        <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 px-3 py-1.5 rounded-full shadow-lg">
+          <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
+          <span className="text-amber-100 text-xs font-mono tracking-wider">ALERT: Vendor Discrepancy Found</span>
+        </div>
+      </div>
+
+      {/* 4. BOTTOM INTERACTION PANEL (The "No Scroll" Content Area) */}
+      <div className="absolute bottom-0 left-0 right-0 z-30 flex flex-col justify-end pb-8">
+        
+        {/* Headlines */}
+        <div className="px-6 mb-6">
+          <h1 className="text-4xl font-bold text-white leading-[1.05] mb-2 drop-shadow-xl">
+            Smart Villages,<br />
+            <span className="text-emerald-400">Digitally Twin'd.</span>
+          </h1>
+          <p className="text-slate-300 text-sm max-w-[280px] leading-relaxed">
+            Monitor schemes, verify vendors, and protect citizen identity.
+          </p>
+        </div>
+
+        {/* Horizontal Scroll "Bento" Deck */}
+        <div className="w-full mb-8">
+          <div className="flex overflow-x-auto gap-4 px-6 pb-4 snap-x scrollbar-hide no-scrollbar">
+            {/* Feature 1: Discrepancy Detection */}
+            <FeatureCard 
+              title="Audit AI" 
+              subtitle="Scheme vs Vendor Check" 
+              img={IMAGES.auditAI} 
+              icon={AlertCircle}
+              colorClass="bg-red-500"
+            />
+            {/* Feature 2: Live RAG */}
+            <FeatureCard 
+              title="Scheme Bot" 
+              subtitle="Live RAG Q&A" 
+              img={IMAGES.schemeBot} 
+              icon={MessageSquare}
+              colorClass="bg-blue-500"
+            />
+            {/* Feature 3: Anonymization */}
+            <FeatureCard 
+              title="Anonymous" 
+              subtitle="Secure Feedback" 
+              img={IMAGES.anonymous} 
+              icon={ShieldCheck}
+              colorClass="bg-emerald-500"
+            />
+            {/* Spacer for right padding */}
+            <div className="min-w-[10px] shrink-0" />
+          </div>
+        </div>
+
+        {/* Primary CTA */}
+        <div className="px-6">
+          <button 
+            onClick={onStart}
+            className="w-full bg-white text-slate-900 h-14 rounded-2xl font-bold text-lg shadow-xl shadow-emerald-900/20 flex items-center justify-between px-2 pl-6 group active:scale-95 transition-all"
+          >
+            <span>Launch Dashboard</span>
+            <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white group-hover:bg-emerald-600 transition-colors">
+              <ArrowRight size={20} />
+            </div>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
+// --- Entry Point ---
 
 interface MobileLandingPageProps {
   onGetStarted: () => void;
@@ -7,158 +166,33 @@ interface MobileLandingPageProps {
 
 export default function MobileLandingPage({ onGetStarted }: MobileLandingPageProps) {
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col relative overflow-hidden">
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-950 to-slate-900" />
-
-      {/* Glow accents */}
-      <div className="pointer-events-none absolute -top-24 -left-24 h-56 w-56 rounded-full bg-blue-500/20 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-32 -right-10 h-72 w-72 rounded-full bg-emerald-500/25 blur-3xl" />
-
-      {/* Radar circle bottom-right */}
-      <div className="pointer-events-none absolute -bottom-20 -right-16 h-72 w-72 rounded-full border border-slate-700/60">
-        <div className="absolute inset-6 rounded-full border border-slate-700/50" />
-        <div className="absolute inset-12 rounded-full border border-slate-700/40" />
-        <div className="absolute inset-1/2 h-px w-full -translate-y-1/2 bg-slate-700/60" />
-        <div className="absolute inset-1/2 h-full w-px -translate-x-1/2 bg-slate-700/60" />
-      </div>
-
-      {/* Top section */}
-      <header className="relative z-10 flex items-center justify-between px-6 pt-10">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-600">
-            <Map size={20} className="text-white" />
-          </div>
-          <div className="flex flex-col leading-tight">
-            <span className="text-[10px] uppercase tracking-[0.28em] text-slate-400">
-              RURALENS
-            </span>
-            <span className="text-sm font-semibold text-slate-100">
-              Smart Village Hub
-            </span>
-          </div>
-        </div>
-
-        <div className="text-right text-[9px] leading-tight text-slate-400 uppercase tracking-[0.24em]">
-          <p>MOBILE APP V1.0</p>
-          <p className="text-[9px] text-blue-400 mt-0.5">DATA-DRIVEN INSIGHTS</p>
-        </div>
-      </header>
-
-      {/* Main content */}
-      <main className="relative z-10 flex flex-1 flex-col px-6 pb-8">
-        {/* Hero text */}
-        <div className="mt-8">
-          <h1 className="text-[34px] font-black leading-[1.05] tracking-tight">
-            Smart Village
-            <br />
-            <span className="bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
-              In Your Pocket
-            </span>
-          </h1>
-
-          <p className="mt-4 max-w-xs text-[13px] text-slate-300 leading-relaxed">
-            Monitor infrastructure, report issues, and track government schemes
-            directly from your phone.
-          </p>
-        </div>
-
-        {/* Feature list */}
-        <div className="mt-8 space-y-4 text-sm font-semibold text-slate-100">
-          <FeatureLine
-            icon={<Bell size={16} className="text-orange-400" />}
-            text="Instant alerts for water & power outages."
-          />
-          <FeatureLine
-            icon={<Map size={16} className="text-blue-400" />}
-            text="Interactive village map with real-time status."
-          />
-          <FeatureLine
-            icon={<ShieldCheck size={16} className="text-emerald-400" />}
-            text="Secure, anonymous issue reporting."
-          />
-        </div>
-
-        {/* Stats Section */}
-        <div className="mt-8 grid grid-cols-3 gap-2">
-          <StatBox value="600+" label="Villages" />
-          <StatBox value="10k+" label="Users" />
-          <StatBox value="99%" label="Uptime" />
-        </div>
-
-        {/* How it works */}
-        <div className="mt-8">
-          <h3 className="text-sm font-bold text-slate-200 mb-3 uppercase tracking-wider">How it works</h3>
-          <div className="space-y-4 relative pl-4 border-l border-slate-800">
-            <StepItem 
-              title="Connect" 
-              desc="Sign in with your secure ID." 
-            />
-            <StepItem 
-              title="Monitor" 
-              desc="View real-time infrastructure status." 
-            />
-            <StepItem 
-              title="Report" 
-              desc="Submit issues directly to admin." 
-            />
-          </div>
-        </div>
-
-        {/* Spacer */}
-        <div className="flex-1" />
-
-        {/* CTA */}
-        <div className="mt-6 mb-4">
-          <button
-            onClick={onGetStarted}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 py-4 text-base font-semibold shadow-lg shadow-blue-500/40 transition-all active:scale-[0.98] hover:bg-blue-500"
-          >
-            Get Started
-            <ArrowRight size={18} />
-          </button>
-
-          <p className="mt-3 text-center text-[10px] text-slate-500">
-            By continuing, you agree to our Terms of Service.
-          </p>
-        </div>
-      </main>
-    </div>
-  );
-}
-
-function FeatureLine({
-  icon,
-  text,
-}: {
-  icon: React.ReactNode;
-  text: string;
-}) {
-  return (
-    <div className="flex items-center gap-3">
-      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-900/80">
-        {icon}
-      </div>
-      <p className="text-[13px] leading-snug text-slate-200">{text}</p>
-    </div>
-  );
-}
-
-function StatBox({ value, label }: { value: string; label: string }) {
-  return (
-    <div className="rounded-xl bg-slate-900/50 border border-white/5 p-3 text-center">
-      <div className="text-lg font-bold text-white">{value}</div>
-      <div className="text-[10px] text-slate-400 uppercase tracking-wide">{label}</div>
-    </div>
-  );
-}
-
-function StepItem({ title, desc }: { title: string; desc: string }) {
-  return (
-    <div className="relative">
-      <div className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-blue-600 border-2 border-slate-950" />
-      <h4 className="text-sm font-semibold text-white">{title}</h4>
-      <p className="text-xs text-slate-400">{desc}</p>
-    </div>
+    <>
+      <style>{`
+        /* Utility to hide scrollbar but keep functionality */
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        @keyframes slow-zoom {
+          0% { transform: scale(1); }
+          100% { transform: scale(1.1); }
+        }
+        .animate-slow-zoom {
+          animation: slow-zoom 20s infinite alternate linear;
+        }
+        .animate-fade-in-delayed {
+           animation: fadeIn 1s ease-out 0.5s forwards;
+           opacity: 0;
+        }
+        @keyframes fadeIn {
+          to { opacity: 1; }
+        }
+      `}</style>
+      
+      <LandingScreen onStart={onGetStarted} />
+    </>
   );
 }

@@ -9,16 +9,18 @@ import {
   Download
 } from 'lucide-react';
 import { useVillageStore } from '../../store/villageStore';
+import { useAnonymousReports } from '../../hooks/useAnonymousReports';
 
 export default function AnalyticsView() {
-  const { waterTanks, powerNodes, sensors, citizenReports } = useVillageStore();
+  const { waterTanks, powerNodes, sensors } = useVillageStore();
+  const { reports: anonymousReports, stats: reportStats } = useAnonymousReports();
   const [dateRange, setDateRange] = useState('7days');
 
   // Calculate analytics
   const avgWaterLevel = waterTanks.reduce((sum, t) => sum + t.currentLevel, 0) / waterTanks.length;
   const avgPowerLoad = powerNodes.reduce((sum, n) => sum + (n.currentLoad / n.capacity * 100), 0) / powerNodes.length;
   const activeSensors = sensors.filter(s => s.status === 'active').length;
-  const pendingReports = citizenReports.filter(r => r.status === 'pending').length;
+  const pendingReports = reportStats?.pending || 0;
 
   const stats = [
     {
@@ -183,18 +185,18 @@ export default function AnalyticsView() {
             </div>
           </div>
 
-          {/* Recent Citizen Reports */}
+          {/* Recent Anonymous Reports */}
           <div className="bg-slate-900/50 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-sm">
             <h3 className="text-xl font-semibold text-white mb-4">Recent Reports</h3>
             <div className="space-y-3">
-              {citizenReports.slice(0, 5).map((report) => (
+              {anonymousReports.slice(0, 5).map((report) => (
                 <div key={report.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-white/5">
                   <div className="flex-1">
                     <p className="text-white text-sm font-medium">{report.title}</p>
                     <p className="text-xs text-slate-400 capitalize">{report.category}</p>
                   </div>
                   <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                    report.status === 'completed' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
+                    report.status === 'resolved' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
                     report.status === 'in_progress' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
                     'bg-slate-700 text-slate-300 border border-slate-600'
                   }`}>
@@ -202,6 +204,9 @@ export default function AnalyticsView() {
                   </div>
                 </div>
               ))}
+              {anonymousReports.length === 0 && (
+                <p className="text-slate-400 text-sm text-center py-4">No reports yet</p>
+              )}
             </div>
           </div>
         </div>

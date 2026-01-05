@@ -1,4 +1,4 @@
-import { Home, Briefcase, Map, Bell, Menu } from 'lucide-react';
+import { Home, Briefcase, Map, Menu, Shield } from 'lucide-react';
 import { useVillageStore } from '../../store/villageStore';
 
 export default function MobileNav() {
@@ -8,7 +8,7 @@ export default function MobileNav() {
     { id: 'dashboard', icon: Home, label: 'Home' },
     { id: 'schemes', icon: Briefcase, label: 'Schemes' },
     { id: 'map', icon: Map, label: 'Map' },
-    { id: 'reports', icon: Bell, label: 'Reports' },
+    { id: 'anonymous-reports', icon: Shield, label: 'Report' },
   ];
 
   return (

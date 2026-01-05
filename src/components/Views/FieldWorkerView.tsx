@@ -13,42 +13,49 @@ import {
 } from 'lucide-react';
 import { useVillageStore } from '../../store/villageStore';
 import { format } from 'date-fns';
+import { API_URL } from '../../config/api';
 
-interface CitizenReport {
+interface AnonymousReport {
   id: string;
   category: string;
   title: string;
   description: string;
-  coords: [number, number];
-  location: string;
+  intent: string;
+  location: {
+    area: string;
+    district: string;
+    approximateCoords: number[];
+  };
   priority: string;
   status: string;
-  assignedTo?: string;
+  assignedTo: {
+    workerId: string | null;
+    workerName: string;
+    assignedAt: string | null;
+  };
   photos: string[];
-  photoCount: number;
   createdAt: string;
   updatedAt: string;
 }
 
 export default function FieldWorkerView() {
   const { username } = useVillageStore();
-  const [reports, setReports] = useState<CitizenReport[]>([]);
+  const [reports, setReports] = useState<AnonymousReport[]>([]);
   const [filter, setFilter] = useState<'all' | 'assigned' | 'pending'>('all');
-  const [selectedTicket, setSelectedTicket] = useState<CitizenReport | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<AnonymousReport | null>(null);
   const [updating, setUpdating] = useState(false);
   const [updateForm, setUpdateForm] = useState({
     status: '',
-    assignedTo: '',
   });
 
-  // Fetch reports from backend
+  // Fetch anonymous reports from backend
   useEffect(() => {
     fetchReports();
   }, []);
 
   const fetchReports = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/reports');
+      const response = await fetch(`${API_URL}/api/anonymous-reports`);
       const data = await response.json();
       setReports(data.reports || []);
     } catch (error) {
@@ -58,15 +65,15 @@ export default function FieldWorkerView() {
 
   // Filter reports for field worker
   const myTickets = reports.filter(report => {
-    if (filter === 'assigned') return report.assignedTo === username || report.assignedTo?.includes('Field Worker');
+    if (filter === 'assigned') return report.assignedTo?.workerName === username || report.assignedTo?.workerName?.includes('Field Worker');
     if (filter === 'pending') return report.status === 'pending';
     return true;
   });
 
   const stats = {
-    assigned: reports.filter(r => r.assignedTo === username || r.assignedTo?.includes('Field Worker')).length,
-    inProgress: reports.filter(r => r.status === 'in_progress' && (r.assignedTo === username || r.assignedTo?.includes('Field Worker'))).length,
-    completed: reports.filter(r => r.status === 'completed' && (r.assignedTo === username || r.assignedTo?.includes('Field Worker'))).length,
+    assigned: reports.filter(r => r.assignedTo?.workerName === username || r.assignedTo?.workerName?.includes('Field Worker')).length,
+    inProgress: reports.filter(r => r.status === 'in_progress' && (r.assignedTo?.workerName === username || r.assignedTo?.workerName?.includes('Field Worker'))).length,
+    completed: reports.filter(r => r.status === 'resolved' && (r.assignedTo?.workerName === username || r.assignedTo?.workerName?.includes('Field Worker'))).length,
   };
 
   const handleUpdateTicket = async (e: React.FormEvent) => {
@@ -75,14 +82,16 @@ export default function FieldWorkerView() {
 
     setUpdating(true);
     try {
-      const response = await fetch(`http://localhost:3001/api/reports/${selectedTicket.id}/status`, {
-        method: 'PATCH',
+      const response = await fetch(`${API_URL}/api/anonymous-reports/${selectedTicket.id}/status`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           status: updateForm.status,
-          assignedTo: updateForm.assignedTo || selectedTicket.assignedTo,
+          updatedBy: username,
+          updatedByRole: 'field_worker',
+          message: `Status updated to ${updateForm.status} by ${username}`,
         }),
       });
 
@@ -91,7 +100,7 @@ export default function FieldWorkerView() {
       if (data.success) {
         alert('Ticket updated successfully!');
         setSelectedTicket(null);
-        setUpdateForm({ status: '', assignedTo: '' });
+        setUpdateForm({ status: '' });
         // Refresh reports
         fetchReports();
       } else {
@@ -229,16 +238,16 @@ export default function FieldWorkerView() {
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2 text-slate-400">
                   <MapPin size={16} />
-                  <span>{ticket.location || `${ticket.coords[1].toFixed(4)}, ${ticket.coords[0].toFixed(4)}`}</span>
+                  <span>{ticket.location?.area || ticket.location?.district || 'Location not specified'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-slate-400">
                   <Calendar size={16} />
                   <span>{format(new Date(ticket.createdAt), 'MMM dd, yyyy HH:mm')}</span>
                 </div>
-                {ticket.photoCount > 0 && (
+                {ticket.photos && ticket.photos.length > 0 && (
                   <div className="flex items-center gap-2 text-slate-400">
                     <Camera size={16} />
-                    <span>{ticket.photoCount} photo{ticket.photoCount > 1 ? 's' : ''} attached</span>
+                    <span>{ticket.photos.length} photo{ticket.photos.length > 1 ? 's' : ''} attached</span>
                   </div>
                 )}
               </div>
@@ -249,26 +258,26 @@ export default function FieldWorkerView() {
                   {ticket.photos.slice(0, 3).map((photo, idx) => (
                     <img
                       key={idx}
-                      src={`http://localhost:3001${photo}`}
+                      src={`${API_URL}${photo}`}
                       alt={`Report photo ${idx + 1}`}
                       className="w-full h-20 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border border-white/10"
                       onClick={(e) => {
                         e.stopPropagation();
-                        window.open(`http://localhost:3001${photo}`, '_blank');
+                        window.open(`${API_URL}${photo}`, '_blank');
                       }}
                     />
                   ))}
-                  {ticket.photoCount > 3 && (
+                  {ticket.photos.length > 3 && (
                     <div className="w-full h-20 bg-slate-800 rounded-lg flex items-center justify-center text-slate-400 text-sm border border-white/10">
-                      +{ticket.photoCount - 3} more
+                      +{ticket.photos.length - 3} more
                     </div>
                   )}
                 </div>
               )}
 
-              {ticket.assignedTo && (
+              {ticket.assignedTo?.workerName && (
                 <div className="mt-4 p-3 bg-blue-500/10 rounded-lg text-sm text-blue-400 border border-blue-500/20">
-                  Assigned to: <strong>{ticket.assignedTo}</strong>
+                  Assigned to: <strong>{ticket.assignedTo.workerName}</strong>
                 </div>
               )}
 
@@ -305,7 +314,7 @@ export default function FieldWorkerView() {
                 <div className="flex items-center gap-4 text-sm text-slate-500">
                   <span className="flex items-center gap-1">
                     <MapPin size={14} />
-                    {selectedTicket.coords.join(', ')}
+                    {selectedTicket.location?.area || selectedTicket.location?.district || 'N/A'}
                   </span>
                   <span className="flex items-center gap-1">
                     <Calendar size={14} />
@@ -326,42 +335,27 @@ export default function FieldWorkerView() {
                     required
                   >
                     <option value="">Select status</option>
+                    <option value="acknowledged">Acknowledged</option>
                     <option value="in_progress">In Progress</option>
-                    <option value="completed">Completed</option>
+                    <option value="resolved">Resolved</option>
                     <option value="pending">Pending (Need Support)</option>
                   </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Assign To
-                  </label>
-                  <input
-                    type="text"
-                    value={updateForm.assignedTo}
-                    onChange={(e) => setUpdateForm({ ...updateForm, assignedTo: e.target.value })}
-                    placeholder={selectedTicket?.assignedTo || "Field worker name"}
-                    className="w-full px-4 py-3 rounded-lg bg-slate-800 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <p className="text-xs text-slate-500 mt-1">
-                    Leave blank to keep current assignment
-                  </p>
                 </div>
 
                 {/* Show attached photos */}
                 {selectedTicket.photos && selectedTicket.photos.length > 0 && (
                   <div>
                     <label className="block text-sm font-medium text-slate-300 mb-2">
-                      Attached Photos ({selectedTicket.photoCount})
+                      Attached Photos ({selectedTicket.photos.length})
                     </label>
                     <div className="grid grid-cols-3 gap-3">
                       {selectedTicket.photos.map((photo, idx) => (
                         <img
                           key={idx}
-                          src={`http://localhost:3001${photo}`}
+                          src={`${API_URL}${photo}`}
                           alt={`Report photo ${idx + 1}`}
                           className="w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border border-white/10"
-                          onClick={() => window.open(`http://localhost:3001${photo}`, '_blank')}
+                          onClick={() => window.open(`${API_URL}${photo}`, '_blank')}
                         />
                       ))}
                     </div>
@@ -387,7 +381,7 @@ export default function FieldWorkerView() {
                     type="button"
                     onClick={() => {
                       setSelectedTicket(null);
-                      setUpdateForm({ status: '', assignedTo: '' });
+                      setUpdateForm({ status: '' });
                     }}
                     className="px-6 py-3 border border-white/10 text-slate-300 rounded-lg hover:bg-slate-800 transition-all"
                   >

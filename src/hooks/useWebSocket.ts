@@ -49,7 +49,6 @@ export default function useWebSocket() {
                   powerNodes: currentState.powerNodes,
                   roads: currentState.roads,
                   sensors: currentState.sensors,
-                  citizenReports: currentState.citizenReports,
                   schemes: message.allSchemes,
                   alerts: currentState.alerts,
                   kpis: currentState.kpis
@@ -71,7 +70,6 @@ export default function useWebSocket() {
                   powerNodes: currentState.powerNodes,
                   roads: currentState.roads,
                   sensors: currentState.sensors,
-                  citizenReports: currentState.citizenReports,
                   schemes: message.allSchemes,
                   alerts: currentState.alerts,
                   kpis: currentState.kpis

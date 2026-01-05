@@ -13,7 +13,8 @@ import PowerView from './components/Views/PowerView';
 import AlertsView from './components/Views/AlertsView';
 import SettingsView from './components/Views/SettingsView';
 import AnalyticsView from './components/Views/AnalyticsView';
-import CitizenReportsView from './components/Views/CitizenReportsView';
+import AnonymousReportsView from './components/Views/AnonymousReportsView';
+import MobileAnonymousReports from './components/Views/MobileAnonymousReports';
 import FieldWorkerView from './components/Views/FieldWorkerView';
 import MapView from './components/Views/MapView';
 import EnvironmentView from './components/Views/EnvironmentView';
@@ -84,7 +85,8 @@ function App() {
       case 'alerts':
         return <AlertsView />;
       case 'reports':
-        return <CitizenReportsView />;
+      case 'anonymous-reports':
+        return isMobile ? <MobileAnonymousReports /> : <AnonymousReportsView />;
       case 'analytics':
         return userRole === 'admin' ? <AnalyticsView /> : <Dashboard />;
       case 'settings':

@@ -11,8 +11,17 @@ export default defineConfig({
         ws: true,
       },
     },
+    watch: {
+      ignored: ['**/llm-app/**', '**/android/**', '**/venv/**', '**/node_modules/**', '**/.git/**'],
+    },
   },
   optimizeDeps: {
     exclude: ['lucide-react'],
+    entries: ['index.html'],
+  },
+  build: {
+    rollupOptions: {
+      input: 'index.html',
+    },
   },
 });

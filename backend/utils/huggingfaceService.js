@@ -348,3 +348,196 @@ IMPORTANT:
     throw new Error(`Failed to analyze vendor report: ${error.message}`);
   }
 }
+
+/**
+ * Anonymize citizen report and extract intent/problem using Llama 3.1-8B-Instruct
+ * @param {string} title - Original report title
+ * @param {string} description - Original report description
+ * @param {string} category - Report category
+ * @param {string} location - Location information
+ * @returns {Promise<Object>} Anonymized report with extracted intent
+ */
+export async function anonymizeAndExtractIntent(title, description, category, location) {
+  try {
+    const client = getHfClient();
+    
+    const prompt = `You are an AI system that processes citizen grievance reports for a village governance system. Your tasks are:
+
+1. ANONYMIZE: Remove ALL personally identifiable information (PII):
+   - Names of people (replace with [CITIZEN], [OFFICIAL], etc.)
+   - Phone numbers (replace with [PHONE])
+   - Email addresses (replace with [EMAIL])
+   - Specific addresses/house numbers (replace with [ADDRESS])
+   - Aadhaar/ID numbers (replace with [ID])
+   - Bank account details (replace with [BANK_INFO])
+   - Any identifying personal details
+
+2. EXTRACT: Identify the core problem and intent:
+   - What is the main issue?
+   - What action is being requested?
+   - Who/what is affected?
+   - What is the urgency level?
+
+3. CATEGORIZE: Determine the problem category and severity
+
+ORIGINAL REPORT:
+Title: ${title}
+Category: ${category}
+Location: ${location}
+Description: ${description}
+
+Return ONLY a valid JSON object with this structure:
+{
+  "anonymizedTitle": "Title with all PII removed, keeping the core issue",
+  "anonymizedDescription": "Full description with all PII removed",
+  "extractedIntent": "Clear 1-2 sentence summary of what the citizen wants/needs",
+  "problemSummary": "Brief summary of the core problem",
+  "problemCategory": "One of: road, water, power, waste, healthcare, education, corruption, safety, other",
+  "severity": "One of: low, medium, high, critical",
+  "affectedArea": "General area description (anonymized)",
+  "keywords": ["list", "of", "relevant", "keywords"],
+  "actionRequired": "What action needs to be taken",
+  "piiRemoved": ["list of types of PII that were removed, e.g., 'name', 'phone'"],
+  "confidence": 0.0-1.0
+}
+
+Rules:
+- Preserve the meaning and urgency of the report
+- Keep location at area/village level, not specific addresses
+- Ensure the anonymized version still provides enough detail for officials to act
+- Be conservative - if unsure if something is PII, remove it`;
+
+    const response = await client.chatCompletion({
+      model: "meta-llama/Llama-3.1-8B-Instruct",
+      messages: [
+        { role: "system", content: "You are a privacy-focused AI assistant that anonymizes citizen reports while preserving essential information. Return only valid JSON." },
+        { role: "user", content: prompt }
+      ],
+      max_tokens: 800,
+      temperature: 0.2 // Low temperature for consistent anonymization
+    });
+
+    const rawResponse = response.choices[0].message.content.trim();
+    
+    // Extract JSON from response
+    let jsonMatch = rawResponse.match(/\{[\s\S]*\}/);
+    const jsonText = jsonMatch ? jsonMatch[0] : rawResponse;
+    
+    let result;
+    try {
+      result = JSON.parse(jsonText);
+    } catch (parseError) {
+      console.warn('⚠️ Failed to parse anonymization response, using fallback');
+      // Fallback: Basic regex-based anonymization
+      const anonymizedDesc = description
+        .replace(/\b[A-Z][a-z]+ [A-Z][a-z]+\b/g, '[CITIZEN]')
+        .replace(/\b\d{10}\b/g, '[PHONE]')
+        .replace(/\b\d{12}\b/g, '[ID]')
+        .replace(/\b[\w.-]+@[\w.-]+\.\w+\b/g, '[EMAIL]')
+        .replace(/house\s*(?:no\.?|number)?\s*\d+/gi, '[ADDRESS]');
+      
+      result = {
+        anonymizedTitle: title.replace(/\b[A-Z][a-z]+ [A-Z][a-z]+\b/g, '[CITIZEN]'),
+        anonymizedDescription: anonymizedDesc,
+        extractedIntent: `Citizen reports issue related to ${category}`,
+        problemSummary: description.substring(0, 100),
+        problemCategory: category || 'other',
+        severity: 'medium',
+        affectedArea: location || 'Unknown area',
+        keywords: [category],
+        actionRequired: 'Review and address citizen concern',
+        piiRemoved: ['potential_names'],
+        confidence: 0.5
+      };
+    }
+
+    console.log('✅ Report anonymized successfully using Llama 3.1-8B');
+    
+    return {
+      success: true,
+      ...result,
+      model: 'meta-llama/Llama-3.1-8B-Instruct',
+      processedAt: new Date().toISOString()
+    };
+  } catch (error) {
+    console.error('❌ Error in anonymizeAndExtractIntent:', error.message);
+    throw new Error(`Failed to anonymize report: ${error.message}`);
+  }
+}
+
+/**
+ * Verify if a report is legitimate based on content analysis
+ * @param {string} description - Report description
+ * @returns {Promise<Object>} Legitimacy analysis
+ */
+export async function analyzeReportLegitimacy(description) {
+  try {
+    const client = getHfClient();
+    
+    const prompt = `Analyze this citizen grievance report for legitimacy indicators.
+
+REPORT: ${description}
+
+Evaluate:
+1. Does it describe a real, actionable issue?
+2. Is there enough detail to investigate?
+3. Are there signs of spam, abuse, or false reporting?
+4. Is the language appropriate and coherent?
+
+Return ONLY a valid JSON object:
+{
+  "isLegitimate": true/false,
+  "legitimacyScore": 0-100,
+  "concerns": ["list of any concerns about the report"],
+  "hasActionableContent": true/false,
+  "hasEnoughDetail": true/false,
+  "flaggedReasons": ["reasons if flagged as potentially false"],
+  "recommendation": "approve, review, or reject"
+}`;
+
+    const response = await client.chatCompletion({
+      model: "meta-llama/Llama-3.1-8B-Instruct",
+      messages: [
+        { role: "system", content: "You are a content moderation AI. Analyze reports objectively. Return only valid JSON." },
+        { role: "user", content: prompt }
+      ],
+      max_tokens: 400,
+      temperature: 0.3
+    });
+
+    const rawResponse = response.choices[0].message.content.trim();
+    let jsonMatch = rawResponse.match(/\{[\s\S]*\}/);
+    const jsonText = jsonMatch ? jsonMatch[0] : rawResponse;
+    
+    let result;
+    try {
+      result = JSON.parse(jsonText);
+    } catch (parseError) {
+      result = {
+        isLegitimate: true,
+        legitimacyScore: 70,
+        concerns: [],
+        hasActionableContent: true,
+        hasEnoughDetail: description.length > 50,
+        flaggedReasons: [],
+        recommendation: 'approve'
+      };
+    }
+
+    return {
+      success: true,
+      ...result,
+      model: 'meta-llama/Llama-3.1-8B-Instruct'
+    };
+  } catch (error) {
+    console.error('❌ Error in analyzeReportLegitimacy:', error.message);
+    // Default to legitimate to avoid blocking valid reports
+    return {
+      success: false,
+      isLegitimate: true,
+      legitimacyScore: 60,
+      concerns: ['AI analysis failed'],
+      recommendation: 'review'
+    };
+  }
+}

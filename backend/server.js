@@ -9,9 +9,9 @@ import { processFeedbackWithLocalLLM } from './utils/localLLMService.js';
 import { connectDatabase, seedDatabase } from './config/database.js';
 import authRoutes from './routes/auth.js';
 import schemesRoutes from './routes/schemes.js';
-import reportsRoutes from './routes/reports.js';
 import llmStatusRoutes from './routes/llmStatus.js';
 import ragRoutes from './routes/rag.js';
+import anonymousReportsRoutes from './routes/anonymousReports.js';
 import Scheme from './models/Scheme.js';
 import Feedback from './models/Feedback.js';
 
@@ -60,9 +60,9 @@ app.set('broadcast', (data) => {
 // API Routes (after wss is initialized)
 app.use('/api/auth', authRoutes);
 app.use('/api/schemes', schemesRoutes);
-app.use('/api/reports', reportsRoutes);
 app.use('/api/llm', llmStatusRoutes);
 app.use('/api/rag-query', ragRoutes);
+app.use('/api/anonymous-reports', anonymousReportsRoutes);
 
 // Initialize village data (in-memory for real-time sensors, schemes from DB)
 let villageState = generateVillageData();

@@ -60,19 +60,6 @@ export interface Sensor {
   tds?: number;
 }
 
-export interface CitizenReport {
-  id: string;
-  category: 'road' | 'water' | 'power' | 'waste' | 'other';
-  title: string;
-  coords: [number, number];
-  status: 'pending' | 'in_progress' | 'completed';
-  priority: 'low' | 'medium' | 'high';
-  createdAt: string;
-  assignedTo: string | null;
-  photos: number;
-  description: string;
-}
-
 export interface SchemePhase {
   id: number;
   name: string;
@@ -191,7 +178,6 @@ interface VillageState {
   powerNodes: PowerNode[];
   roads: Road[];
   sensors: Sensor[];
-  citizenReports: CitizenReport[];
   schemes: GovernmentScheme[];
   alerts: Alert[];
   kpis: KPIs;
@@ -228,7 +214,6 @@ export const useVillageStore = create<VillageState>((set) => ({
   powerNodes: [],
   roads: [],
   sensors: [],
-  citizenReports: [],
   schemes: [],
   alerts: [],
   kpis: {
@@ -256,7 +241,6 @@ export const useVillageStore = create<VillageState>((set) => ({
     powerNodes: data.powerNodes || [],
     roads: data.roads || [],
     sensors: data.sensors || [],
-    citizenReports: data.citizenReports || [],
     schemes: data.schemes || [],
     alerts: data.alerts || [],
     kpis: data.kpis || {},

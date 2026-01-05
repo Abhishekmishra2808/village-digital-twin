@@ -1,6 +1,10 @@
 apply plugin: 'com.android.application'
+apply plugin: 'org.jetbrains.kotlin.android'
 
 android {
+    kotlinOptions {
+        jvmTarget = '21'
+    }
     namespace "com.yourorg.ruralens"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
