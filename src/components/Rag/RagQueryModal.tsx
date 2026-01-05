@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Send, Loader2, MapPin, ExternalLink, Clock, FileText, AlertCircle, CheckCircle, Shield, Brain } from 'lucide-react';
+import { X, Send, Loader2, MapPin, ExternalLink, Clock, FileText, AlertCircle, CheckCircle } from 'lucide-react';
 import useRagQuery, { Citation } from '../../hooks/useRagQuery';
 import { format } from 'date-fns';
 

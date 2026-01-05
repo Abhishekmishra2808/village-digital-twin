@@ -1098,10 +1098,8 @@ function VendorReportsTab({ scheme }: { scheme: GovernmentScheme }) {
               `Updated Metrics:\n` +
               `• Progress: ${updatedScheme.overallProgress}%\n` +
               `• Budget Utilized: ₹${(updatedScheme.budgetUtilized / 100000).toFixed(2)}L\n` +
-              `• Status: ${updatedScheme.status.toUpperCase()}`);
-        
-        // Close the modal to show updated scheme list
-        setSelectedScheme(null);
+              `• Status: ${updatedScheme.status.toUpperCase()}\n\n` +
+              `The scheme list will update automatically.`);
       } else {
         throw new Error(result.error || 'Failed to analyze vendor report');
       }
