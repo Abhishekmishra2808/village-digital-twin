@@ -10,17 +10,13 @@ import InfoPanel from './components/InfoPanel/InfoPanel';
 import Dashboard from './components/Dashboard/Dashboard';
 import WaterView from './components/Views/WaterView';
 import PowerView from './components/Views/PowerView';
-import AgricultureView from './components/Views/AgricultureView';
 import AlertsView from './components/Views/AlertsView';
 import SettingsView from './components/Views/SettingsView';
 import AnalyticsView from './components/Views/AnalyticsView';
 import CitizenReportsView from './components/Views/CitizenReportsView';
 import FieldWorkerView from './components/Views/FieldWorkerView';
-import RoadsView from './components/Views/RoadsView';
-import WasteView from './components/Views/WasteView';
 import MapView from './components/Views/MapView';
 import EnvironmentView from './components/Views/EnvironmentView';
-import FloodView from './components/Views/FloodView';
 import SchemesView from './components/Views/SchemesView';
 import AdminControls from './components/ControlPanel/AdminControls';
 import useWebSocket from './hooks/useWebSocket';
@@ -83,16 +79,8 @@ function App() {
         return <WaterView />;
       case 'power':
         return <PowerView />;
-      case 'roads':
-        return <RoadsView />;
-      case 'waste':
-        return <WasteView />;
-      case 'agriculture':
-        return <AgricultureView />;
       case 'environment':
         return <EnvironmentView />;
-      case 'flood':
-        return <FloodView />;
       case 'alerts':
         return <AlertsView />;
       case 'reports':

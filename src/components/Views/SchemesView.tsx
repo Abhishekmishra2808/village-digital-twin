@@ -112,19 +112,9 @@ export default function SchemesView() {
     if (!feedbackScheme || !rating) return;
 
     setIsProcessing(true);
-    setAiStatus({ status: 'anonymizing', message: 'Anonymizing your feedback (removing names, emails, phone numbers, addresses)...', progress: 20 });
+    setAiStatus({ status: 'processing', message: 'Processing your feedback...', progress: 50 });
 
     try {
-      // Simulate anonymization delay (800-1200ms) to show the process
-      const anonymizationDelay = 800 + Math.random() * 400;
-      await new Promise(resolve => setTimeout(resolve, anonymizationDelay));
-      
-      setAiStatus({ status: 'anonymizing', message: 'Personal information removed. Preparing to submit...', progress: 50 });
-      
-      // Brief delay before actual submission
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      setAiStatus({ status: 'processing', message: 'AI analyzing feedback...', progress: 70 });
 
       // Generate a unique userId from username or create anonymous ID
       const userId = username || `anon-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -886,16 +876,19 @@ function SchemeDetailsModal({
             >
               Vendor Reports
             </button>
-            <button
-              onClick={() => setActiveTab('reviews')}
-              className={`py-3 md:py-4 border-b-2 transition-colors text-sm md:text-base whitespace-nowrap ${
-                activeTab === 'reviews'
-                  ? 'border-purple-500 text-purple-400 font-medium'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              Citizen Reviews
-            </button>
+            {/* Reviews tab - Admin only */}
+            {userRole === 'admin' && (
+              <button
+                onClick={() => setActiveTab('reviews')}
+                className={`py-3 md:py-4 border-b-2 transition-colors text-sm md:text-base whitespace-nowrap ${
+                  activeTab === 'reviews'
+                    ? 'border-purple-500 text-purple-400 font-medium'
+                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Citizen Reviews
+              </button>
+            )}
           </div>
         </div>
 
@@ -2116,7 +2109,7 @@ function AddSchemeModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
           monitoringCheckpoints: []
         });
 
-        alert('✅ PDF data extracted successfully! Please review and edit if needed.');
+        alert('✅ PDF data extracted successfully using RunAnywhere SDK (Qwen 2.5 0.5B)!\n\nAll processing done locally on your device.\n\nPlease review and edit if needed.');
       } else {
         throw new Error(result.error || 'Failed to extract data from PDF');
       }
@@ -2211,7 +2204,7 @@ function AddSchemeModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
                   {isExtractingPDF ? (
                     <>
                       <Loader size={18} className="animate-spin text-blue-400" />
-                      <span className="text-sm font-medium text-blue-400">Extracting data from PDF...</span>
+                      <span className="text-sm font-medium text-blue-400">Analyzing with RunAnywhere SDK...</span>
                     </>
                   ) : (
                     <>
@@ -2225,9 +2218,9 @@ function AddSchemeModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
               </label>
               
               <p className="text-xs text-slate-500 mt-2 text-center">
-                PDF will be analyzed using AI to extract scheme details, phases, budget, and timeline.
+                PDF analyzed locally using Qwen 2.5 0.5B via RunAnywhere SDK.
                 <br/>
-                <span className="text-purple-400 font-medium">Powered by RunAnywhere SDK</span>
+                <span className="text-purple-400 font-medium">⚡ 100% Local AI - No Cloud Required</span>
               </p>
             </div>
 
