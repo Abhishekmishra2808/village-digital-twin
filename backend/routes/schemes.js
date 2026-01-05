@@ -223,14 +223,25 @@ router.post('/:id/feedback', async (req, res) => {
     scheme.citizenRating = totalRating / scheme.feedbackCount;
     scheme.citizenRating = Math.round(scheme.citizenRating * 10) / 10; // Round to 1 decimal
 
-    // Add discrepancy if urgent
+    // Add discrepancy only if explicitly marked as urgent by the citizen
     if (feedback.isUrgent) {
+      // Create a more meaningful aggregated message
+      const concernsSummary = aiAnalysis.concerns && aiAnalysis.concerns.length > 0 
+        ? aiAnalysis.concerns.slice(0, 2).join('; ')
+        : 'Issue reported';
+      
+      const categoriesText = aiAnalysis.categories && aiAnalysis.categories.length > 0
+        ? ` in ${aiAnalysis.categories.join(', ')}`
+        : '';
+      
+      const ratingContext = rating <= 2 ? ` (${rating}/5 rating)` : '';
+      
       scheme.discrepancies.push({
         id: `disc-${Date.now()}`,
         type: 'citizen_reported',
-        description: `${aiAnalysis.urgency} Issue: ${aiAnalysis.summary}`,
-        severity: aiAnalysis.urgency === 'Critical' ? 'critical' : 'high',
-        reportedBy: 'Citizen (Anonymous)',
+        description: `Citizens report ${aiAnalysis.sentiment.toLowerCase()} feedback${categoriesText}${ratingContext}. Key concerns: ${concernsSummary}`,
+        severity: aiAnalysis.urgency === 'Critical' || rating === 1 ? 'critical' : 'high',
+        reportedBy: 'Citizens (Anonymized)',
         categories: aiAnalysis.categories,
         concerns: aiAnalysis.concerns,
         date: new Date().toISOString(),
@@ -408,8 +419,9 @@ router.post('/:id/vendor-report', upload.single('pdf'), async (req, res) => {
       if (scheme.phases && scheme.phases.length > 0) {
         const phaseIndex = scheme.phases.findIndex(p => p.id === reportedPhase);
         if (phaseIndex !== -1) {
-          // Estimate phase progress from compliance score
-          const phaseProgress = Math.min(100, Math.round(result.analysis.overallCompliance));
+          // Estimate phase progress from compliance score - ensure valid number
+          const complianceScore = parseFloat(result.analysis.overallCompliance) || 0;
+          const phaseProgress = Math.min(100, Math.max(0, Math.round(complianceScore)));
           scheme.phases[phaseIndex].progress = phaseProgress;
           
           // Update phase status
@@ -429,13 +441,17 @@ router.post('/:id/vendor-report', upload.single('pdf'), async (req, res) => {
       // Calculate overall progress as average of all phases
       let totalProgress = 0;
       if (scheme.phases && scheme.phases.length > 0) {
-        totalProgress = scheme.phases.reduce((sum, phase) => sum + (phase.progress || 0), 0) / scheme.phases.length;
+        const validPhases = scheme.phases.filter(p => typeof p.progress === 'number' && !isNaN(p.progress));
+        if (validPhases.length > 0) {
+          totalProgress = validPhases.reduce((sum, phase) => sum + phase.progress, 0) / validPhases.length;
+        }
       } else {
         // Fallback: estimate from reported phase and compliance
-        totalProgress = ((reportedPhase - 1) / totalPhases) * 100 + (result.analysis.overallCompliance / totalPhases);
+        const complianceScore = parseFloat(result.analysis.overallCompliance) || 0;
+        totalProgress = ((reportedPhase - 1) / totalPhases) * 100 + (complianceScore / totalPhases);
       }
       
-      scheme.overallProgress = Math.min(100, Math.round(totalProgress));
+      scheme.overallProgress = Math.min(100, Math.max(0, Math.round(totalProgress)));
       console.log(`📊 Progress Updated: ${scheme.overallProgress}%`);
 
       // 3. UPDATE SCHEME STATUS

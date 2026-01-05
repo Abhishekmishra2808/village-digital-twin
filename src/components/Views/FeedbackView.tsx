@@ -142,11 +142,18 @@ const FeedbackView: React.FC<FeedbackViewProps> = ({ scheme, onClose }) => {
             </button>
           </div>
           
-          <div className="mt-4 flex items-center gap-2 text-sm text-slate-400">
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-            </svg>
-            <span>All feedback is anonymized. User identities and raw comments are never exposed.</span>
+          <div className="mt-4 bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+            <div className="flex items-start gap-2 text-sm">
+              <svg className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+              <div className="flex-1">
+                <p className="text-blue-300 font-medium mb-1">Privacy Protected Feedback</p>
+                <p className="text-blue-200/80 text-xs leading-relaxed">
+                  All feedback shown here has been processed by AI to remove personal information including names, phone numbers, addresses, emails, and any identifying details. Only anonymized summaries, sentiment analysis, and concerns are displayed to protect citizen privacy.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
