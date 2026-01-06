@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useVillageStore } from '../../store/villageStore';
+import { Capacitor } from '@capacitor/core';
 
 const VILLAGE_CENTER: [number, number] = [73.8567, 18.5204]; // Pune coordinates
 
@@ -14,6 +15,9 @@ export default function Map3D() {
   const lastViewRef = useRef<string>('');
   const [currentZoom, setCurrentZoom] = useState(16.6);
   const [currentPitch, setCurrentPitch] = useState(45);
+  const [showLegend, setShowLegend] = useState(false);
+  
+  const isMobile = Capacitor.isNativePlatform() || window.innerWidth < 768;
   
   const { 
     waterTanks, 
@@ -400,22 +404,29 @@ export default function Map3D() {
     <div className="relative w-full h-full">
       <div ref={mapContainer} className="absolute inset-0" />
       
-      {/* Map Info Panel */}
-      <div className="absolute top-4 left-4 bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg p-3 border border-white/10">
-        <div className="space-y-1 text-sm">
-          <div className="flex items-center gap-2">
-            <span className="text-slate-400">Zoom:</span>
+      {/* Map Info Panel - Mobile Optimized */}
+      <div className={`absolute top-2 left-2 bg-slate-900/90 backdrop-blur-md rounded-lg shadow-lg border border-white/10 ${
+        isMobile ? 'p-2' : 'p-3'
+      }`}>
+        <div className={`flex items-center gap-3 ${isMobile ? 'text-xs' : 'text-sm'}`}>
+          <div className="flex items-center gap-1">
+            <span className="text-slate-400">🔍</span>
             <span className="font-semibold text-white">{currentZoom}x</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-slate-400">Pitch:</span>
+          <div className="w-px h-4 bg-slate-700" />
+          <div className="flex items-center gap-1">
+            <span className="text-slate-400">📐</span>
             <span className="font-semibold text-white">{currentPitch}°</span>
           </div>
         </div>
       </div>
       
-      {/* Quick Action Buttons */}
-      <div className="absolute top-4 right-20 flex flex-col gap-2">
+      {/* Quick Action Buttons - Mobile Optimized */}
+      <div className={`absolute flex gap-2 ${
+        isMobile 
+          ? 'top-2 right-2 flex-row' 
+          : 'top-4 right-20 flex-col'
+      }`}>
         <button
           onClick={() => {
             if (map.current) {
@@ -428,10 +439,12 @@ export default function Map3D() {
               });
             }
           }}
-          className="bg-slate-900/80 hover:bg-slate-800 backdrop-blur-md text-white px-4 py-2 rounded-lg shadow-lg border border-white/10 text-sm font-medium transition-all"
+          className={`bg-slate-900/90 hover:bg-slate-800 active:scale-95 backdrop-blur-md text-white rounded-lg shadow-lg border border-white/10 font-medium transition-all ${
+            isMobile ? 'px-3 py-2 text-xs' : 'px-4 py-2 text-sm'
+          }`}
           title="Reset to village center"
         >
-          🏠 Reset View
+          🏠 {isMobile ? 'Reset' : 'Reset View'}
         </button>
         <button
           onClick={() => {
@@ -443,40 +456,108 @@ export default function Map3D() {
               });
             }
           }}
-          className="bg-slate-900/80 hover:bg-slate-800 backdrop-blur-md text-white px-4 py-2 rounded-lg shadow-lg border border-white/10 text-sm font-medium transition-all"
+          className={`bg-slate-900/90 hover:bg-slate-800 active:scale-95 backdrop-blur-md text-white rounded-lg shadow-lg border border-white/10 font-medium transition-all ${
+            isMobile ? 'px-3 py-2 text-xs' : 'px-4 py-2 text-sm'
+          }`}
           title="Toggle 3D view"
         >
-          🔄 Toggle 3D
+          🔄 3D
         </button>
       </div>
       
-      {/* Map Legend */}
-      <div className="absolute bottom-4 right-4 bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg p-4 border border-white/10 text-sm space-y-2 max-w-xs">
-        <h4 className="font-semibold text-white mb-3">Map Legend</h4>
-        <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 rounded-full bg-green-500 border-2 border-white/20 shadow-sm" />
-          <span className="text-slate-300">Water Tank (Good)</span>
+      {/* Map Legend - Mobile Toggle Button & Collapsible Panel */}
+      {isMobile ? (
+        <>
+          {/* Mobile Legend Toggle Button */}
+          <button
+            onClick={() => setShowLegend(!showLegend)}
+            className={`absolute bottom-4 right-4 bg-slate-900/90 backdrop-blur-md text-white px-4 py-3 rounded-xl shadow-lg border border-white/10 font-semibold text-sm active:scale-95 transition-all ${
+              showLegend ? 'bg-cyan-600/90' : ''
+            }`}
+          >
+            {showLegend ? '✕ Close' : '🗺️ Legend'}
+          </button>
+          
+          {/* Mobile Legend Panel - Bottom Sheet Style */}
+          {showLegend && (
+            <div className="absolute bottom-16 left-2 right-2 bg-slate-900/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/10 p-4 animate-in slide-in-from-bottom-4">
+              <h4 className="font-bold text-white text-base mb-4 text-center">Map Legend</h4>
+              
+              {/* Legend Grid for Mobile */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Water Tanks Section */}
+                <div className="bg-slate-800/50 rounded-xl p-3">
+                  <div className="text-xs text-slate-400 font-medium mb-2">💧 Water Tanks</div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-full bg-green-500 border-2 border-white/30 shadow-sm" />
+                      <span className="text-slate-200 text-xs font-medium">Good</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-full bg-yellow-500 border-2 border-white/30 shadow-sm" />
+                      <span className="text-slate-200 text-xs font-medium">Warning</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-full bg-red-500 border-2 border-white/30 shadow-sm" />
+                      <span className="text-slate-200 text-xs font-medium">Critical</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Other Assets Section */}
+                <div className="bg-slate-800/50 rounded-xl p-3">
+                  <div className="text-xs text-slate-400 font-medium mb-2">⚡ Infrastructure</div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 bg-green-500 border-2 border-white/30 shadow-sm transform rotate-45" />
+                      <span className="text-slate-200 text-xs font-medium">Power Node</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-full bg-cyan-500 border-2 border-white/30 shadow-sm" />
+                      <span className="text-slate-200 text-xs font-medium">IoT Sensor</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Controls Help */}
+              <div className="mt-4 pt-3 border-t border-white/10 text-center">
+                <p className="text-slate-400 text-xs font-medium">
+                  👆 Tap markers for details • Pinch to zoom • Drag to pan
+                </p>
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        /* Desktop Legend */
+        <div className="absolute bottom-4 right-4 bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg p-4 border border-white/10 text-sm space-y-2 max-w-xs">
+          <h4 className="font-semibold text-white mb-3">Map Legend</h4>
+          <div className="flex items-center space-x-2">
+            <div className="w-4 h-4 rounded-full bg-green-500 border-2 border-white/20 shadow-sm" />
+            <span className="text-slate-300">Water Tank (Good)</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-4 h-4 rounded-full bg-yellow-500 border-2 border-white/20 shadow-sm" />
+            <span className="text-slate-300">Water Tank (Warning)</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-4 h-4 rounded-full bg-red-500 border-2 border-white/20 shadow-sm" />
+            <span className="text-slate-300">Water Tank (Critical)</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 bg-green-500 border-2 border-white/20 shadow-sm transform rotate-45" />
+            <span className="text-slate-300">Power Node</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 rounded-full bg-cyan-500 border-2 border-white/20 shadow-sm" />
+            <span className="text-slate-300">IoT Sensor</span>
+          </div>
+          <div className="pt-2 mt-2 border-t border-white/10 text-xs text-slate-400">
+            💡 Scroll to zoom • Drag to pan • Right-click drag to rotate
+          </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 rounded-full bg-yellow-500 border-2 border-white/20 shadow-sm" />
-          <span className="text-slate-300">Water Tank (Warning)</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 rounded-full bg-red-500 border-2 border-white/20 shadow-sm" />
-          <span className="text-slate-300">Water Tank (Critical)</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-3 h-3 bg-green-500 border-2 border-white/20 shadow-sm transform rotate-45" />
-          <span className="text-slate-300">Power Node</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-3 h-3 rounded-full bg-cyan-500 border-2 border-white/20 shadow-sm" />
-          <span className="text-slate-300">IoT Sensor</span>
-        </div>
-        <div className="pt-2 mt-2 border-t border-white/10 text-xs text-slate-400">
-          💡 Scroll to zoom • Drag to pan • Right-click drag to rotate
-        </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -265,6 +265,89 @@ body.mobile-app {
   height: 100% !important;
 }
 
+/* Style MapLibre Navigation & Fullscreen Controls for Mobile */
+.mobile-app .maplibregl-ctrl-group {
+  background-color: rgba(15, 23, 42, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+  overflow: hidden;
+}
+
+.mobile-app .maplibregl-ctrl-group button {
+  background-color: transparent !important;
+  width: 44px !important;
+  height: 44px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.mobile-app .maplibregl-ctrl-group button:last-child {
+  border-bottom: none !important;
+}
+
+.mobile-app .maplibregl-ctrl-group button:active {
+  background-color: rgba(56, 189, 248, 0.3) !important;
+}
+
+/* Hide default icons and use custom SVGs for mobile */
+.mobile-app .maplibregl-ctrl-icon {
+  background-image: none !important;
+  background-color: transparent !important;
+}
+
+/* Zoom In Button - Plus sign (Cyan) */
+.mobile-app .maplibregl-ctrl-zoom-in .maplibregl-ctrl-icon {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2322d3ee' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='5' x2='12' y2='19'%3E%3C/line%3E%3Cline x1='5' y1='12' x2='19' y2='12'%3E%3C/line%3E%3C/svg%3E") !important;
+  background-size: 22px 22px !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+/* Zoom Out Button - Minus sign (Cyan) */
+.mobile-app .maplibregl-ctrl-zoom-out .maplibregl-ctrl-icon {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2322d3ee' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='5' y1='12' x2='19' y2='12'%3E%3C/line%3E%3C/svg%3E") !important;
+  background-size: 22px 22px !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+/* Fullscreen Button - Expand icon (Cyan) */
+.mobile-app .maplibregl-ctrl-fullscreen .maplibregl-ctrl-icon {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2322d3ee' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='15 3 21 3 21 9'%3E%3C/polyline%3E%3Cpolyline points='9 21 3 21 3 15'%3E%3C/polyline%3E%3Cline x1='21' y1='3' x2='14' y2='10'%3E%3C/line%3E%3Cline x1='3' y1='21' x2='10' y2='14'%3E%3C/line%3E%3C/svg%3E") !important;
+  background-size: 20px 20px !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+/* Fullscreen Exit Button - Shrink icon (Cyan) */
+.mobile-app .maplibregl-ctrl-shrink .maplibregl-ctrl-icon {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2322d3ee' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='4 14 10 14 10 20'%3E%3C/polyline%3E%3Cpolyline points='20 10 14 10 14 4'%3E%3C/polyline%3E%3Cline x1='14' y1='10' x2='21' y2='3'%3E%3C/line%3E%3Cline x1='3' y1='21' x2='10' y2='14'%3E%3C/line%3E%3C/svg%3E") !important;
+  background-size: 20px 20px !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+/* Compass Button - Arrow icon (Pink) */
+.mobile-app .maplibregl-ctrl-compass .maplibregl-ctrl-icon {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23f472b6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='12 2 19 21 12 17 5 21 12 2'%3E%3C/polygon%3E%3C/svg%3E") !important;
+  background-size: 20px 20px !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+/* Scale control styling */
+.mobile-app .maplibregl-ctrl-scale {
+  background-color: rgba(15, 23, 42, 0.85) !important;
+  color: #94a3b8 !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 6px !important;
+  font-size: 11px !important;
+  padding: 2px 6px !important;
+}
+
 /* Remove outlines on tap */
 .mobile-app * {
   -webkit-tap-highlight-color: transparent;
