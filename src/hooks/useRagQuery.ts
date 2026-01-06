@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { API_URL } from '../config/api';
 
 interface RagQueryRequest {
   question: string;
@@ -55,7 +56,7 @@ export default function useRagQuery(): UseRagQueryResult {
       
       setLoadingStage('processing');
 
-      const response = await fetch('http://192.168.29.179:3001/api/rag-query', {
+      const response = await fetch(`${API_URL}/api/rag-query`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -5,7 +5,7 @@ import crypto from 'crypto';
  * Uses cryptographic hashing to ensure escalation records cannot be tampered with
  */
 
-// Authority levels and their details
+// Authority levels and their detailshy it is showsing failed to fetch but nt is cone
 const AUTHORITY_LEVELS = {
   0: { name: 'sarpanch', title: 'Village Sarpanch', timeframeDays: 7 },
   1: { name: 'block_officer', title: 'Block Development Officer', timeframeDays: 10 },
