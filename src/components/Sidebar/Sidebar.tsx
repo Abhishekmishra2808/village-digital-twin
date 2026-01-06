@@ -2,7 +2,6 @@ import {
   Home, 
   Droplet, 
   Zap, 
-  Sprout,
   Bell,
   BarChart3,
   Settings,
@@ -10,7 +9,6 @@ import {
   ChevronRight,
   Map,
   Leaf,
-  CloudRain,
   Briefcase,
   Shield
 } from 'lucide-react';
@@ -20,13 +18,11 @@ const menuItems = [
   { id: 'dashboard', icon: Home, label: 'Dashboard' },
   { id: 'map', icon: Map, label: '3D Map View' },
   { id: 'schemes', icon: Briefcase, label: 'Government Schemes' },
+  { id: 'anonymous-reports', icon: Shield, label: 'Citizen Reports' },
   { id: 'water', icon: Droplet, label: 'Water Infrastructure' },
   { id: 'power', icon: Zap, label: 'Power Grid' },
-  { id: 'agriculture', icon: Sprout, label: 'Agriculture' },
   { id: 'environment', icon: Leaf, label: 'Environment Monitor' },
-  { id: 'flood', icon: CloudRain, label: 'Flood Prediction' },
   { id: 'alerts', icon: Bell, label: 'Alerts & Notifications' },
-  { id: 'anonymous-reports', icon: Shield, label: 'Citizen Reports' },
   { id: 'analytics', icon: BarChart3, label: 'Analytics' },
   { id: 'settings', icon: Settings, label: 'Settings' },
 ];
@@ -47,7 +43,7 @@ export default function Sidebar() {
     if (userRole === 'user') {
       // Citizens see basic menu including anonymous reports
       return menuItems.filter(item => 
-        ['dashboard', 'map', 'schemes', 'water', 'power', 'environment', 'flood', 'anonymous-reports', 'settings'].includes(item.id)
+        ['dashboard', 'map', 'schemes', 'anonymous-reports', 'water', 'power', 'environment', 'settings'].includes(item.id)
       );
     }
     // Admin sees all

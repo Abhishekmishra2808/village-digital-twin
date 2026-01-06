@@ -271,17 +271,19 @@ export default function AnonymousReportsView() {
           <Eye className="w-4 h-4" />
           Browse Reports
         </button>
-        <button
-          onClick={() => setActiveTab('submit')}
-          className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
-            activeTab === 'submit' 
-              ? 'bg-cyan-500/20 text-cyan-400' 
-              : 'text-slate-400 hover:bg-slate-800'
-          }`}
-        >
-          <Send className="w-4 h-4" />
-          Submit Report
-        </button>
+        {!isAdmin && (
+          <button
+            onClick={() => setActiveTab('submit')}
+            className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
+              activeTab === 'submit' 
+                ? 'bg-cyan-500/20 text-cyan-400' 
+                : 'text-slate-400 hover:bg-slate-800'
+            }`}
+          >
+            <Send className="w-4 h-4" />
+            Submit Report
+          </button>
+        )}
         <button
           onClick={() => setActiveTab('track')}
           className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
