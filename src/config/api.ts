@@ -2,7 +2,7 @@
 // Automatically detects environment and uses appropriate backend URL
 
 // Local development IP - update this to your machine's IP
-const LOCAL_DEV_IP = '192.168.29.179';
+const LOCAL_DEV_IP = 'localhost';
 const LOCAL_DEV_PORT = '3001';
 
 // Check if running on Capacitor (mobile app)

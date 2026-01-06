@@ -101,7 +101,10 @@ function getSeverityColor(severity) {
 function printAffectedNode(node, index) {
   const sevColor = getSeverityColor(node.severity);
   console.log(`    ${colors.white}${index + 1}. ${colors.bright}${node.nodeName}${colors.reset}`);
-  console.log(`       Type: ${colors.cyan}${node.nodeType}${colors.reset} | Severity: ${sevColor}${node.severity.toUpperCase()}${colors.reset} | Probability: ${(node.probability * 100).toFixed(0)}%`);
+  // Fix probability display - ensure it's a percentage between 0-100
+  const probPercent = node.probability > 100 ? Math.min(98, node.probability / 100) : Math.min(98, node.probability);
+  
+  console.log(`       Type: ${colors.cyan}${node.nodeType}${colors.reset} | Severity: ${sevColor}${node.severity.toUpperCase()}${colors.reset} | Probability: ${probPercent.toFixed(0)}%`);
   console.log(`       Time to Impact: ${colors.magenta}${node.timeToImpact} mins${colors.reset}`);
   if (node.effects && node.effects.length > 0) {
     console.log(`       Effects: ${colors.yellow}${node.effects.slice(0, 2).join(', ')}${colors.reset}`);
