@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { useVillageStore } from './store/villageStore';
+import { demoVillageData } from './data/demoVillageData';
 import LandingPage from './components/Landing/LandingPage';
 import LoginPage from './components/Auth/LoginPageNew';
 import TopNav from './components/Layout/TopNav';
@@ -29,10 +30,18 @@ import MobileLoginPage from './components/Auth/MobileLoginPage';
 import MobileDashboard from './components/Dashboard/MobileDashboard';
 
 function App() {
-  const { activeView, sidebarCollapsed, infoPanelOpen, isAuthenticated, userRole } = useVillageStore();
+  const { activeView, sidebarCollapsed, infoPanelOpen, isAuthenticated, userRole, setVillageData, waterTanks } = useVillageStore();
   const [showLanding, setShowLanding] = useState(true);
   const isMobile = Capacitor.isNativePlatform();
   useWebSocket();
+
+  // Load demo data on startup if no data loaded
+  useEffect(() => {
+    if (waterTanks.length === 0) {
+      console.log('🏘️ Loading demo village data with built-in network...');
+      setVillageData(demoVillageData);
+    }
+  }, [waterTanks.length, setVillageData]);
 
   // Control body overflow based on authentication state
   useEffect(() => {

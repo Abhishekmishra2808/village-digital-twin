@@ -20,7 +20,7 @@ const menuItems = [
   { id: 'map', icon: Map, label: '3D Map View' },
   { id: 'schemes', icon: Briefcase, label: 'Government Schemes' },
   { id: 'anonymous-reports', icon: Shield, label: 'Citizen Reports' },
-  { id: 'impact-predictor', icon: Network, label: 'Impact Predictor' },
+  { id: 'impact-predictor', icon: Network, label: 'Village Analyzer' },
   { id: 'water', icon: Droplet, label: 'Water Infrastructure' },
   { id: 'power', icon: Zap, label: 'Power Grid' },
   { id: 'environment', icon: Leaf, label: 'Environment Monitor' },
