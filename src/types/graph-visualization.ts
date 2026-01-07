@@ -3,7 +3,7 @@
  * These types match the output structure from the backend GNN service
  */
 
-export type NodeType = 'power' | 'water' | 'road' | 'building' | 'pump' | 'hospital' | 'school' | 'tank' | 'transformer' | 'line';
+export type NodeType = 'power' | 'water' | 'road' | 'building' | 'pump' | 'hospital' | 'school' | 'tank' | 'transformer' | 'line' | 'market' | 'cluster' | 'pipe' | 'sensor' | 'residential' | 'commercial' | 'industrial';
 
 export type SeverityLevel = 'critical' | 'high' | 'medium' | 'low' | 'none';
 
@@ -28,6 +28,8 @@ export interface GraphNode {
   y?: number;
   vx?: number;
   vy?: number;
+  fx?: number | null;  // Fixed x position
+  fy?: number | null;  // Fixed y position
   
   // For hover/selection features
   neighbors?: GraphNode[];
