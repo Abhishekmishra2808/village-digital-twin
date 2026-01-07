@@ -12,6 +12,7 @@ import schemesRoutes from './routes/schemes.js';
 import llmStatusRoutes from './routes/llmStatus.js';
 import ragRoutes from './routes/rag.js';
 import anonymousReportsRoutes from './routes/anonymousReports.js';
+import gnnRoutes from './routes/gnn.js';
 import Scheme from './models/Scheme.js';
 import Feedback from './models/Feedback.js';
 
@@ -63,6 +64,7 @@ app.use('/api/schemes', schemesRoutes);
 app.use('/api/llm', llmStatusRoutes);
 app.use('/api/rag-query', ragRoutes);
 app.use('/api/anonymous-reports', anonymousReportsRoutes);
+app.use('/api/gnn', gnnRoutes);
 
 // Initialize village data (in-memory for real-time sensors, schemes from DB)
 let villageState = generateVillageData();

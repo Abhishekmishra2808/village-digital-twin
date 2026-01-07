@@ -20,6 +20,8 @@ import MapView from './components/Views/MapView';
 import EnvironmentView from './components/Views/EnvironmentView';
 import SchemesView from './components/Views/SchemesView';
 import AdminControls from './components/ControlPanel/AdminControls';
+import ImpactPredictorView from './components/Views/ImpactPredictorView';
+import GNNImpactDemo from './pages/GNNImpactDemo';
 import useWebSocket from './hooks/useWebSocket';
 import MobileNav from './components/Layout/MobileNav';
 import MobileHeader from './components/Layout/MobileHeader';
@@ -89,6 +91,8 @@ function App() {
         return isMobile ? <MobileAnonymousReports /> : <AnonymousReportsView />;
       case 'analytics':
         return userRole === 'admin' ? <AnalyticsView /> : <Dashboard />;
+      case 'impact-predictor':
+        return <ImpactPredictorView />;
       case 'settings':
         return <SettingsView />;
       default:
