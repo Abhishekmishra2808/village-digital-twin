@@ -25,6 +25,9 @@ import {
   Heart,
   ShoppingCart,
   Radio,
+  X,
+  Zap as PowerIcon,
+  Gauge,
 } from 'lucide-react';
 import useGNN from '../../hooks/useGNN';
 import type { 
@@ -35,6 +38,8 @@ import type {
   VulnerableNode 
 } from '../../types/gnn';
 import type { WaterSimulationState } from '../../types/water';
+import ImpactGraphVisualizer from '../ImpactGraphVisualizer';
+import type { GraphVisualizationData, GraphNode, GraphLink, SeverityLevel } from '../../types/graph-visualization';
 
 // Extended village state interface for all infrastructure
 interface VillageState {
@@ -129,6 +134,7 @@ export const ImpactPredictionPanel: React.FC<ImpactPredictionPanelProps> = ({
   const [showVulnerabilities, setShowVulnerabilities] = useState(false);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [nodeTypeFilter, setNodeTypeFilter] = useState<string>('all');
+  const [selectedNodeForDetails, setSelectedNodeForDetails] = useState<AffectedNode | null>(null);
 
   // Get combined state - prefer villageState, fall back to waterState
   const combinedState = useMemo(() => {
@@ -159,7 +165,7 @@ export const ImpactPredictionPanel: React.FC<ImpactPredictionPanelProps> = ({
     if (!selectedNode) return scenarios;
     const node = nodes.find(n => n.id === selectedNode);
     if (!node) return scenarios;
-    return scenarios.filter(s => s.applicableTo.includes(node.type));
+    return scenarios.filter(s => s.applicableTo && Array.isArray(s.applicableTo) && s.applicableTo.includes(node.type));
   }, [selectedNode, nodes, scenarios]);
 
   const handleRunPrediction = async () => {
@@ -207,7 +213,8 @@ export const ImpactPredictionPanel: React.FC<ImpactPredictionPanelProps> = ({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="relative flex gap-4">
+      <div className="flex-1 space-y-4">
       {/* Header */}
       <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
         <div className="flex items-center justify-between mb-4">
@@ -385,11 +392,21 @@ export const ImpactPredictionPanel: React.FC<ImpactPredictionPanelProps> = ({
         />
       )}
 
-      {/* Network Visualization */}
+      {/* Interactive Graph Visualization */}
       {currentPrediction && (
-        <NetworkVisualization 
+        <ImpactGraphVisualizationWrapper 
           prediction={currentPrediction}
           nodes={nodes}
+          onNodeClick={setSelectedNodeForDetails}
+        />
+      )}
+      </div>
+
+      {/* Right Sidebar for Node Details */}
+      {selectedNodeForDetails && (
+        <NodeDetailsSidebar
+          node={selectedNodeForDetails}
+          onClose={() => setSelectedNodeForDetails(null)}
         />
       )}
     </div>
@@ -693,97 +710,306 @@ const AffectedNodeCard: React.FC<{
   );
 };
 
-// Simple Network Visualization
-const NetworkVisualization: React.FC<{
+// Interactive Graph Visualization Wrapper
+const ImpactGraphVisualizationWrapper: React.FC<{
   prediction: ImpactPrediction;
   nodes: GNNNode[];
-}> = ({ prediction, nodes }) => {
+  onNodeClick: (node: AffectedNode) => void;
+}> = ({ prediction, nodes, onNodeClick }) => {
   const { sourceFailure, affectedNodes, propagationPath } = prediction;
+  const [currentTime, setCurrentTime] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
 
-  // Create a simple flow visualization
-  const flowPaths = useMemo(() => {
-    if (!propagationPath.length) return [];
+  // Start cascade animation
+  useEffect(() => {
+    // Reset animation when prediction changes
+    setIsAnimating(false);
+    setCurrentTime(0);
     
-    // Group by depth for layered visualization
-    const byDepth: { [key: number]: typeof propagationPath } = {};
-    propagationPath.forEach(p => {
-      if (!byDepth[p.depth]) byDepth[p.depth] = [];
-      byDepth[p.depth].push(p);
+    const maxTime = Math.max(...affectedNodes.map(n => n.timeToImpact), 1);
+    const startTime = Date.now();
+    const duration = maxTime * 500; // 500ms per hour
+    
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      setCurrentTime(progress * maxTime);
+      
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        setIsAnimating(true);
+      }
+    };
+    
+    requestAnimationFrame(animate);
+  }, [prediction, affectedNodes]);
+
+  // Transform prediction data to graph visualization format
+  const graphData = useMemo((): GraphVisualizationData => {
+    // Create graph nodes
+    const graphNodes: GraphNode[] = [];
+    
+    // Add source node (epicenter)
+    graphNodes.push({
+      id: sourceFailure.nodeId,
+      name: sourceFailure.nodeName,
+      type: sourceFailure.nodeType as any,
+      isEpicenter: true,
+      severity: 'critical' as SeverityLevel,
+      probability: 100,
+      pulse: true
     });
     
-    return Object.entries(byDepth).map(([depth, paths]) => ({
-      depth: parseInt(depth),
-      paths
-    }));
-  }, [propagationPath]);
+    // Add affected nodes with timeToImpact for sequential animation
+    affectedNodes.forEach(node => {
+      graphNodes.push({
+        id: node.nodeId,
+        name: node.nodeName,
+        type: node.nodeType as any,
+        severity: node.severity as SeverityLevel,
+        probability: node.probability,
+        isEpicenter: false,
+        timeToImpact: node.timeToImpact
+      });
+    });
+    
+    // Create links from propagation paths
+    const graphLinks: GraphLink[] = [];
+    
+    if (propagationPath && propagationPath.length > 0) {
+      propagationPath.forEach(path => {
+        const targetNode = affectedNodes.find(n => n.nodeId === path.to);
+        const shouldShow = !targetNode || currentTime >= targetNode.timeToImpact;
+        
+        graphLinks.push({
+          source: path.from,
+          target: path.to,
+          type: 'impact-flow',
+          particles: shouldShow ? Math.floor(path.weight * 5) + 1 : 0,
+          particleSpeed: 0.01,
+          particleWidth: 3
+        });
+      });
+    } else {
+      // Sequential direct links from source to affected nodes based on timeToImpact
+      affectedNodes.forEach(node => {
+        const shouldShow = currentTime >= node.timeToImpact;
+        
+        graphLinks.push({
+          source: sourceFailure.nodeId,
+          target: node.nodeId,
+          type: 'impact-flow',
+          particles: shouldShow ? (node.severity === 'critical' ? 5 : node.severity === 'high' ? 3 : 2) : 0,
+          particleSpeed: 0.01,
+          particleWidth: 3
+        });
+      });
+    }
+    
+    return { nodes: graphNodes, links: graphLinks };
+  }, [prediction, sourceFailure, affectedNodes, propagationPath]);
+
+  const handleNodeClick = (graphNode: any) => {
+    // Find the corresponding affected node with full details
+    const affectedNode = affectedNodes.find(n => n.nodeId === graphNode.id);
+    if (affectedNode) {
+      onNodeClick(affectedNode);
+    }
+  };
 
   return (
     <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-      <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-        <Network className="w-5 h-5 text-cyan-400" />
-        Impact Propagation Flow
-      </h3>
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+            <Network className="w-5 h-5 text-cyan-400" />
+            Slow-Motion Cascade Visualization
+          </h3>
+          <p className="text-sm text-slate-400 mt-1">
+            Watch impacts cascade in sequence. Click nodes for detailed metrics →
+          </p>
+        </div>
+        <div className="text-right">
+          <div className="text-xs text-slate-500">Animation Time</div>
+          <div className="text-lg font-mono text-cyan-400">{currentTime.toFixed(1)}h</div>
+        </div>
+      </div>
+      <ImpactGraphVisualizer
+        visualizationData={graphData}
+        height={600}
+        backgroundColor="#0f1419"
+        showLegend={true}
+        enableInteraction={true}
+        onNodeClick={handleNodeClick}
+      />
+    </div>
+  );
+};
 
-      {/* Simple flow diagram */}
-      <div className="flex flex-wrap items-start gap-4 overflow-x-auto pb-4">
-        {/* Source Node */}
-        <div className="flex flex-col items-center">
-          <div className="w-20 h-20 rounded-full bg-red-500/20 border-2 border-red-500 flex items-center justify-center">
-            {React.createElement(nodeTypeIcons[sourceFailure.nodeType] || Activity, {
-              className: "w-8 h-8 text-red-400"
-            })}
+// Node Details Sidebar Component
+const NodeDetailsSidebar: React.FC<{
+  node: AffectedNode;
+  onClose: () => void;
+}> = ({ node, onClose }) => {
+  const Icon = nodeTypeIcons[node.nodeType] || Activity;
+  const colors = severityColors[node.severity];
+
+  return (
+    <div className="w-96 bg-slate-800 border-l border-slate-700 p-6 overflow-y-auto max-h-screen">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className={`p-3 rounded-lg ${nodeTypeColors[node.nodeType]}`}>
+            <Icon className="w-6 h-6 text-white" />
           </div>
-          <div className="mt-2 text-center">
-            <div className="text-sm font-medium text-white">{sourceFailure.nodeName}</div>
-            <div className="text-xs text-red-400">FAILURE</div>
+          <div>
+            <h3 className="text-lg font-bold text-white">{node.nodeName}</h3>
+            <p className="text-sm text-slate-400">{nodeTypeLabels[node.nodeType] || node.nodeType}</p>
           </div>
         </div>
+        <button
+          onClick={onClose}
+          className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+        >
+          <X className="w-5 h-5 text-slate-400" />
+        </button>
+      </div>
 
-        {/* Arrow */}
-        {affectedNodes.length > 0 && (
-          <div className="flex items-center self-center">
-            <ArrowRight className="w-8 h-8 text-slate-500" />
-          </div>
-        )}
+      {/* Risk Overview */}
+      <div className={`rounded-lg p-4 mb-6 ${colors.bg} border ${colors.border}`}>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm text-slate-300">Impact Probability</span>
+          <span className={`text-2xl font-bold ${colors.text}`}>{node.probability.toFixed(1)}%</span>
+        </div>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm text-slate-300">Severity Level</span>
+          <span className={`text-lg font-semibold ${colors.text} uppercase`}>{node.severity}</span>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-slate-400">
+          <Clock className="w-4 h-4" />
+          Impact expected in ~{node.timeToImpact} hours
+        </div>
+      </div>
 
-        {/* Affected nodes by severity */}
-        <div className="flex flex-wrap gap-3">
-          {affectedNodes.slice(0, 8).map((node) => {
-            const colors = severityColors[node.severity];
-            const Icon = nodeTypeIcons[node.nodeType] || Activity;
-            
-            return (
-              <div key={node.nodeId} className="flex flex-col items-center">
-                <div className={`w-16 h-16 rounded-full ${colors.bg} border ${colors.border} flex items-center justify-center`}>
-                  <Icon className={`w-6 h-6 ${colors.text}`} />
-                </div>
-                <div className="mt-1 text-center max-w-16">
-                  <div className="text-xs font-medium text-white truncate">{node.nodeName}</div>
-                  <div className={`text-xs ${colors.text}`}>{node.probability}%</div>
-                </div>
+      {/* Key Metrics */}
+      <div className="mb-6">
+        <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+          <Gauge className="w-4 h-4" />
+          Key Performance Metrics
+        </h4>
+        <div className="space-y-3">
+          {/* Pressure/Supply */}
+          {node.metrics.pressureDrop !== undefined && (
+            <div className="bg-slate-700/50 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm text-slate-400">Pressure Drop</span>
+                <span className="text-lg font-bold text-white">{node.metrics.pressureDrop}%</span>
               </div>
-            );
-          })}
-          {affectedNodes.length > 8 && (
-            <div className="flex flex-col items-center justify-center">
-              <div className="w-16 h-16 rounded-full bg-slate-700 border border-slate-600 flex items-center justify-center">
-                <span className="text-slate-400 text-sm">+{affectedNodes.length - 8}</span>
+              <div className="w-full bg-slate-600 rounded-full h-2">
+                <div 
+                  className="bg-blue-500 h-2 rounded-full transition-all"
+                  style={{ width: `${node.metrics.pressureDrop}%` }}
+                />
               </div>
-              <div className="mt-1 text-xs text-slate-400">more</div>
             </div>
           )}
+
+          {/* Power/Voltage */}
+          {node.metrics.powerImpact !== undefined && (
+            <div className="bg-slate-700/50 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <PowerIcon className="w-4 h-4 text-yellow-400" />
+                  <span className="text-sm text-slate-400">Power Impact</span>
+                </div>
+                <span className="text-lg font-bold text-white">{node.metrics.powerImpact}%</span>
+              </div>
+              <div className="w-full bg-slate-600 rounded-full h-2">
+                <div 
+                  className="bg-yellow-500 h-2 rounded-full transition-all"
+                  style={{ width: `${node.metrics.powerImpact}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Supply Disruption */}
+          <div className="bg-slate-700/50 rounded-lg p-3">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-sm text-slate-400">Supply Disruption</span>
+              <span className="text-lg font-bold text-white">{node.metrics.supplyDisruption}%</span>
+            </div>
+            <div className="w-full bg-slate-600 rounded-full h-2">
+              <div 
+                className="bg-orange-500 h-2 rounded-full transition-all"
+                style={{ width: `${node.metrics.supplyDisruption}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Population Affected */}
+          {node.metrics.populationAffected !== undefined && (
+            <div className="bg-slate-700/50 rounded-lg p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-green-400" />
+                  <span className="text-sm text-slate-400">Population Affected</span>
+                </div>
+                <span className="text-lg font-bold text-white">{node.metrics.populationAffected}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Cascade Risk */}
+          <div className="bg-slate-700/50 rounded-lg p-3">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-sm text-slate-400">Cascade Risk</span>
+              <span className="text-lg font-bold text-white">{node.metrics.cascadeRisk}%</span>
+            </div>
+            <div className="w-full bg-slate-600 rounded-full h-2">
+              <div 
+                className="bg-red-500 h-2 rounded-full transition-all"
+                style={{ width: `${node.metrics.cascadeRisk}%` }}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Legend */}
-      <div className="mt-4 pt-4 border-t border-slate-700 flex flex-wrap gap-4">
-        {Object.entries(severityColors).map(([level, colors]) => (
-          <div key={level} className="flex items-center gap-2">
-            <div className={`w-3 h-3 rounded-full ${colors.bg} border ${colors.border}`} />
-            <span className="text-xs text-slate-400 capitalize">{level}</span>
-          </div>
-        ))}
+      {/* Expected Effects */}
+      <div className="mb-6">
+        <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4" />
+          Expected Effects
+        </h4>
+        <ul className="space-y-2">
+          {node.effects.map((effect, idx) => (
+            <li key={idx} className="flex items-start gap-2 text-sm text-slate-300">
+              <AlertCircle className="w-4 h-4 text-orange-400 mt-0.5 flex-shrink-0" />
+              {effect}
+            </li>
+          ))}
+        </ul>
       </div>
+
+      {/* Recommendations */}
+      {node.recommendations.length > 0 && (
+        <div>
+          <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+            <CheckCircle className="w-4 h-4" />
+            Recommended Actions
+          </h4>
+          <ul className="space-y-2">
+            {node.recommendations.map((rec, idx) => (
+              <li key={idx} className="flex items-start gap-2 text-sm text-green-400">
+                <ArrowRight className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                {rec}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };

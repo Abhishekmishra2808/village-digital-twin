@@ -27,7 +27,7 @@ import {
  * - Consumer clusters
  */
 const ImpactPredictorView: React.FC = () => {
-  const { waterSimulation, setSelectedElement } = useVillageStore();
+  const villageStore = useVillageStore();
   const [useSampleData, setUseSampleData] = useState(true);
   const [showScenarios, setShowScenarios] = useState(false);
   
@@ -40,19 +40,21 @@ const ImpactPredictorView: React.FC = () => {
     
     // Use real store data (may be incomplete)
     return {
-      tanks: waterSimulation?.tanks || [],
-      pumps: waterSimulation?.pumps || [],
-      pipes: waterSimulation?.pipes || [],
-      clusters: waterSimulation?.clusters || [],
-      sensors: waterSimulation?.sensors || [],
-      roads: [],
-      buildings: [],
-      powerNodes: [],
+      tanks: villageStore.waterTanks || [],
+      pumps: [],
+      pipes: [],
+      clusters: [],
+      sensors: villageStore.sensors || [],
+      roads: villageStore.roads || [],
+      buildings: villageStore.buildings || [],
+      powerNodes: villageStore.powerNodes || [],
     };
-  }, [useSampleData, waterSimulation]);
+  }, [useSampleData, villageStore]);
   
   const handleNodeSelect = (nodeId: string) => {
-    setSelectedElement(nodeId);
+    console.log('Node selected:', nodeId);
+    // Optional: use setSelectedAsset if you want to show info panel
+    // villageStore.setSelectedAsset({ id: nodeId, type: 'infrastructure' });
   };
 
   // Infrastructure summary stats

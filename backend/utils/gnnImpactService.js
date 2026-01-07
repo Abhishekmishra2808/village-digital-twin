@@ -165,7 +165,23 @@ class InfrastructureGraph {
     // Historical failure rate
     embedding[23] = properties.failureHistory ? Math.min(properties.failureHistory / 10, 1) : 0.1;
     
-    return embedding;
+    // Apply min-max normalization to ensure embeddings are well-scaled
+    return this.normalizeNodeEmbedding(embedding);
+  }
+  
+  // Min-max normalization for embedding stability
+  normalizeNodeEmbedding(embedding) {
+    const nonZeroValues = embedding.filter(v => v !== 0);
+    if (nonZeroValues.length === 0) return embedding;
+    
+    const min = Math.min(...nonZeroValues);
+    const max = Math.max(...nonZeroValues);
+    const range = max - min;
+    
+    if (range < 1e-10) return embedding;
+    
+    // Normalize while preserving zero values (they carry semantic meaning)
+    return embedding.map(v => v === 0 ? 0 : (v - min) / range);
   }
 
   calculateMaintenanceScore(lastMaintenance) {
@@ -232,6 +248,46 @@ class InfrastructureGraph {
     const dx = coords1[0] - coords2[0];
     const dy = coords1[1] - coords2[1];
     return Math.sqrt(dx * dx + dy * dy);
+  }
+  
+  // Dijkstra's algorithm for shortest path distance in the graph
+  calculateGraphDistance(sourceId, targetId) {
+    if (sourceId === targetId) return 0;
+    
+    const distances = new Map();
+    const visited = new Set();
+    const queue = [{ nodeId: sourceId, distance: 0 }];
+    
+    distances.set(sourceId, 0);
+    
+    while (queue.length > 0) {
+      // Sort by distance (min-heap simulation)
+      queue.sort((a, b) => a.distance - b.distance);
+      const { nodeId, distance } = queue.shift();
+      
+      if (visited.has(nodeId)) continue;
+      visited.add(nodeId);
+      
+      if (nodeId === targetId) {
+        return distance;
+      }
+      
+      // Explore neighbors
+      const neighbors = this.edges.get(nodeId) || [];
+      for (const edge of neighbors) {
+        if (!visited.has(edge.target)) {
+          const newDistance = distance + (1 / (edge.weight || 0.1));
+          const currentDist = distances.get(edge.target) || Infinity;
+          
+          if (newDistance < currentDist) {
+            distances.set(edge.target, newDistance);
+            queue.push({ nodeId: edge.target, distance: newDistance });
+          }
+        }
+      }
+    }
+    
+    return Infinity; // No path found
   }
 
   // Build proximity-based connections between infrastructure
@@ -307,95 +363,190 @@ class InfrastructureGraph {
   }
 }
 
-// Simple GNN Layer implementation (Message Passing)
+// Advanced Graph Attention Network (GAT) Layer with Multi-Head Attention
 class GNNLayer {
-  constructor(inputDim, outputDim) {
+  constructor(inputDim, outputDim, numHeads = 3) {
     this.inputDim = inputDim;
     this.outputDim = outputDim;
-    this.weights = this.initializeWeights(inputDim, outputDim);
-    this.bias = new Array(outputDim).fill(0.1);
-    this.attentionWeights = new Array(inputDim).fill(0).map(() => Math.random() * 0.2 + 0.9);
+    this.numHeads = numHeads;
+    this.headDim = Math.floor(outputDim / numHeads);
+    
+    // Multi-head attention weights
+    this.attentionWeights = [];
+    this.transformWeights = [];
+    for (let h = 0; h < numHeads; h++) {
+      this.attentionWeights.push(this.initializeAttentionWeights(inputDim));
+      this.transformWeights.push(this.initializeWeights(inputDim, this.headDim));
+    }
+    
+    // Output projection
+    this.outputWeights = this.initializeWeights(outputDim, outputDim);
+    this.bias = new Array(outputDim).fill(0).map(() => (Math.random() - 0.5) * 0.2);
+    
+    // Layer normalization parameters
+    this.gamma = new Array(outputDim).fill(1.0);
+    this.beta = new Array(outputDim).fill(0.0);
   }
 
   initializeWeights(inputDim, outputDim) {
-    // Heuristic-based initialization prioritizing criticality dimensions
-    const weights = Array(inputDim).fill(null).map(() => Array(outputDim).fill(0));
-    
-    for (let i = 0; i < inputDim; i++) {
-      for (let j = 0; j < outputDim; j++) {
-        // Criticality dimensions (type encoding 0-11, status 12-16) get higher weights
-        let baseWeight = (i < 12 || (i >= 12 && i <= 16)) ? 0.5 : 0.3;
-        
-        // Add small random variation
-        const variance = (Math.random() * 2 - 1) * 0.15;
-        weights[i][j] = baseWeight + variance;
-      }
-    }
+    // Xavier/Glorot initialization for better gradient flow
+    const limit = Math.sqrt(6 / (inputDim + outputDim));
+    const weights = Array(inputDim).fill(null).map(() => 
+      Array(outputDim).fill(0).map(() => (Math.random() * 2 - 1) * limit)
+    );
     return weights;
+  }
+  
+  initializeAttentionWeights(inputDim) {
+    // Attention mechanism weights for computing attention scores
+    return {
+      queryWeights: new Array(inputDim).fill(0).map(() => (Math.random() - 0.5) * 0.3),
+      keyWeights: new Array(inputDim).fill(0).map(() => (Math.random() - 0.5) * 0.3),
+      valueWeights: new Array(inputDim).fill(0).map(() => (Math.random() - 0.5) * 0.3)
+    };
   }
 
   relu(x) {
     return Math.max(0, x);
   }
+  
+  leakyRelu(x, alpha = 0.1) {
+    return x > 0 ? x : alpha * x;
+  }
 
   sigmoid(x) {
     return 1 / (1 + Math.exp(-Math.max(-500, Math.min(500, x))));
   }
-
-  forward(nodeFeatures, neighborFeatures, adjacencyWeights, relationshipGates = null) {
-    const aggregated = new Array(this.inputDim).fill(0);
-    let totalWeight = 0;
+  
+  // Compute attention score between two nodes
+  computeAttentionScore(nodeFeatures, neighborFeatures, attentionWeights) {
+    // Query from target node, Key from neighbor node
+    let query = 0, key = 0;
+    for (let i = 0; i < this.inputDim; i++) {
+      query += nodeFeatures[i] * attentionWeights.queryWeights[i];
+      key += neighborFeatures[i] * attentionWeights.keyWeights[i];
+    }
+    // Scaled dot-product attention
+    const score = (query * key) / Math.sqrt(this.inputDim);
+    return this.leakyRelu(score);
+  }
+  
+  // Layer normalization
+  layerNorm(features) {
+    const mean = features.reduce((sum, f) => sum + f, 0) / features.length;
+    const variance = features.reduce((sum, f) => sum + Math.pow(f - mean, 2), 0) / features.length;
+    const std = Math.sqrt(variance + 1e-5);
     
-    for (let i = 0; i < neighborFeatures.length; i++) {
-      let weight = adjacencyWeights[i] || 0;
+    return features.map((f, i) => {
+      const normalized = (f - mean) / std;
+      return this.gamma[i] * normalized + this.beta[i];
+    });
+  }
+
+  forward(nodeFeatures, neighborFeatures, adjacencyWeights, relationshipGates = null, residual = null) {
+    const headOutputs = [];
+    
+    // Multi-head attention
+    for (let h = 0; h < this.numHeads; h++) {
+      const attWeights = this.attentionWeights[h];
+      const transWeights = this.transformWeights[h];
       
-      // Apply relationship gating if provided
-      if (relationshipGates && relationshipGates[i] !== undefined) {
-        weight *= relationshipGates[i];
-      }
-      
-      if (weight > 0) {
-        totalWeight += weight;
-        for (let j = 0; j < this.inputDim; j++) {
-          aggregated[j] += (neighborFeatures[i][j] || 0) * weight;
+      // Compute attention scores for all neighbors
+      const attentionScores = [];
+      for (let i = 0; i < neighborFeatures.length; i++) {
+        const structuralWeight = adjacencyWeights[i] || 0;
+        if (structuralWeight > 0) {
+          let attScore = this.computeAttentionScore(nodeFeatures, neighborFeatures[i], attWeights);
+          
+          // Combine structural and learned attention
+          attScore = attScore * structuralWeight;
+          
+          // Apply relationship gating
+          if (relationshipGates && relationshipGates[i] !== undefined) {
+            attScore *= relationshipGates[i];
+          }
+          
+          attentionScores.push({ index: i, score: attScore });
         }
       }
-    }
-    
-    if (totalWeight > 0) {
-      for (let j = 0; j < this.inputDim; j++) {
-        aggregated[j] /= totalWeight;
+      
+      // Softmax normalization of attention scores
+      const maxScore = Math.max(...attentionScores.map(a => a.score), 0);
+      const expScores = attentionScores.map(a => ({
+        index: a.index,
+        score: Math.exp(a.score - maxScore)
+      }));
+      const sumExp = expScores.reduce((sum, a) => sum + a.score, 0) + 1e-10;
+      const normalizedAttention = expScores.map(a => ({
+        index: a.index,
+        weight: a.score / sumExp
+      }));
+      
+      // Aggregate neighbor features with attention weights
+      const aggregated = new Array(this.inputDim).fill(0);
+      for (const { index, weight } of normalizedAttention) {
+        for (let j = 0; j < this.inputDim; j++) {
+          aggregated[j] += neighborFeatures[index][j] * weight;
+        }
       }
+      
+      // Transform aggregated features
+      const headOutput = new Array(this.headDim).fill(0);
+      for (let i = 0; i < this.headDim; i++) {
+        for (let j = 0; j < this.inputDim; j++) {
+          headOutput[i] += aggregated[j] * transWeights[j][i];
+        }
+        headOutput[i] = this.leakyRelu(headOutput[i]);
+      }
+      
+      headOutputs.push(headOutput);
     }
     
-    // Gated aggregation: reduce influence of irrelevant features
-    const combined = nodeFeatures.map((f, i) => {
-      const gate = this.attentionWeights[i] || 0.5;
-      return f * gate + aggregated[i] * (1 - gate);
-    });
+    // Concatenate multi-head outputs
+    const concatenated = headOutputs.flat();
     
+    // Output projection
     const output = new Array(this.outputDim).fill(0);
     for (let i = 0; i < this.outputDim; i++) {
-      for (let j = 0; j < this.inputDim; j++) {
-        output[i] += combined[j] * this.weights[j][i];
+      for (let j = 0; j < concatenated.length; j++) {
+        output[i] += (concatenated[j] || 0) * (this.outputWeights[j] ? this.outputWeights[j][i] : 0);
       }
-      output[i] = this.relu(output[i] + this.bias[i]);
+      output[i] += this.bias[i];
     }
     
-    return output;
+    // Add residual connection if provided
+    let finalOutput = output;
+    if (residual && residual.length === output.length) {
+      finalOutput = output.map((v, i) => v + residual[i]);
+    }
+    
+    // Layer normalization
+    return this.layerNorm(finalOutput);
   }
 }
 
-// Impact Prediction GNN Model for Village Infrastructure
+// Impact Prediction GNN Model for Village Infrastructure with Temporal Dynamics
 class ImpactPredictionGNN {
   constructor() {
-    this.layer1 = new GNNLayer(24, 48);  // Expand features
-    this.layer2 = new GNNLayer(48, 48);  // Message passing
-    this.layer3 = new GNNLayer(48, 12);  // Impact prediction head
+    this.layer1 = new GNNLayer(24, 48, 3);  // Expand features with 3 attention heads
+    this.layer2 = new GNNLayer(48, 48, 3);  // Message passing with 3 attention heads
+    this.layer3 = new GNNLayer(48, 48, 2);  // Additional layer for deeper learning
+    this.layer4 = new GNNLayer(48, 12, 1);  // Impact prediction head
+    
+    // Temporal decay parameters
+    this.timeDecayRate = 0.15; // How fast impact decays over time
+    this.propagationVelocity = 0.5; // Speed of impact propagation (edges per minute)
   }
 
   sigmoid(x) {
     return 1 / (1 + Math.exp(-Math.max(-500, Math.min(500, x))));
+  }
+  
+  // Normalize embeddings to unit norm for better numerical stability
+  normalizeEmbedding(embedding) {
+    const norm = Math.sqrt(embedding.reduce((sum, v) => sum + v * v, 0));
+    if (norm < 1e-10) return embedding;
+    return embedding.map(v => v / norm);
   }
 
   predictImpact(graph, failedNodeId, failureType, failureSeverity) {
@@ -424,6 +575,11 @@ class ImpactPredictionGNN {
       embeddings[failedIdx][17] = Math.min(1, criticality * 1.2);
     }
     
+    // Pre-compute graph distances from failed node for temporal decay
+    const graphDistances = nodeIds.map(targetId => 
+      graph.calculateGraphDistance(failedNodeId, targetId)
+    );
+    
     // Compute relationship gating for each node
     const relationshipGates = nodeIds.map((targetId, i) => {
       return nodeIds.map((sourceId, j) => {
@@ -434,19 +590,31 @@ class ImpactPredictionGNN {
       });
     });
     
-    // GNN forward passes with relationship gating
+    // Normalize embeddings for better gradient flow
+    embeddings = embeddings.map(emb => this.normalizeEmbedding(emb));
+    
+    // GNN forward passes with residual connections and relationship gating
     let hidden1 = embeddings.map((emb, i) => {
       const neighborEmbs = nodeIds.map((_, j) => embeddings[j]);
-      return this.layer1.forward(emb, neighborEmbs, adjacencyMatrix[i], relationshipGates[i]);
+      return this.layer1.forward(emb, neighborEmbs, adjacencyMatrix[i], relationshipGates[i], null);
     });
     
+    // Second layer with residual from input
     let hidden2 = hidden1.map((emb, i) => {
-      return this.layer2.forward(emb, hidden1, adjacencyMatrix[i], relationshipGates[i]);
+      // Pad embeddings to match dimensions for residual
+      const paddedInput = [...embeddings[i], ...new Array(48 - embeddings[i].length).fill(0)];
+      return this.layer2.forward(emb, hidden1, adjacencyMatrix[i], relationshipGates[i], paddedInput);
     });
     
-    const impactScores = hidden2.map((emb, i) => {
-      const output = this.layer3.forward(emb, hidden2, adjacencyMatrix[i], relationshipGates[i]);
-      return this.interpretImpactOutput(output, graph.nodes.get(nodeIds[i]).type, failedNode?.type);
+    // Third layer with residual from first layer
+    let hidden3 = hidden2.map((emb, i) => {
+      return this.layer3.forward(emb, hidden2, adjacencyMatrix[i], relationshipGates[i], hidden1[i]);
+    });
+    
+    // Output layer
+    const impactScores = hidden3.map((emb, i) => {
+      const output = this.layer4.forward(emb, hidden3, adjacencyMatrix[i], relationshipGates[i], null);
+      return this.interpretImpactOutput(output, graph.nodes.get(nodeIds[i]).type, failedNode?.type, graphDistances[i]);
     });
     
     return this.analyzeImpact(graph, failedNodeId, failureType, failureSeverity, impactScores, nodeIds);
@@ -483,9 +651,9 @@ class ImpactPredictionGNN {
     if (failedType && dependencyMatrix[failedType] && dependencyMatrix[failedType][targetType]) {
       gate = dependencyMatrix[failedType][targetType];
     } else if (failedType === targetType) {
-      gate = 0.8; // Same type has moderate impact
+      gate = 0.7; // Same type has moderate impact
     } else {
-      gate = 0.3; // Default weak connection
+      gate = 0.05; // Default very weak connection (reduced from 0.3)
     }
     
     // Failure-type specific modifiers
@@ -505,10 +673,29 @@ class ImpactPredictionGNN {
     return Math.max(0, Math.min(1, gate));
   }
 
-  interpretImpactOutput(output, nodeType, sourceType) {
-    // Normalize output values to 0-1 range first (they come from ReLU, can be large)
+  interpretImpactOutput(output, nodeType, sourceType, graphDistance = 1) {
+    // Apply temporal decay based on graph distance
+    let temporalDecay = 1.0;
+    let timeToImpact = 1.0;
+    
+    if (graphDistance === Infinity || graphDistance > 50) {
+      // Disconnected or very far nodes: heavy penalty but not zero
+      // This handles both truly disconnected nodes and weakly connected graphs
+      temporalDecay = 0.02; // 2% residual impact for extreme distance
+      timeToImpact = graphDistance === Infinity ? Infinity : graphDistance / this.propagationVelocity;
+    } else if (graphDistance > 10) {
+      // Far but connected: strong decay
+      timeToImpact = graphDistance / this.propagationVelocity;
+      temporalDecay = Math.exp(-0.25 * timeToImpact);
+    } else {
+      // Close nodes: moderate decay
+      timeToImpact = Math.max(1, graphDistance / this.propagationVelocity);
+      temporalDecay = Math.exp(-0.15 * timeToImpact);
+    }
+    
+    // Normalize output values to 0-1 range first (they come from layer norm)
     const maxOutput = Math.max(...output.map(Math.abs), 1);
-    const normalizedOutput = output.map(v => v / maxOutput);
+    const normalizedOutput = output.map(v => v / maxOutput * temporalDecay);
     
     // Apply type-specific scaling factors (but keep them moderate)
     const typeMultiplier = this.getTypeImpactMultiplier(nodeType, sourceType);
@@ -521,7 +708,7 @@ class ImpactPredictionGNN {
     const baseImpact = {
       impactProbability: probValue,
       severityScore: this.sigmoid(normalizedOutput[1] * (0.45 + typeMultiplier * 0.27)),
-      timeToImpact: Math.max(0.5, Math.abs(normalizedOutput[2]) * 30), // Minutes
+      timeToImpact: timeToImpact === Infinity ? Infinity : Math.max(0.5, timeToImpact), // Minutes from graph distance
       accessDisruption: this.sigmoid(normalizedOutput[3] * 1.2),
       serviceDisruption: this.sigmoid(normalizedOutput[4] * 1.1),
       economicImpact: this.sigmoid(normalizedOutput[5] * 0.95),
@@ -574,31 +761,43 @@ class ImpactPredictionGNN {
       const node = graph.nodes.get(nodeId);
       const score = impactScores[idx];
       
-      // PHYSICS-BASED DECAY: Use inverse square law (1/d²)
-      const distance = this.calculateNodeDistance(graph, failedNodeId, nodeId);
-      const physicsDecay = distance > 0 ? 1 / Math.pow(distance, 2) : 1;
+      // Use graph-based distance (already incorporated in temporal decay)
+      const adjustedProbability = score.impactProbability;
       
-      // Normalize physics decay to reasonable range (0.1 to 1.0)
-      const normalizedDecay = Math.max(0.1, Math.min(1.0, physicsDecay));
+      // ADAPTIVE THRESHOLD: Based on multiple factors
+      const nodeCriticality = node.properties.criticalityLevel || 0.5;
+      const nodeConnectivity = (graph.edges.get(nodeId) || []).length;
+      const avgConnectivity = Array.from(graph.edges.values()).reduce((sum, e) => sum + e.length, 0) / graph.edges.size;
+      const connectivityFactor = nodeConnectivity / Math.max(avgConnectivity, 1);
       
-      const adjustedProbability = score.impactProbability * normalizedDecay;
+      // Compute adaptive threshold: higher connectivity and criticality = lower threshold
+      // Base threshold at 38% for realistic impact detection
+      const baseThreshold = 0.38;
+      const criticalityAdjustment = (1 - nodeCriticality) * 0.15;
+      const connectivityAdjustment = (1 - Math.min(connectivityFactor, 1)) * 0.10;
+      const threshold = baseThreshold + criticalityAdjustment + connectivityAdjustment;
       
-      // NOISE FLOOR: Implement 30% threshold to avoid "impact leak"
-      const NOISE_FLOOR = 0.30;
+      // Check if node is truly disconnected or just very far
+      const isVeryDistant = score.timeToImpact === Infinity || score.timeToImpact > 30;
       
-      // Dynamic threshold based on node criticality
-      const criticalityThreshold = node.properties.criticalityLevel || 0.5;
-      const threshold = NOISE_FLOOR * (1 - criticalityThreshold * 0.3);
+      // For distant nodes, increase threshold significantly
+      const effectiveThreshold = isVeryDistant ? threshold + 0.25 : threshold;
       
-      if (adjustedProbability > threshold) {
+      if (adjustedProbability > effectiveThreshold) {
         score.impactProbability = Math.min(0.98, adjustedProbability); // Cap at 98%
+        
+        // Compute normalized distance for visualization
+        const maxGraphDistance = Math.max(...nodeIds.map((nid, i) => 
+          impactScores[i] ? (impactScores[i].timeToImpact || 1) : 1
+        ));
+        const normalizedDistance = (score.timeToImpact || 1) / Math.max(maxGraphDistance, 1);
         
         // Add edge for visualization (particle flow)
         visualizationEdges.push({
           source: failedNodeId,
           target: nodeId,
           strength: adjustedProbability,
-          particleSpeed: 0.01 * (1 - distance / 10), // Slower for distant nodes
+          particleSpeed: 0.01 * (1 - normalizedDistance * 0.5), // Slower for distant nodes
           particleWidth: 2 + Math.round(adjustedProbability * 3),
           color: this.getEdgeColor(adjustedProbability)
         });
@@ -775,18 +974,6 @@ class ImpactPredictionGNN {
     if (strength > 0.5) return '#F6AD55'; // Orange - medium impact
     if (strength > 0.3) return '#F6E05E'; // Yellow - low impact
     return '#A0AEC0'; // Gray - minimal impact
-  }
-        failureType,
-        severity: failureSeverity
-      },
-      affectedNodes,
-      propagationPath,
-      overallAssessment,
-      totalAffected: affectedNodes.length,
-      criticalCount: affectedNodes.filter(n => n.severity === 'critical').length,
-      highCount: affectedNodes.filter(n => n.severity === 'high').length,
-      timestamp: new Date().toISOString()
-    };
   }
 
   buildPropagationPaths(graph, failedNodeId, affectedNodes) {
@@ -1132,6 +1319,12 @@ class GNNImpactService {
   initializeFromVillageState(villageState) {
     this.graph = new InfrastructureGraph();
     
+    // ============ STEP 1: STITCH COORDINATES ============
+    // Assign spatial coordinates to nodes that don't have them
+    // This creates a realistic layout: roads as spine, buildings east, utilities west
+    console.log('📍 Stitching spatial coordinates...');
+    villageState = this.stitchVillageCoordinates(villageState);
+    
     // ============ ADD ROADS ============
     if (villageState.roads && villageState.roads.length > 0) {
       for (const road of villageState.roads) {
@@ -1284,14 +1477,21 @@ class GNNImpactService {
     }
     
     // ============ BUILD DEPENDENCY CONNECTIONS ============
+    console.log('🔗 Building infrastructure connections...');
+    
     // Build power connections to buildings
     this.buildPowerConnections(villageState);
     
     // Build road access connections to buildings
     this.buildRoadAccessConnections(villageState);
     
-    // Build proximity-based connections for everything else
-    this.graph.buildProximityEdges(0.008); // ~800m radius
+    // Build proximity-based connections with generous radius (approx 1.5km)
+    console.log('   🌐 Building proximity edges (radius: ~1.5km)...');
+    this.graph.buildProximityEdges(0.015);
+    
+    // Add hard-coded critical dependencies (logic over proximity)
+    console.log('   ⚡ Adding critical infrastructure dependencies...');
+    const criticalEdges = this.addCriticalDependencies(villageState);
     
     // Build adjacency matrix
     this.graph.buildAdjacencyMatrix();
@@ -1431,6 +1631,151 @@ class GNNImpactService {
         this.graph.addEdge(nearestRoad.id, building.id, weight, 'road-access', 'provides-access');
       }
     }
+  }
+  
+  // Stitch spatial coordinates onto nodes for realistic layout
+  stitchVillageCoordinates(villageState) {
+    let roadIndex = 0;
+    let buildingIndex = 0;
+    let powerIndex = 0;
+    let waterIndex = 0;
+    let clusterIndex = 0;
+
+    // Roads - central spine at X=0
+    if (villageState.roads) {
+      villageState.roads.forEach((node) => {
+        if (!node.coords && !node.path) {
+          node.coords = [0, roadIndex * 0.001]; // ~100m spacing
+          roadIndex++;
+        }
+      });
+    }
+
+    // Buildings - East cluster
+    if (villageState.buildings) {
+      villageState.buildings.forEach((node) => {
+        if (!node.coords) {
+          const row = Math.floor(buildingIndex / 2);
+          const col = buildingIndex % 2;
+          node.coords = [0.003 + (col * 0.002), row * 0.0015]; // 300-500m East
+          buildingIndex++;
+        }
+      });
+    }
+
+    // Power infrastructure - West side
+    if (villageState.powerNodes) {
+      villageState.powerNodes.forEach((node) => {
+        if (!node.coords) {
+          node.coords = [-0.004, powerIndex * 0.002]; // 400m West
+          powerIndex++;
+        }
+      });
+    }
+
+    // Sensors - Near power
+    if (villageState.sensors) {
+      villageState.sensors.forEach((node) => {
+        if (!node.coords) {
+          node.coords = [-0.0035, powerIndex * 0.0025];
+          powerIndex++;
+        }
+      });
+    }
+
+    // Water infrastructure - North cluster
+    const tanks = villageState.waterTanks || villageState.tanks || [];
+    tanks.forEach((node) => {
+      if (!node.coords) {
+        node.coords = [-0.002, 0.01 + (waterIndex * 0.0008)];
+        waterIndex++;
+      }
+    });
+
+    if (villageState.pumps) {
+      villageState.pumps.forEach((node) => {
+        if (!node.coords) {
+          node.coords = [-0.0025, 0.01 + (waterIndex * 0.0008)];
+          waterIndex++;
+        }
+      });
+    }
+
+    if (villageState.pipes) {
+      villageState.pipes.forEach((node) => {
+        if (!node.coords && !node.fromNode) {
+          node.coords = [-0.003, 0.01 + (waterIndex * 0.0008)];
+          waterIndex++;
+        }
+      });
+    }
+
+    // Consumer clusters - near buildings
+    if (villageState.clusters) {
+      villageState.clusters.forEach((node) => {
+        if (!node.coords && !node.geo) {
+          const row = Math.floor(clusterIndex / 2);
+          const col = clusterIndex % 2;
+          node.coords = [0.0045 + (col * 0.0015), row * 0.002];
+          clusterIndex++;
+        }
+      });
+    }
+
+    return villageState;
+  }
+  
+  // Add critical infrastructure dependencies (logic-based, not proximity)
+  addCriticalDependencies(villageState) {
+    let count = 0;
+
+    // Power → Pumps (critical)
+    if (villageState.powerNodes && villageState.pumps) {
+      const mainPower = villageState.powerNodes[0];
+      villageState.pumps.forEach((pump) => {
+        const pumpId = pump.pumpId || pump.id;
+        if (this.graph.nodes.has(mainPower.id) && this.graph.nodes.has(pumpId)) {
+          this.graph.addEdge(mainPower.id, pumpId, 1.0, 'power-supply', 'critical-dependency', true);
+          count++;
+        }
+      });
+    }
+
+    // Power → Buildings (high priority)
+    if (villageState.powerNodes && villageState.buildings) {
+      const mainPower = villageState.powerNodes[0];
+      if (mainPower) {
+        villageState.buildings.forEach((building) => {
+          if (this.graph.nodes.has(mainPower.id) && this.graph.nodes.has(building.id)) {
+            this.graph.addEdge(mainPower.id, building.id, 0.9, 'power-supply', 'powers', true);
+            count++;
+          }
+        });
+      }
+    }
+
+    // Tanks → Pumps → Clusters (water flow)
+    if (villageState.tanks && villageState.pumps && villageState.clusters) {
+      if (villageState.tanks[0] && villageState.pumps[0]) {
+        const tankId = villageState.tanks[0].tankId || villageState.tanks[0].id;
+        const pumpId = villageState.pumps[0].pumpId || villageState.pumps[0].id;
+        if (this.graph.nodes.has(tankId) && this.graph.nodes.has(pumpId)) {
+          this.graph.addEdge(tankId, pumpId, 0.95, 'water-flow', 'supplies', true);
+          count++;
+        }
+      }
+
+      if (villageState.pumps[0] && villageState.clusters[0]) {
+        const pumpId = villageState.pumps[0].pumpId || villageState.pumps[0].id;
+        const clusterId = villageState.clusters[0].clusterId || villageState.clusters[0].id;
+        if (this.graph.nodes.has(pumpId) && this.graph.nodes.has(clusterId)) {
+          this.graph.addEdge(pumpId, clusterId, 0.9, 'water-flow', 'supplies', true);
+          count++;
+        }
+      }
+    }
+
+    return count;
   }
 
   // Predict impact of a failure
