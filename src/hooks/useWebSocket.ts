@@ -1,19 +1,33 @@
 import { useEffect, useRef } from 'react';
 import { useVillageStore } from '../store/villageStore';
-import { WS_URL } from '../config/api';
+import { WS_URL, API_URL } from '../config/api';
 
-// ⚠️ DEV MODE: WebSocket disabled (no backend required)
-const WEBSOCKET_ENABLED = false;
+// WebSocket enabled for real-time updates
+const WEBSOCKET_ENABLED = true;
 
 export default function useWebSocket() {
   const ws = useRef<WebSocket | null>(null);
   const reconnectTimeout = useRef<ReturnType<typeof setTimeout>>();
   const { setVillageData, setWsConnected, setLastUpdate } = useVillageStore();
 
+  const fetchInitialData = async () => {
+    try {
+      console.log('📡 Fetching initial data from API...');
+      const response = await fetch(`${API_URL}/api/state`);
+      const data = await response.json();
+      setVillageData(data);
+      setLastUpdate(new Date().toISOString());
+      console.log('✅ Initial data loaded from API');
+    } catch (error) {
+      console.error('❌ Failed to fetch initial data:', error);
+    }
+  };
+
   const connect = () => {
     // Skip WebSocket connection in dev mode
     if (!WEBSOCKET_ENABLED) {
-      console.log('🔇 WebSocket disabled (dev mode - no backend required)');
+      console.log('🔇 WebSocket disabled (dev mode - fetching data via API)');
+      fetchInitialData();
       return;
     }
     
@@ -127,6 +141,10 @@ export default function useWebSocket() {
   };
 
   useEffect(() => {
+    // Fetch initial data immediately
+    fetchInitialData();
+    
+    // Then connect WebSocket for real-time updates
     connect();
 
     return () => {
