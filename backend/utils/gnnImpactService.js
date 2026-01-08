@@ -1,6 +1,18 @@
 /**
  * GNN-based Impact Prediction Service for Village Infrastructure
  * 
+ * ARCHITECTURE: 4-Layer Deep Neural Network with Residual Connections
+ * ================================================================
+ * Layer 1 (24→48): Feature expansion from node embeddings
+ * Layer 2 (48→48): Message passing + residual from padded input (24→48)
+ * Layer 3 (48→48): Deep learning + residual from Layer 1 (48→48)
+ * Layer 4 (48→12): Output projection to impact scores
+ * 
+ * Residual Connections:
+ * - Layer 2 receives padded input embedding (dimension-matched to 48)
+ * - Layer 3 receives Layer 1 output (already 48 dimensions)
+ * - Enables deeper learning without vanishing gradients
+ * 
  * This service uses Graph Neural Network concepts to predict cascading effects
  * when something goes wrong anywhere in the village infrastructure:
  * - Roads (damage, blockage, flooding, accidents)
@@ -526,16 +538,32 @@ class GNNLayer {
 }
 
 // Impact Prediction GNN Model for Village Infrastructure with Temporal Dynamics
+// 4-Layer Deep Architecture with Residual Connections
 class ImpactPredictionGNN {
   constructor() {
+    // Layer 1 (24→48): Feature expansion
     this.layer1 = new GNNLayer(24, 48, 3);  // Expand features with 3 attention heads
+    
+    // Layer 2 (48→48): Message passing + residual from input (padded)
     this.layer2 = new GNNLayer(48, 48, 3);  // Message passing with 3 attention heads
+    
+    // Layer 3 (48→48): Deep learning + residual from Layer 1
     this.layer3 = new GNNLayer(48, 48, 2);  // Additional layer for deeper learning
+    
+    // Layer 4 (48→12): Output projection
     this.layer4 = new GNNLayer(48, 12, 1);  // Impact prediction head
     
     // Temporal decay parameters
     this.timeDecayRate = 0.15; // How fast impact decays over time
     this.propagationVelocity = 0.5; // Speed of impact propagation (edges per minute)
+  }
+  
+  // Helper function to pad embeddings for dimension-matched residual connections
+  padEmbedding(embedding, targetDim) {
+    if (embedding.length >= targetDim) {
+      return embedding.slice(0, targetDim);
+    }
+    return [...embedding, ...new Array(targetDim - embedding.length).fill(0)];
   }
 
   sigmoid(x) {
@@ -593,27 +621,37 @@ class ImpactPredictionGNN {
     // Normalize embeddings for better gradient flow
     embeddings = embeddings.map(emb => this.normalizeEmbedding(emb));
     
-    // GNN forward passes with residual connections and relationship gating
+    // ============================================================
+    // 4-LAYER DEEP ARCHITECTURE WITH RESIDUAL CONNECTIONS
+    // ============================================================
+    
+    // LAYER 1 (24→48): Feature expansion
+    // No residual connection - initial feature extraction
     let hidden1 = embeddings.map((emb, i) => {
       const neighborEmbs = nodeIds.map((_, j) => embeddings[j]);
       return this.layer1.forward(emb, neighborEmbs, adjacencyMatrix[i], relationshipGates[i], null);
     });
     
-    // Second layer with residual from input
+    // LAYER 2 (48→48): Message passing + residual from input (dimension-matched with padding)
+    // Residual: padded input (24→48) added to layer output
     let hidden2 = hidden1.map((emb, i) => {
-      // Pad embeddings to match dimensions for residual
-      const paddedInput = [...embeddings[i], ...new Array(48 - embeddings[i].length).fill(0)];
-      return this.layer2.forward(emb, hidden1, adjacencyMatrix[i], relationshipGates[i], paddedInput);
+      const neighborEmbs = nodeIds.map((_, j) => hidden1[j]);
+      const paddedInput = this.padEmbedding(embeddings[i], 48); // Match 48 dimensions
+      return this.layer2.forward(emb, neighborEmbs, adjacencyMatrix[i], relationshipGates[i], paddedInput);
     });
     
-    // Third layer with residual from first layer
+    // LAYER 3 (48→48): Deep learning + residual from Layer 1
+    // Residual: Layer 1 output (48) added to Layer 3 output (48)
     let hidden3 = hidden2.map((emb, i) => {
-      return this.layer3.forward(emb, hidden2, adjacencyMatrix[i], relationshipGates[i], hidden1[i]);
+      const neighborEmbs = nodeIds.map((_, j) => hidden2[j]);
+      return this.layer3.forward(emb, neighborEmbs, adjacencyMatrix[i], relationshipGates[i], hidden1[i]);
     });
     
-    // Output layer
+    // LAYER 4 (48→12): Output projection
+    // No residual connection - final impact prediction
     const impactScores = hidden3.map((emb, i) => {
-      const output = this.layer4.forward(emb, hidden3, adjacencyMatrix[i], relationshipGates[i], null);
+      const neighborEmbs = nodeIds.map((_, j) => hidden3[j]);
+      const output = this.layer4.forward(emb, neighborEmbs, adjacencyMatrix[i], relationshipGates[i], null);
       return this.interpretImpactOutput(output, graph.nodes.get(nodeIds[i]).type, failedNode?.type, graphDistances[i]);
     });
     
