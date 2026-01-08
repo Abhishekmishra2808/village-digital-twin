@@ -585,7 +585,7 @@ export function useGNN(): UseGNNReturn {
       };
 
       // Generate affected nodes based on logical cascades
-      const cascadeTargetTypes = getCascadeTargets(sourceNode.type, failureType);
+      const cascadeTargetTypes = getCascadeTargets(sourceNode.type);
       const affectedNodesList = nodes
         .filter(n => n.id !== nodeId && cascadeTargetTypes.includes(n.type))
         .slice(0, Math.floor(Math.random() * 4) + 4) // 4-7 affected nodes

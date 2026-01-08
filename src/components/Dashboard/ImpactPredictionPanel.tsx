@@ -719,7 +719,6 @@ const ImpactGraphVisualizationWrapper: React.FC<{
   // Start cascade animation
   useEffect(() => {
     // Reset animation when prediction changes
-    setIsAnimating(false);
     setCurrentTime(0);
     
     const maxTime = Math.max(...affectedNodes.map(n => n.timeToImpact), 1);
