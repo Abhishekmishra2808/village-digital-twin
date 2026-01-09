@@ -4,9 +4,6 @@ import { Capacitor } from '@capacitor/core';
 import App from './App.tsx';
 import './index.css';
 
-// 🔓 DEV MODE: Auto-login bypass (remove in production)
-import './utils/devModeBypass';
-
 // Load mobile-specific styles only when running in Capacitor (Android/iOS)
 if (Capacitor.isNativePlatform()) {
   import('./styles/mobile.css');

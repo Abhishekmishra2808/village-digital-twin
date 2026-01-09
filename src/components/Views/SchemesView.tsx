@@ -71,6 +71,12 @@ export default function SchemesView() {
     progress: 0
   });
 
+  // Fetch schemes from database on component mount
+  useEffect(() => {
+    fetchSchemes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Listen to AI processing status events
   useEffect(() => {
     if (!LocalLLM) return;

@@ -30,7 +30,7 @@ import MobileLoginPage from './components/Auth/MobileLoginPage';
 import MobileDashboard from './components/Dashboard/MobileDashboard';
 
 function App() {
-  const { activeView, sidebarCollapsed, infoPanelOpen, isAuthenticated, userRole, setVillageData, waterTanks } = useVillageStore();
+  const { activeView, sidebarCollapsed, infoPanelOpen, isAuthenticated, userRole, fetchSchemes } = useVillageStore();
   const [showLanding, setShowLanding] = useState(true);
   const isMobile = Capacitor.isNativePlatform();
   useWebSocket();
@@ -47,6 +47,8 @@ function App() {
   useEffect(() => {
     if (isAuthenticated) {
       document.body.classList.add('dashboard-mode');
+      // Fetch schemes when user logs in
+      fetchSchemes();
     } else {
       document.body.classList.remove('dashboard-mode');
     }
@@ -54,7 +56,7 @@ function App() {
     return () => {
       document.body.classList.remove('dashboard-mode');
     };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, fetchSchemes]);
 
   // Show landing page first
   if (showLanding && !isAuthenticated) {
