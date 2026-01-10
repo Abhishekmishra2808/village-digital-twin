@@ -30,7 +30,7 @@ import MobileLoginPage from './components/Auth/MobileLoginPage';
 import MobileDashboard from './components/Dashboard/MobileDashboard';
 
 function App() {
-  const { activeView, sidebarCollapsed, infoPanelOpen, isAuthenticated, userRole, fetchSchemes } = useVillageStore();
+  const { activeView, sidebarCollapsed, infoPanelOpen, isAuthenticated, userRole, fetchSchemes, waterTanks, setVillageData } = useVillageStore();
   const [showLanding, setShowLanding] = useState(true);
   const isMobile = Capacitor.isNativePlatform();
   useWebSocket();
