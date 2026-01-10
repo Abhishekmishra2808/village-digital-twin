@@ -40,7 +40,6 @@ const ImpactGraphVisualizer: React.FC<ImpactGraphVisualizerProps> = ({
   height = 600,
   width,
   backgroundColor = '#0F172A',
-  showLegend = true,
   enableInteraction = true,
   onNodeClick,
   onNodeHover: externalNodeHover,
