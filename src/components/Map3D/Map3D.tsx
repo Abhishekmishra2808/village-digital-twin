@@ -235,7 +235,7 @@ export default function Map3D() {
   const lastViewRef = useRef<string>('');
   const [currentZoom, setCurrentZoom] = useState(16.6);
   const [currentPitch, setCurrentPitch] = useState(45);
-  const [showLegend, setShowLegend] = useState(false);
+  const [failureCount, setFailureCount] = useState(0);
   
   // Failure popup state
   const [failurePopup, setFailurePopup] = useState<{
@@ -349,11 +349,15 @@ export default function Map3D() {
     const node = failurePopup.node;
     setIsLoadingPrediction(true);
     
-    // Clear previous failures first
-    clearAllFailures();
-    clearNodeImpacts();
+    // INCREMENT COUNTER
+    setFailureCount(prev => prev + 1);
+    
+    // DO NOT CLEAR PREVIOUS FAILURES - ACCUMULATE THEM
+    // clearAllFailures();
+    // clearNodeImpacts();
     
     try {
+      // Try to call API, but expect it might fail in dev mode
       const response = await fetch(`${GNN_API_URL}/api/gnn/predict-structured`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -403,8 +407,14 @@ export default function Map3D() {
               }
               
               if (nodeMatch) {
-                setNodeImpact(nodeMatch.id, affected.probability || affected.severityScore || 50, node.id);
-                if (affected.severity === 'critical' || affected.severity === 'high') {
+                // ACCUMULATE IMPACT
+                const currentImpact = nodeMatch.impactScore || 0;
+                const newImpact = affected.probability || affected.severityScore || 50;
+                const totalImpact = Math.min(100, currentImpact + (newImpact * 0.5)); // Add 50% of new impact to existing
+                
+                setNodeImpact(nodeMatch.id, totalImpact, node.id);
+                
+                if (totalImpact > 80) {
                   setNodeFailed(nodeMatch.id, 'cascade_effect');
                 }
               } else {
@@ -422,10 +432,13 @@ export default function Map3D() {
         
         connectedNodeIds.forEach((nodeId, idx) => {
           const existingNode = currentGnnNodes.find(n => n.id === nodeId);
-          if (existingNode && !existingNode.impactScore) {
-            // Only set impact if not already set by API response
-            const impactScore = Math.max(30, 80 - (idx * 10));
-            setNodeImpact(nodeId, impactScore, node.id);
+          if (existingNode) {
+            // ACCUMULATE IMPACT
+            const currentImpact = existingNode.impactScore || 0;
+            const additionalImpact = Math.max(10, 40 - (idx * 10));
+            const totalImpact = Math.min(100, currentImpact + additionalImpact);
+            
+            setNodeImpact(nodeId, totalImpact, node.id);
           }
         });
         
@@ -452,15 +465,28 @@ export default function Map3D() {
       
       // Find connected nodes and mark them as impacted
       const gnnEdges = useVillageStore.getState().gnnEdges;
+      const currentGnnNodes = useVillageStore.getState().gnnNodes;
+      
       const connectedNodes = gnnEdges
         .filter(e => e.source === node.id || e.target === node.id)
         .map(e => e.source === node.id ? e.target : e.source);
       
       connectedNodes.forEach((nodeId, idx) => {
-        const impactScore = Math.max(30, 90 - (idx * 15));
-        setNodeImpact(nodeId, impactScore, node.id);
-        if (impactScore > 70) {
-          setNodeFailed(nodeId, 'cascade_effect');
+        const existingNode = currentGnnNodes.find(n => n.id === nodeId);
+        if (existingNode) {
+             // ACCUMULATE IMPACT LOGIC
+             // "1 node is damaged 10 percent then by another failure it is damaged 6 percent"
+             const currentImpact = existingNode.impactScore || 0;
+             const additionalImpact = Math.max(5, 20 - (idx * 5)); // Add 5-20% damage
+             const totalImpact = Math.min(100, currentImpact + additionalImpact);
+             
+             console.log(`Accumulating Impact for ${existingNode.name}: ${currentImpact}% + ${additionalImpact}% = ${totalImpact}%`);
+             
+             setNodeImpact(nodeId, totalImpact, node.id);
+             
+             if (totalImpact > 90) {
+               setNodeFailed(nodeId, 'cascade_effect');
+             }
         }
       });
       
@@ -1148,28 +1174,6 @@ export default function Map3D() {
     lastViewRef.current = activeView;
 
     switch (activeView) {
-      case 'water':
-        if (waterTanks.length > 0) {
-          map.current.flyTo({
-            center: waterTanks[0].coords,
-            zoom: 16.6,
-            pitch: 60,
-            duration: 1500,
-            essential: true,
-          });
-        }
-        break;
-      case 'power':
-        if (powerNodes.length > 0) {
-          map.current.flyTo({
-            center: powerNodes[0].coords,
-            zoom: 16.6,
-            pitch: 50,
-            duration: 1500,
-            essential: true,
-          });
-        }
-        break;
       case 'map':
         // Reset to overview when switching to map view
         map.current.flyTo({
@@ -1252,100 +1256,29 @@ export default function Map3D() {
           🔄 3D
         </button>
       </div>
-      
-      {/* Map Legend - Mobile Toggle Button & Collapsible Panel */}
-      {isMobile ? (
-        <>
-          {/* Mobile Legend Toggle Button */}
-          <button
-            onClick={() => setShowLegend(!showLegend)}
-            className={`absolute bottom-4 right-4 bg-slate-900/90 backdrop-blur-md text-white px-4 py-3 rounded-xl shadow-lg border border-white/10 font-semibold text-sm active:scale-95 transition-all ${
-              showLegend ? 'bg-cyan-600/90' : ''
-            }`}
+
+      {/* Failure Counter Display */}
+      {failureCount > 0 && (
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-slate-900/90 backdrop-blur-md rounded-lg shadow-lg border border-red-500/50 px-4 py-2 flex items-center gap-3 z-10">
+          <div className="text-2xl">⚠️</div>
+          <div>
+            <div className="text-xs text-slate-400 uppercase font-bold tracking-wider">Failure Events</div>
+            <div className="text-xl font-bold text-white">{failureCount} <span className="text-sm font-normal text-slate-400">accumulated</span></div>
+          </div>
+          <button 
+            onClick={() => {
+              setFailureCount(0);
+              clearAllFailures();
+              clearNodeImpacts();
+            }}
+            className="ml-2 p-1 hover:bg-white/10 rounded-full transition-colors"
+            title="Reset Failures"
           >
-            {showLegend ? '✕ Close' : '🗺️ Legend'}
+            🔄
           </button>
-          
-          {/* Mobile Legend Panel - Bottom Sheet Style */}
-          {showLegend && (
-            <div className="absolute bottom-16 left-2 right-2 bg-slate-900/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/10 p-4 animate-in slide-in-from-bottom-4">
-              <h4 className="font-bold text-white text-base mb-4 text-center">Map Legend</h4>
-              
-              {/* Legend Grid for Mobile */}
-              <div className="grid grid-cols-2 gap-3">
-                {/* Water Tanks Section */}
-                <div className="bg-slate-800/50 rounded-xl p-3">
-                  <div className="text-xs text-slate-400 font-medium mb-2">💧 Water Tanks</div>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded-full bg-green-500 border-2 border-white/30 shadow-sm" />
-                      <span className="text-slate-200 text-xs font-medium">Good</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded-full bg-yellow-500 border-2 border-white/30 shadow-sm" />
-                      <span className="text-slate-200 text-xs font-medium">Warning</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded-full bg-red-500 border-2 border-white/30 shadow-sm" />
-                      <span className="text-slate-200 text-xs font-medium">Critical</span>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Other Assets Section */}
-                <div className="bg-slate-800/50 rounded-xl p-3">
-                  <div className="text-xs text-slate-400 font-medium mb-2">⚡ Infrastructure</div>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-green-500 border-2 border-white/30 shadow-sm transform rotate-45" />
-                      <span className="text-slate-200 text-xs font-medium">Power Node</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded-full bg-cyan-500 border-2 border-white/30 shadow-sm" />
-                      <span className="text-slate-200 text-xs font-medium">IoT Sensor</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Controls Help */}
-              <div className="mt-4 pt-3 border-t border-white/10 text-center">
-                <p className="text-slate-400 text-xs font-medium">
-                  👆 Tap markers for details • Pinch to zoom • Drag to pan
-                </p>
-              </div>
-            </div>
-          )}
-        </>
-      ) : (
-        /* Desktop Legend */
-        <div className="absolute bottom-4 right-4 bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg p-4 border border-white/10 text-sm space-y-2 max-w-xs">
-          <h4 className="font-semibold text-white mb-3">Map Legend</h4>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 rounded-full bg-green-500 border-2 border-white/20 shadow-sm" />
-            <span className="text-slate-300">Water Tank (Good)</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 rounded-full bg-yellow-500 border-2 border-white/20 shadow-sm" />
-            <span className="text-slate-300">Water Tank (Warning)</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 rounded-full bg-red-500 border-2 border-white/20 shadow-sm" />
-            <span className="text-slate-300">Water Tank (Critical)</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-green-500 border-2 border-white/20 shadow-sm transform rotate-45" />
-            <span className="text-slate-300">Power Node</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 rounded-full bg-cyan-500 border-2 border-white/20 shadow-sm" />
-            <span className="text-slate-300">IoT Sensor</span>
-          </div>
-          <div className="pt-2 mt-2 border-t border-white/10 text-xs text-slate-400">
-            💡 Scroll to zoom • Drag to pan • Right-click drag to rotate
-          </div>
         </div>
       )}
+
 
       {/* Failure Popup */}
       {failurePopup && (

@@ -1,7 +1,5 @@
 import { 
   Home, 
-  Droplet, 
-  Zap, 
   Bell,
   BarChart3,
   Settings,
@@ -21,8 +19,6 @@ const menuItems = [
   { id: 'schemes', icon: Briefcase, label: 'Government Schemes' },
   { id: 'anonymous-reports', icon: Shield, label: 'Citizen Reports' },
   { id: 'impact-predictor', icon: Network, label: 'Village Analyzer' },
-  { id: 'water', icon: Droplet, label: 'Water Infrastructure' },
-  { id: 'power', icon: Zap, label: 'Power Grid' },
   { id: 'environment', icon: Leaf, label: 'Environment Monitor' },
   { id: 'alerts', icon: Bell, label: 'Alerts & Notifications' },
   { id: 'analytics', icon: BarChart3, label: 'Analytics' },
@@ -45,7 +41,7 @@ export default function Sidebar() {
     if (userRole === 'user') {
       // Citizens see basic menu including anonymous reports
       return menuItems.filter(item => 
-        ['dashboard', 'map', 'schemes', 'anonymous-reports', 'water', 'power', 'environment', 'settings'].includes(item.id)
+        ['dashboard', 'map', 'schemes', 'anonymous-reports', 'environment', 'settings'].includes(item.id)
       );
     }
     // Admin sees all

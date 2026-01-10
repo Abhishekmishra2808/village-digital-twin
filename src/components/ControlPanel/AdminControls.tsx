@@ -1,23 +1,17 @@
 import { useState } from 'react';
 import { Settings2, X, Zap, Droplet, CloudRain } from 'lucide-react';
-import useWebSocket from '../../hooks/useWebSocket';
 
 export default function AdminControls() {
   const [isOpen, setIsOpen] = useState(false);
-  const { sendMessage } = useWebSocket();
 
   const handleSliderChange = (category: string, id: string, field: string, value: number) => {
-    sendMessage({
-      type: 'manual_update',
-      payload: { category, id, field, value }
-    });
+    // WebSocket functionality removed - GNN handles sensor updates
+    console.log('Sensor update:', { category, id, field, value });
   };
 
   const simulateScenario = (scenario: string) => {
-    sendMessage({
-      type: 'simulate_scenario',
-      scenario
-    });
+    // WebSocket functionality removed - GNN handles scenario simulation
+    console.log('Scenario simulation:', scenario);
   };
 
   if (!isOpen) {

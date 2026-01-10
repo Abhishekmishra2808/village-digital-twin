@@ -16,154 +16,116 @@ import ImpactGraphVisualizer from '../components/ImpactGraphVisualizer';
 import { gnnService } from '../services/gnnImpactService';
 import type { GraphVisualizationData, GraphNode } from '../types/graph-visualization';
 
-// Mock data for testing without backend
+// Mock data for testing without backend - 8 nodes matching map layout
 const MOCK_VISUALIZATION_DATA: GraphVisualizationData = {
   nodes: [
     { 
-      id: 'power-substation-1', 
-      name: 'Main Substation', 
-      type: 'power', 
-      color: '#9F7AEA', 
-      size: 15, 
-      pulse: true, 
-      isEpicenter: true,
-      probability: 100,
-      severity: 'critical'
+      id: 'tank-main', 
+      name: 'Main Water Tank', 
+      type: 'tank', 
+      color: '#4299E1', 
+      size: 12, 
+      isEpicenter: false,
+      probability: 0,
+      severity: 'none',
+      fx: -100,
+      fy: -120
     },
     { 
       id: 'pump-main', 
-      name: 'Central Pump Station', 
+      name: 'Main Pump Station', 
       type: 'pump', 
-      color: '#FC8181', 
-      size: 12, 
-      severity: 'critical', 
-      probability: 87.5 
+      color: '#4FD1C5', 
+      size: 11, 
+      isEpicenter: false,
+      probability: 0,
+      severity: 'none',
+      fx: -150,
+      fy: -60
+    },
+    { 
+      id: 'power-main', 
+      name: 'Main Transformer', 
+      type: 'power', 
+      color: '#F6E05E', 
+      size: 14, 
+      isEpicenter: false,
+      probability: 0,
+      severity: 'none',
+      fx: 0,
+      fy: 0
+    },
+    { 
+      id: 'school-main', 
+      name: 'Village School', 
+      type: 'school', 
+      color: '#90CDF4', 
+      size: 10, 
+      isEpicenter: false,
+      probability: 0,
+      severity: 'none',
+      fx: 150,
+      fy: -40
     },
     { 
       id: 'hospital-main', 
-      name: 'Village Hospital', 
+      name: 'Primary Health Center', 
       type: 'hospital', 
-      color: '#F6AD55', 
+      color: '#FC8181', 
       size: 10, 
-      severity: 'high', 
-      probability: 62.3 
+      isEpicenter: false,
+      probability: 0,
+      severity: 'none',
+      fx: 0,
+      fy: 120
     },
     { 
-      id: 'school-central', 
-      name: 'Central School', 
-      type: 'school', 
-      color: '#F6AD55', 
-      size: 9, 
-      severity: 'high', 
-      probability: 58.1 
+      id: 'market-main', 
+      name: 'Village Market', 
+      type: 'market', 
+      color: '#9AE6B4', 
+      size: 10, 
+      isEpicenter: false,
+      probability: 0,
+      severity: 'none',
+      fx: 120,
+      fy: 80
     },
     { 
       id: 'road-main', 
-      name: 'Main Road', 
+      name: 'Main Village Road', 
       type: 'road', 
-      color: '#68D391', 
-      size: 7, 
-      severity: 'medium', 
-      probability: 34.2 
+      color: '#CBD5E0', 
+      size: 8, 
+      isEpicenter: false,
+      probability: 0,
+      severity: 'none',
+      fx: -150,
+      fy: 40
     },
     { 
-      id: 'tank-north', 
-      name: 'North Water Tank', 
-      type: 'tank', 
+      id: 'sensor-flow-1', 
+      name: 'Flow Sensor Main', 
+      type: 'sensor', 
       color: '#68D391', 
       size: 8, 
-      severity: 'medium', 
-      probability: 41.8 
-    },
-    { 
-      id: 'building-1', 
-      name: 'Residential Block A', 
-      type: 'building', 
-      color: '#cbd5e0', 
-      size: 5, 
-      severity: 'low', 
-      probability: 12.5 
-    },
-    { 
-      id: 'building-2', 
-      name: 'Residential Block B', 
-      type: 'building', 
-      color: '#cbd5e0', 
-      size: 5, 
-      severity: 'none', 
-      probability: 5.2 
+      isEpicenter: false,
+      probability: 0,
+      severity: 'none',
+      fx: 80,
+      fy: 0
     },
   ],
   links: [
-    // Physical infrastructure connections
-    { 
-      source: 'power-substation-1', 
-      target: 'pump-main', 
-      width: 2, 
-      color: '#4A5568',
-      type: 'physical'
-    },
-    { 
-      source: 'power-substation-1', 
-      target: 'hospital-main', 
-      width: 2, 
-      color: '#4A5568',
-      type: 'physical'
-    },
-    { 
-      source: 'pump-main', 
-      target: 'tank-north', 
-      width: 1.5, 
-      color: '#4A5568',
-      type: 'physical'
-    },
-    
-    // Impact flow animations (the magic particles!)
-    { 
-      source: 'power-substation-1', 
-      target: 'pump-main', 
-      type: 'impact-flow', 
-      color: '#FC8181', 
-      width: 4, 
-      particles: 8, 
-      particleSpeed: 0.02 
-    },
-    { 
-      source: 'power-substation-1', 
-      target: 'hospital-main', 
-      type: 'impact-flow', 
-      color: '#F6AD55', 
-      width: 3, 
-      particles: 6, 
-      particleSpeed: 0.015 
-    },
-    { 
-      source: 'power-substation-1', 
-      target: 'school-central', 
-      type: 'impact-flow', 
-      color: '#F6AD55', 
-      width: 3, 
-      particles: 5, 
-      particleSpeed: 0.012 
-    },
-    { 
-      source: 'pump-main', 
-      target: 'tank-north', 
-      type: 'impact-flow', 
-      color: '#68D391', 
-      width: 2, 
-      particles: 3, 
-      particleSpeed: 0.008 
-    },
-    { 
-      source: 'hospital-main', 
-      target: 'road-main', 
-      type: 'impact-flow', 
-      color: '#68D391', 
-      width: 2, 
-      particles: 3, 
-      particleSpeed: 0.007 
-    },
+    // Physical infrastructure connections - connecting the 8 nodes logically
+    { source: 'power-main', target: 'pump-main', width: 2, color: '#4A5568', type: 'physical' },
+    { source: 'power-main', target: 'hospital-main', width: 2, color: '#4A5568', type: 'physical' },
+    { source: 'power-main', target: 'school-main', width: 2, color: '#4A5568', type: 'physical' },
+    { source: 'power-main', target: 'market-main', width: 1.5, color: '#4A5568', type: 'physical' },
+    { source: 'pump-main', target: 'tank-main', width: 2, color: '#4A5568', type: 'physical' },
+    { source: 'tank-main', target: 'sensor-flow-1', width: 1.5, color: '#4A5568', type: 'physical' },
+    { source: 'road-main', target: 'market-main', width: 1.5, color: '#4A5568', type: 'physical' },
+    { source: 'road-main', target: 'hospital-main', width: 1.5, color: '#4A5568', type: 'physical' },
   ],
 };
 
@@ -173,23 +135,35 @@ const GNNImpactDemo: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [useMockData, setUseMockData] = useState(true);
+  const [accumulatedFailures, setAccumulatedFailures] = useState<Set<string>>(new Set());
+  const [combinedGraphData, setCombinedGraphData] = useState<GraphVisualizationData | null>(null);
   
-  // Available failure scenarios for testing
+  // Available failure scenarios for testing - matching the 8 node IDs
   const scenarios = [
-    { id: 'power-substation-1', name: 'Main Substation Failure', severity: 1.0 },
-    { id: 'pump-main', name: 'Central Pump Failure', severity: 0.8 },
-    { id: 'tank-north', name: 'Water Tank Leak', severity: 0.6 },
-    { id: 'road-main', name: 'Main Road Blocked', severity: 0.5 },
+    { id: 'power-main', name: 'Transformer Failure', severity: 1.0 },
+    { id: 'pump-main', name: 'Pump Station Failure', severity: 0.9 },
+    { id: 'tank-main', name: 'Water Tank Leak', severity: 0.8 },
+    { id: 'hospital-main', name: 'Health Center Issue', severity: 0.7 },
+    { id: 'school-main', name: 'School Power Outage', severity: 0.6 },
+    { id: 'market-main', name: 'Market Disruption', severity: 0.5 },
+    { id: 'road-main', name: 'Road Blocked', severity: 0.4 },
+    { id: 'sensor-flow-1', name: 'Sensor Malfunction', severity: 0.3 },
   ];
 
-  // Load initial graph data
+  // Load initial graph data - only on first mount, not when useMockData changes
   useEffect(() => {
-    loadGraphData();
-  }, [useMockData]);
+    // Only load if we don't have data yet
+    if (!graphData) {
+      loadGraphData();
+    }
+  }, []); // Empty dependency - only run once on mount
 
   const loadGraphData = async () => {
     setLoading(true);
     setError(null);
+    // Clear accumulated failures when explicitly reloading
+    setAccumulatedFailures(new Set());
+    setCombinedGraphData(null);
     
     try {
       if (useMockData) {
@@ -227,9 +201,35 @@ const GNNImpactDemo: React.FC = () => {
     
     try {
       if (useMockData) {
-        // Simulate API delay and show scenario-specific data
+        // Simulate API delay and accumulate failures
         setTimeout(() => {
-          setGraphData(MOCK_VISUALIZATION_DATA);
+          // Add the new failure to accumulated failures
+          const newAccumulatedFailures = new Set(accumulatedFailures);
+          newAccumulatedFailures.add(nodeId);
+          setAccumulatedFailures(newAccumulatedFailures);
+          
+          // Use existing combined data or start from MOCK data
+          const baseData = combinedGraphData || MOCK_VISUALIZATION_DATA;
+          
+          // Update nodes to mark all accumulated failures as epicenters
+          // Also increase probability for accumulated failures
+          const combinedData = {
+            ...baseData,
+            nodes: baseData.nodes.map(node => {
+              const isFailed = newAccumulatedFailures.has(node.id);
+              return {
+                ...node,
+                isEpicenter: isFailed,
+                pulse: isFailed,
+                probability: isFailed ? 100 : (node.probability || 0),
+                severity: isFailed ? 'critical' : (node.severity || 'none'),
+                color: isFailed ? '#9F7AEA' : node.color,
+              };
+            })
+          };
+          
+          setCombinedGraphData(combinedData);
+          setGraphData(combinedData);
           setLoading(false);
         }, 800);
       } else {
@@ -240,6 +240,9 @@ const GNNImpactDemo: React.FC = () => {
             severity,
             timestamp: new Date(),
           });
+          const newAccumulatedFailures = new Set(accumulatedFailures);
+          newAccumulatedFailures.add(nodeId);
+          setAccumulatedFailures(newAccumulatedFailures);
           setGraphData(result.visualization);
           setLoading(false);
         } catch (backendError) {
@@ -398,8 +401,54 @@ const GNNImpactDemo: React.FC = () => {
             >
               🔄 Refresh
             </button>
+            <button
+              onClick={() => {
+                setAccumulatedFailures(new Set());
+                setCombinedGraphData(null);
+                setGraphData(MOCK_VISUALIZATION_DATA);
+                setSelectedNode(null);
+              }}
+              disabled={loading || accumulatedFailures.size === 0}
+              style={{
+                padding: '10px 20px',
+                background: accumulatedFailures.size > 0 ? 'rgba(252, 129, 129, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                color: 'white',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '8px',
+                cursor: (loading || accumulatedFailures.size === 0) ? 'not-allowed' : 'pointer',
+                fontSize: '14px',
+                opacity: (loading || accumulatedFailures.size === 0) ? 0.5 : 1,
+              }}
+            >
+              🔄 Reset Failures ({accumulatedFailures.size})
+            </button>
           </div>
         </div>
+
+        {/* Show accumulated failures count */}
+        {accumulatedFailures.size > 0 && (
+          <div style={{
+            marginTop: '15px',
+            padding: '12px 16px',
+            background: 'rgba(159, 122, 234, 0.15)',
+            border: '1px solid #9F7AEA',
+            borderRadius: '8px',
+            color: '#D6BCFA',
+            fontSize: '14px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+          }}>
+            <span style={{ fontSize: '18px' }}>⚡</span>
+            <span>
+              <strong>{accumulatedFailures.size} node(s) failed:</strong>{' '}
+              {Array.from(accumulatedFailures).map(id => {
+                const node = MOCK_VISUALIZATION_DATA.nodes.find(n => n.id === id);
+                return node?.name || id;
+              }).join(', ')}
+            </span>
+          </div>
+        )}
 
         {error && (
           <div style={{
@@ -422,7 +471,6 @@ const GNNImpactDemo: React.FC = () => {
           visualizationData={graphData}
           height={700}
           backgroundColor="#1A202C"
-          showLegend={true}
           enableInteraction={true}
           onNodeClick={handleNodeClick}
           onNodeHover={handleNodeHover}

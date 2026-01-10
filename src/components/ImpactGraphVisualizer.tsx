@@ -335,110 +335,12 @@ const ImpactGraphVisualizer: React.FC<ImpactGraphVisualizerProps> = ({
         d3VelocityDecay={0.3}
         
         // Performance
-        enableNodeDrag={enableInteraction}
+        enableNodeDrag={false}
         enableZoomInteraction={enableInteraction}
         enablePanInteraction={enableInteraction}
       />
       
-      {/* Legend */}
-      {showLegend && (
-        <div style={{
-          position: 'absolute',
-          bottom: '20px',
-          right: '20px',
-          background: 'rgba(0, 0, 0, 0.85)',
-          padding: '16px',
-          borderRadius: '8px',
-          color: 'white',
-          fontSize: '12px',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          maxWidth: '220px'
-        }}>
-          <div style={{ fontWeight: 'bold', marginBottom: '12px', fontSize: '13px' }}>
-            Impact Legend
-          </div>
-          
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{
-              display: 'inline-block',
-              width: '14px',
-              height: '14px',
-              backgroundColor: '#9F7AEA',
-              borderRadius: '50%',
-              marginRight: '10px',
-              boxShadow: '0 0 8px rgba(159, 122, 234, 0.6)'
-            }}></span>
-            <span>Failure Source (Pulsing)</span>
-          </div>
-          
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{
-              display: 'inline-block',
-              width: '14px',
-              height: '14px',
-              backgroundColor: '#FC8181',
-              borderRadius: '50%',
-              marginRight: '10px'
-            }}></span>
-            <span>Critical Impact (&gt;75%)</span>
-          </div>
-          
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{
-              display: 'inline-block',
-              width: '14px',
-              height: '14px',
-              backgroundColor: '#F6AD55',
-              borderRadius: '50%',
-              marginRight: '10px'
-            }}></span>
-            <span>High Impact (&gt;50%)</span>
-          </div>
-          
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{
-              display: 'inline-block',
-              width: '14px',
-              height: '14px',
-              backgroundColor: '#68D391',
-              borderRadius: '50%',
-              marginRight: '10px'
-            }}></span>
-            <span>Medium Impact (&gt;25%)</span>
-          </div>
-          
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-            <span style={{
-              display: 'inline-block',
-              width: '14px',
-              height: '14px',
-              backgroundColor: '#cbd5e0',
-              borderRadius: '50%',
-              marginRight: '10px'
-            }}></span>
-            <span>No/Low Impact</span>
-          </div>
-          
-          <div style={{ 
-            borderTop: '1px solid rgba(255, 255, 255, 0.2)', 
-            paddingTop: '10px',
-            marginTop: '10px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <span style={{
-                display: 'inline-block',
-                width: '24px',
-                height: '3px',
-                background: 'linear-gradient(to right, #FC8181, transparent)',
-                marginRight: '10px'
-              }}></span>
-              <span>Impact Flow Path</span>
-            </div>
-          </div>
-        </div>
-      )}
+
       
       {/* Hover Info Panel */}
       {hoverNode && (

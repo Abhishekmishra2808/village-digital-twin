@@ -1,5 +1,4 @@
 import express from 'express';
-import { WebSocketServer } from 'ws';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -46,19 +45,7 @@ async function startServer() {
 
 const server = await startServer();
 
-const wss = new WebSocketServer({ server });
-
-// Make broadcast and wss available to routes
-app.set('wss', wss);
-app.set('broadcast', (data) => {
-  wss.clients.forEach(client => {
-    if (client.readyState === 1) { // OPEN
-      client.send(JSON.stringify(data));
-    }
-  });
-});
-
-// API Routes (after wss is initialized)
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/schemes', schemesRoutes);
 app.use('/api/llm', llmStatusRoutes);
@@ -78,93 +65,10 @@ async function loadSchemesFromDB() {
 
 await loadSchemesFromDB();
 
-// WebSocket connection handler
-wss.on('connection', (ws) => {
-  console.log('✅ New client connected');
-  
-  // Send initial state
-  ws.send(JSON.stringify({
-    type: 'initial_state',
-    data: villageState,
-    timestamp: new Date().toISOString()
-  }));
-
-  ws.on('message', (message) => {
-    try {
-      const data = JSON.parse(message);
-      
-      if (data.type === 'manual_update') {
-        // Handle manual sensor updates from admin panel
-        const { category, id, field, value } = data.payload;
-        if (villageState[category]) {
-          const item = villageState[category].find(i => i.id === id);
-          if (item) {
-            item[field] = value;
-            broadcast({
-              type: 'sensor_update',
-              data: villageState,
-              timestamp: new Date().toISOString()
-            });
-          }
-        }
-      } else if (data.type === 'simulate_scenario') {
-        // Handle scenario simulations
-        villageState = simulateScenario(villageState, data.scenario);
-        broadcast({
-          type: 'scenario_update',
-          scenario: data.scenario,
-          data: villageState,
-          timestamp: new Date().toISOString()
-        });
-      }
-    } catch (error) {
-      console.error('Error processing message:', error);
-    }
-  });
-
-  ws.on('close', () => {
-    console.log('❌ Client disconnected');
-  });
-});
-
-// Broadcast to all connected clients
-function broadcast(data) {
-  wss.clients.forEach(client => {
-    if (client.readyState === 1) { // OPEN
-      client.send(JSON.stringify(data));
-    }
-  });
-}
-
-// Real-time data simulation - Update every 5 seconds
-setInterval(async () => {
-  villageState = updateSensorData(villageState);
-  
-  // Refresh schemes from database
-  const schemes = await Scheme.find();
-  villageState.schemes = schemes.map(s => s.toObject());
-  
-  // Attach recent feedback to each scheme
-  for (const scheme of villageState.schemes) {
-    const feedback = await Feedback.find({ schemeId: scheme.id })
-      .select('-rawComment')
-      .sort({ createdAt: -1 })
-      .limit(5);
-    scheme.feedbackHistory = feedback;
-  }
-  
-  broadcast({
-    type: 'sensor_update',
-    data: villageState,
-    timestamp: new Date().toISOString()
-  });
-}, 5000);
-
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({
     status: 'healthy',
-    connections: wss.clients.size,
     uptime: process.uptime(),
     database: 'connected',
     timestamp: new Date().toISOString()
@@ -244,14 +148,8 @@ app.post('/api/feedback', async (req, res) => {
 
     console.log(`✅ Feedback processed with LOCAL LLM and saved to database`);
 
-    // Broadcast update
+    // Reload schemes from database
     await loadSchemesFromDB();
-    broadcast({
-      type: 'feedback_update',
-      schemeId,
-      data: villageState,
-      timestamp: new Date().toISOString()
-    });
 
     res.status(200).json({
       success: true,
@@ -274,5 +172,3 @@ app.post('/api/feedback', async (req, res) => {
     res.status(500).json({ error: 'Internal server error while processing feedback' });
   }
 });
-
-console.log(`📡 WebSocket server ready at ws://localhost:${PORT}`);
