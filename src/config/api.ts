@@ -1,8 +1,11 @@
 // API Configuration
 // Automatically detects environment and uses appropriate backend URL
 
-// Local development IP - update this to your machine's IP
-const LOCAL_DEV_IP = 'localhost';
+// Production backend URL (deployed on Render)
+const PRODUCTION_API_URL = 'https://village-digital-twin.onrender.com';
+
+// Local development IP - only used if you specifically want to test with local backend
+const LOCAL_DEV_IP = '192.168.29.179';
 const LOCAL_DEV_PORT = '3001';
 
 // Check if running on Capacitor (mobile app)
@@ -16,43 +19,34 @@ const isCapacitor = () => {
 };
 
 const getApiUrl = () => {
-  // For Capacitor mobile app during development, always use local IP
-  // This allows testing on physical device connected to same network
+  // For Capacitor mobile app - ALWAYS use production backend
   if (isCapacitor()) {
-    // Check for environment variable first (for production mobile builds)
-    if (import.meta.env.VITE_API_URL) {
-      return import.meta.env.VITE_API_URL;
-    }
-    // Use local development server
-    return `http://${LOCAL_DEV_IP}:${LOCAL_DEV_PORT}`;
+    // Use production backend for mobile
+    return PRODUCTION_API_URL;
   }
   
   // Check if we're in production (deployed web)
   if (import.meta.env.PROD) {
-    return import.meta.env.VITE_API_URL || 'https://village-digital-twin.onrender.com';
+    return import.meta.env.VITE_API_URL || PRODUCTION_API_URL;
   }
   
-  // Development web - use local IP for mobile APK access
+  // Development web - use local server
   return `http://${LOCAL_DEV_IP}:${LOCAL_DEV_PORT}`;
 };
 
 const getWsUrl = () => {
-  // For Capacitor mobile app during development
+  // For Capacitor mobile app - use production websocket
   if (isCapacitor()) {
-    if (import.meta.env.VITE_API_URL) {
-      const apiUrl = import.meta.env.VITE_API_URL;
-      return apiUrl.replace('https://', 'wss://').replace('http://', 'ws://');
-    }
-    return `ws://${LOCAL_DEV_IP}:${LOCAL_DEV_PORT}`;
+    return PRODUCTION_API_URL.replace('https://', 'wss://').replace('http://', 'ws://');
   }
   
   // Check if we're in production (deployed web)
   if (import.meta.env.PROD) {
-    const apiUrl = import.meta.env.VITE_API_URL || 'https://village-digital-twin.onrender.com';
+    const apiUrl = import.meta.env.VITE_API_URL || PRODUCTION_API_URL;
     return apiUrl.replace('https://', 'wss://').replace('http://', 'ws://');
   }
   
-  // Development web - use local IP for mobile APK access
+  // Development web - use local websocket
   return `ws://${LOCAL_DEV_IP}:${LOCAL_DEV_PORT}`;
 };
 

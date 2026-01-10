@@ -4,11 +4,25 @@ import { AlertTriangle, Activity, ArrowRight } from 'lucide-react';
 export default function MobileDashboard() {
   const { kpis, alerts, setActiveView, userRole } = useVillageStore();
 
-  // Quick stats for mobile
+  console.log('📱 MobileDashboard rendering - alerts:', alerts.length, 'kpis:', kpis, 'userRole:', userRole);
+
+  // Ensure we have data to display
+  if (!kpis) {
+    console.error('❌ KPIs not loaded!');
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <p className="text-white text-lg">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Quick stats for mobile - with defensive coding for undefined values
   const stats = [
     { 
       label: 'Active Alerts', 
-      value: alerts.length.toString(), 
+      value: (alerts?.length ?? 0).toString(), 
       icon: AlertTriangle, 
       color: 'text-orange-400', 
       bg: 'bg-orange-500/10',
@@ -16,7 +30,7 @@ export default function MobileDashboard() {
     },
     { 
       label: 'Sensors', 
-      value: kpis.activeSensors.toString(), 
+      value: (kpis?.activeSensors ?? 0).toString(), 
       icon: Activity, 
       color: 'text-emerald-400', 
       bg: 'bg-emerald-500/10',

@@ -112,6 +112,12 @@ export const demoVillageData = {
   schemes: [],
   alerts: [],
   kpis: {
+    infrastructureHealth: 92,
+    activeSensors: 1,
+    offlineSensors: 0,
+    pendingReports: 0,
+    avgResponseTime: 2.5,
+    // Legacy fields for backwards compatibility
     waterAvailability: 85,
     powerUptime: 98,
     serviceDelivery: 92,

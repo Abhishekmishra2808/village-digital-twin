@@ -41,8 +41,10 @@ function App() {
   useEffect(() => {
     if (isAuthenticated) {
       document.body.classList.add('dashboard-mode');
-      // Fetch schemes when user logs in
-      fetchSchemes();
+      // Fetch schemes when user logs in (non-blocking, especially for mobile)
+      fetchSchemes().catch(err => {
+        console.warn('Schemes fetch failed silently:', err);
+      });
     } else {
       document.body.classList.remove('dashboard-mode');
     }
@@ -70,6 +72,8 @@ function App() {
 
   // Render appropriate view based on activeView and userRole
   const renderView = () => {
+    console.log('🔷 Rendering view:', activeView, 'userRole:', userRole, 'isMobile:', isMobile);
+    
     // Field Worker sees their dashboard by default
     if (userRole === 'field_worker' && !isMobile) {
       return <FieldWorkerView />;
@@ -100,20 +104,20 @@ function App() {
 
   // Mobile Layout (Android APK)
   if (isMobile && isAuthenticated) {
+    console.log('🔵 Mobile authenticated layout - activeView:', activeView, 'userRole:', userRole);
     return (
-      <div className="h-screen w-screen bg-slate-950 text-slate-200 flex flex-col">
+      <div className="h-screen w-screen bg-slate-950 text-slate-200 flex flex-col overflow-hidden">
         {/* 1. Native-style Header */}
         <MobileHeader />
 
         {/* 2. Main Content Area (Scrollable) */}
         <main 
-          className="flex-1 overflow-y-auto overflow-x-hidden scroll-smooth"
+          className="flex-1 overflow-y-auto overflow-x-hidden scroll-smooth bg-slate-950"
           style={{
-            marginTop: 'calc(56px + env(safe-area-inset-top))', // Height of MobileHeader
-            paddingTop: '16px',
+            paddingTop: '72px', // 56px header + 16px spacing
             paddingLeft: '16px',
             paddingRight: '16px',
-            paddingBottom: '80px' // 64px (Nav) + 16px (Spacing) - No extra safe area gap
+            paddingBottom: '88px' // 64px (Nav) + 24px (extra spacing)
           }}
         >
           {renderView()}

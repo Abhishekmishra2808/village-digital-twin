@@ -489,7 +489,13 @@ export const useVillageStore = create<VillageState>((set) => ({
       sensors,
       schemes: data.schemes || [],
       alerts: data.alerts || [],
-      kpis: data.kpis || {},
+      kpis: {
+        infrastructureHealth: data.kpis?.infrastructureHealth ?? 0,
+        activeSensors: data.kpis?.activeSensors ?? sensors.filter((s: any) => s.status === 'operational' || s.status === 'active').length,
+        offlineSensors: data.kpis?.offlineSensors ?? sensors.filter((s: any) => s.status !== 'operational' && s.status !== 'active').length,
+        pendingReports: data.kpis?.pendingReports ?? 0,
+        avgResponseTime: data.kpis?.avgResponseTime ?? 0,
+      },
       gnnNodes: nodes,
       gnnEdges: edges,
       // Preserve existing failedNodes - don't reset them
@@ -534,13 +540,27 @@ export const useVillageStore = create<VillageState>((set) => ({
 
   fetchSchemes: async () => {
     try {
-      const response = await fetch(`${API_URL}/api/schemes`);
+      console.log('📡 Fetching schemes from:', `${API_URL}/api/schemes`);
+      const response = await fetch(`${API_URL}/api/schemes`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        // Add timeout for mobile
+        signal: AbortSignal.timeout(5000)
+      });
+      
+      if (!response.ok) {
+        console.warn('⚠️ Schemes fetch failed with status:', response.status);
+        return; // Don't block UI
+      }
+      
       const data = await response.json();
       if (data.schemes) {
+        console.log('✅ Schemes loaded:', data.schemes.length);
         set({ schemes: data.schemes });
       }
     } catch (error) {
-      console.error('Failed to fetch schemes:', error);
+      console.warn('⚠️ Failed to fetch schemes (non-critical):', error);
+      // Don't throw - allow UI to continue without schemes
     }
   },
 
