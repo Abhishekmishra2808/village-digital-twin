@@ -11,8 +11,6 @@ import {
   Heart,
   GraduationCap,
   Building,
-  Car,
-  Radio,
   ShoppingCart,
   XCircle,
 } from 'lucide-react';
@@ -24,7 +22,7 @@ const GNN_API_URL = 'http://localhost:7876';
 // Village center coordinates (Pune)
 const VILLAGE_CENTER: [number, number] = [73.8567, 18.5204];
 
-// Constants matching Gradio
+// Constants matching the infrastructure network
 const NODE_TYPES = [
   { value: 'Tank', label: 'Water Tank', icon: Droplet, color: 'bg-blue-500' },
   { value: 'Pump', label: 'Water Pump', icon: Activity, color: 'bg-purple-500' },
@@ -33,9 +31,7 @@ const NODE_TYPES = [
   { value: 'School', label: 'School', icon: GraduationCap, color: 'bg-indigo-500' },
   { value: 'Power', label: 'Power Node', icon: Zap, color: 'bg-yellow-500' },
   { value: 'Cluster', label: 'Consumer Area', icon: Users, color: 'bg-green-500' },
-  { value: 'Road', label: 'Road', icon: Car, color: 'bg-amber-500' },
   { value: 'Building', label: 'Building', icon: Building, color: 'bg-slate-600' },
-  { value: 'Sensor', label: 'Sensor', icon: Radio, color: 'bg-cyan-500' },
   { value: 'Market', label: 'Market', icon: ShoppingCart, color: 'bg-emerald-500' },
 ];
 
@@ -172,22 +168,6 @@ export const ImpactGenerator: React.FC = () => {
       // Power connects to pumps and buildings
       gnnNodes.filter(n => n.type === 'pump').slice(0, 2).forEach(pump => {
         addGNNEdge({ source: newNode.id, target: pump.id });
-        connectionsAdded++;
-      });
-    } else if (nodeTypeLower === 'sensor') {
-      // Sensors connect to tanks and pipes
-      gnnNodes.filter(n => n.type === 'tank').slice(0, 1).forEach(tank => {
-        addGNNEdge({ source: newNode.id, target: tank.id });
-        connectionsAdded++;
-      });
-      gnnNodes.filter(n => n.type === 'pipe').slice(0, 1).forEach(pipe => {
-        addGNNEdge({ source: newNode.id, target: pipe.id });
-        connectionsAdded++;
-      });
-    } else if (nodeTypeLower === 'road') {
-      // Roads connect to buildings
-      gnnNodes.filter(n => ['school', 'hospital', 'market', 'building'].includes(n.type)).slice(0, 2).forEach(b => {
-        addGNNEdge({ source: newNode.id, target: b.id });
         connectionsAdded++;
       });
     }

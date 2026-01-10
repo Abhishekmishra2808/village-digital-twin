@@ -71,6 +71,85 @@ User Question → RAG Backend → Pathway MCP → Document Store
 | 🔒 **PII Protection** | Auto-redacts sensitive information (Aadhaar, PAN, emails) |
 | 📊 **Geo-Aware** | Citations include precise coordinates with 4-level fallback |
 
+### 🧠 GNN Impact Predictor (Graph Neural Network)
+
+Advanced infrastructure failure prediction using Graph Neural Networks to simulate cascading impacts across village infrastructure.
+
+#### **GNN Features:**
+
+| Feature | Description |
+|---------|-------------|
+| 🌐 **Real Infrastructure Network** | Auto-generates graph from water tanks, pumps, power nodes, buildings |
+| 💥 **Failure Simulation** | Click any infrastructure node to trigger realistic failures |
+| 🔄 **Cascading Impact** | AI predicts how failures propagate through connected infrastructure |
+| 📊 **Impact Visualization** | Color-coded nodes show damage levels (green → yellow → orange → red) |
+| ➕ **Dynamic Node Addition** | Right-click map to add new infrastructure nodes with auto-connections |
+| 🔗 **Smart Edge Generation** | Nodes automatically connect based on type and proximity |
+| 📈 **Accumulated Damage** | Multiple failures compound damage realistically |
+| 🗺️ **Interactive 3D Map** | View entire infrastructure network on MapLibre GL with smooth animations |
+
+#### **How GNN Works:**
+
+```
+Infrastructure Node Selected → Trigger Failure
+                    ↓
+            GNN API Analysis (or Local Simulation)
+                    ↓
+        Calculate Impact Propagation via Edges
+                    ↓
+        Score Each Connected Node (0-100%)
+                    ↓
+        Update Map Visualization
+                    ↓
+        Display in InfoPanel with Details
+```
+
+#### **GNN Usage:**
+
+1. **View Network**: Navigate to "Village Analyzer" from sidebar
+2. **Explore Map**: All infrastructure appears as labeled nodes on 3D map
+3. **Trigger Failure**: Click any node → Select failure type and severity
+4. **Watch Propagation**: See impacts spread through network in real-time
+5. **Add Nodes**: Right-click map → Add new infrastructure → Auto-connects
+
+#### **Example Scenarios:**
+
+```
+Scenario 1: Water Pump Failure
+- Main Pump Station fails → 
+- Connected pipes show 60% impact →
+- Hospital, School lose water supply (80% impact) →
+- Consumer areas show reduced service (40-70%)
+
+Scenario 2: Power Transformer Failure  
+- Transformer fails →
+- All pumps lose power (90% impact) →
+- Entire water system compromised →
+- Critical buildings affected
+
+Scenario 3: Multiple Cascading Failures
+- First failure: Pump at 50% damage
+- Second failure: Same pump now 56% damage (accumulated)
+- Third failure: Pump cascades to failure (>90%)
+```
+
+### 🗺️ Interactive 3D Map View
+
+**Enhanced Visual Experience:**
+- **Opaque Popups**: Beautiful gradient backgrounds (slate-900 → slate-800) with glowing borders
+- **Color-Coded Infrastructure**: Green (healthy) → Yellow (impacted) → Orange (severe) → Red (failed)
+- **Smooth Animations**: Pulsing failed nodes, glowing impacts
+- **Detailed Tooltips**: Hover over nodes to see health, type, and impact details
+- **Map Controls**: Zoom, pitch, rotation, fullscreen, reset view
+- **Dual-Mode Display**: Normal monitoring + Failure simulation modes
+
+### 📊 Real-Time Analytics & Monitoring
+
+- **Live Dashboard**: Water quality, power consumption, scheme progress
+- **Alert System**: Automatic notifications for critical infrastructure issues
+- **Citizen Feedback**: Anonymous report system with GPS tracking
+- **Government Schemes**: Track budget, timeline, and completion status
+
 #### **Example Queries:**
 
 ```
@@ -103,7 +182,11 @@ A: 2 schemes show budget variance: S-123 (+12% due to material cost increase),
 │  ┌──────────────┐  ┌──────────────┐  ┌────────────────────┐   │
 │  │  Dashboard   │  │  RAG Modal   │  │  3D Map Viewer     │   │
 │  │  Components  │  │  with        │  │  (MapLibre GL)     │   │
-│  │              │  │  Citations   │  │                    │   │
+│  │              │  │  Citations   │  │  + GNN Viz         │   │
+│  └──────────────┘  └──────────────┘  └────────────────────┘   │
+│  ┌──────────────┐  ┌──────────────┐  ┌────────────────────┐   │
+│  │ Impact       │  │ Failure      │  │  Node Addition     │   │
+│  │ Predictor    │  │ Popups       │  │  Interface         │   │
 │  └──────────────┘  └──────────────┘  └────────────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
                               ↓
@@ -117,22 +200,34 @@ A: 2 schemes show budget variance: S-123 (+12% due to material cost increase),
 │  │  Citation    │  │  Geo Fallback│  │  Audit Logger      │   │
 │  │  Enrichment  │  │  4-Level     │  │  + Trace IDs       │   │
 │  └──────────────┘  └──────────────┘  └────────────────────┘   │
+│  ┌──────────────┐  ┌──────────────┐  ┌────────────────────┐   │
+│  │  GNN Proxy   │  │ Infrastructure│  │  Schemes API       │   │
+│  │  Client      │  │  Graph Store │  │  Routes            │   │
+│  └──────────────┘  └──────────────┘  └────────────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
-│              Pathway MCP Server (Python/Rust)                    │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │  DocumentStore: Schemes, Reports, Sensors, Feedback      │  │
-│  │  VectorSearch: Embedding-based semantic search            │  │
-│  │  LLM: OpenAI/Gemini for answer generation                │  │
-│  │  REST API: /v1/pw_ai_answer endpoint                      │  │
-│  └──────────────────────────────────────────────────────────┘  │
+│              AI Services Layer                                   │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │ Pathway MCP Server (Python/Rust)                           │ │
+│  │ • DocumentStore: Schemes, Reports, Sensors, Feedback       │ │
+│  │ • VectorSearch: Embedding-based semantic search            │ │
+│  │ • LLM: OpenAI/Gemini for answer generation                 │ │
+│  │ • REST API: /v1/pw_ai_answer endpoint                      │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │ GNN Service (Python)                                        │ │
+│  │ • Graph Neural Network for impact prediction               │ │
+│  │ • Node embedding and feature extraction                    │ │
+│  │ • Cascading failure simulation                             │ │
+│  │ • REST API: /api/gnn/predict-structured endpoint           │ │
+│  └────────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
 │                    MongoDB Database                              │
 │  Collections: schemes, users, vendorReports, citizenReports,    │
-│               sensors, feedback                                  │
+│               feedback, gnnNodes, gnnEdges, infrastructureGraph  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -144,6 +239,7 @@ A: 2 schemes show budget variance: S-123 (+12% due to material cost increase),
 - 🗺️ MapLibre GL for 3D maps
 - 🔌 WebSocket for real-time updates
 - 📱 Capacitor for mobile apps
+- 🎭 Lucide React for icons
 
 **Backend:**
 - 🟢 Node.js with Express
@@ -238,16 +334,68 @@ python app.py
 
 ---
 
-## 🎨 Using the RAG Feature
+## 🎨 Using the Platform
 
-### 1. Access Points
+### 1. AI RAG Feature - "Ask AI"
 
 The **"Ask AI"** button appears in:
 - 📊 **Admin Dashboard** - Top right corner
 - 👥 **Citizen Dashboard** - Top right corner  
 - 📋 **Schemes View** - Header toolbar
 
-### 2. Ask Questions
+### 2. Village Analyzer (GNN Impact Predictor)
+
+Access from the sidebar menu → **"Village Analyzer"**
+
+**Features:**
+- 🌐 **View Infrastructure Network**: Automatically loaded from real village data
+- 🗺️ **Interactive 3D Map**: All infrastructure nodes displayed with labels and icons
+- 💥 **Trigger Failures**: Click any node → Select failure type and severity
+- 📊 **Watch Impacts**: See how failures cascade through the network
+- ➕ **Add Nodes**: Right-click map → Add new infrastructure with auto-connections
+- 🔄 **Reset Network**: Clear all failures and return to original state
+- 📈 **Accumulated Damage**: Multiple failures compound realistically
+
+**Using the Analyzer:**
+
+```
+Step 1: Navigate to "Village Analyzer" from sidebar
+
+Step 2: View the infrastructure network on the map
+        • Green nodes = Healthy (100% operational)
+        • Yellow nodes = Minor impact (30-60% operational)
+        • Orange nodes = Severe impact (10-30% operational)
+        • Red nodes = Failed (<10% operational)
+
+Step 3: Click any infrastructure node to trigger a failure
+        ┌──────────────────────────────────┐
+        │ ⚠️ Trigger Failure         ✕    │
+        ├──────────────────────────────────┤
+        │ Main Pump Station                │
+        │ pump • Health: 100%              │
+        │                                  │
+        │ Failure Type: [Supply Disruption]│
+        │ Severity: [Low][Medium][High]    │
+        │                                  │
+        │ [💥 Trigger Failure]             │
+        └──────────────────────────────────┘
+
+Step 4: Watch the impact propagate
+        • GNN calculates impact on connected nodes
+        • Map updates with color-coded damage levels
+        • InfoPanel shows detailed impact analysis
+
+Step 5: Add more infrastructure (Optional)
+        • Right-click anywhere on the map
+        • Enter node name and select type
+        • Node auto-connects based on proximity and type
+
+Step 6: Trigger multiple failures to see accumulated damage
+        • Each failure adds to existing damage
+        • Nodes above 90% damage cascade to failure
+```
+
+### 3. Ask AI Questions
 
 Click "Ask AI" button → Modal opens:
 

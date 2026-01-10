@@ -16,8 +16,6 @@ const NODE_TYPES = [
   { value: 'school', label: 'School', icon: '🏫' },
   { value: 'power', label: 'Power Node', icon: '⚡' },
   { value: 'market', label: 'Market', icon: '🛒' },
-  { value: 'sensor', label: 'Sensor', icon: '📡' },
-  { value: 'road', label: 'Road', icon: '🛣️' },
 ];
 
 // Failure types and severity levels
@@ -55,51 +53,52 @@ function AddNodePopup({ position, mapCoords, onClose, onAddNode }: AddNodePopupP
 
   return (
     <div 
-      className="fixed z-[9999] bg-slate-900/98 border-2 border-emerald-500 rounded-xl shadow-2xl p-4 min-w-[280px]"
+      className="fixed z-[9999] bg-gradient-to-br from-slate-900 to-slate-800 border-2 border-emerald-400 rounded-xl shadow-2xl p-5 min-w-[300px]"
       style={{ 
-        left: Math.min(position.x, window.innerWidth - 300), 
-        top: Math.min(position.y, window.innerHeight - 320),
-        maxWidth: '320px'
+        left: Math.min(position.x, window.innerWidth - 320), 
+        top: Math.min(position.y, window.innerHeight - 340),
+        maxWidth: '340px',
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.1)'
       }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-700">
-        <div className="flex items-center gap-2">
-          <span className="text-xl">➕</span>
-          <span className="text-white font-bold text-sm">Add New Node</span>
+      <div className="flex items-center justify-between mb-4 pb-3 border-b border-emerald-500/30">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">➕</span>
+          <span className="text-white font-bold text-base">Add New Node</span>
         </div>
         <button 
           onClick={onClose}
-          className="text-slate-400 hover:text-white text-xl leading-none"
+          className="text-slate-400 hover:text-white text-2xl leading-none transition-colors"
         >
           ×
         </button>
       </div>
 
       {/* Location Info */}
-      <div className="bg-slate-800/50 rounded-lg p-2 mb-3 text-xs text-slate-400">
+      <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-3 mb-3 text-xs text-emerald-300">
         📍 {mapCoords[1].toFixed(5)}°N, {mapCoords[0].toFixed(5)}°E
       </div>
 
       {/* Node Name */}
-      <div className="mb-3">
-        <label className="block text-xs text-slate-400 mb-1">Node Name</label>
+      <div className="mb-4">
+        <label className="block text-xs text-emerald-300 font-semibold mb-2">Node Name</label>
         <input
           type="text"
           value={nodeName}
           onChange={(e) => setNodeName(e.target.value)}
           placeholder="Enter node name..."
-          className="w-full px-2 py-1.5 bg-slate-800 border border-slate-600 rounded text-white text-sm focus:outline-none focus:border-emerald-500"
+          className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20 transition-all"
         />
       </div>
 
       {/* Node Type */}
-      <div className="mb-4">
-        <label className="block text-xs text-slate-400 mb-1">Node Type</label>
+      <div className="mb-5">
+        <label className="block text-xs text-emerald-300 font-semibold mb-2">Node Type</label>
         <select
           value={nodeType}
           onChange={(e) => setNodeType(e.target.value)}
-          className="w-full px-2 py-1.5 bg-slate-800 border border-slate-600 rounded text-white text-sm focus:outline-none focus:border-emerald-500"
+          className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20 transition-all"
         >
           {NODE_TYPES.map(type => (
             <option key={type.value} value={type.value}>
@@ -113,12 +112,12 @@ function AddNodePopup({ position, mapCoords, onClose, onAddNode }: AddNodePopupP
       <button
         onClick={handleAdd}
         disabled={!nodeName.trim()}
-        className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-600 text-white rounded-lg font-bold text-sm transition-colors flex items-center justify-center gap-2"
+        className="w-full py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 disabled:from-slate-700 disabled:to-slate-600 text-white rounded-lg font-bold text-sm transition-all shadow-lg hover:shadow-emerald-500/50 flex items-center justify-center gap-2"
       >
         ➕ Add to Network
       </button>
 
-      <p className="text-[10px] text-slate-500 mt-2 text-center">
+      <p className="text-[11px] text-slate-400 mt-3 text-center">
         Node will auto-connect based on type
       </p>
     </div>
@@ -140,40 +139,41 @@ function FailurePopup({ node, position, onClose, onTriggerFailure, isLoading }: 
 
   return (
     <div 
-      className="fixed z-[9999] bg-slate-900/98 border-2 border-cyan-500 rounded-xl shadow-2xl p-4 min-w-[280px]"
+      className="fixed z-[9999] bg-gradient-to-br from-slate-900 to-slate-800 border-2 border-orange-400 rounded-xl shadow-2xl p-5 min-w-[300px]"
       style={{ 
-        left: Math.min(position.x, window.innerWidth - 300), 
-        top: Math.min(position.y, window.innerHeight - 350),
-        maxWidth: '320px'
+        left: Math.min(position.x, window.innerWidth - 320), 
+        top: Math.min(position.y, window.innerHeight - 370),
+        maxWidth: '340px',
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.1)'
       }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-700">
-        <div className="flex items-center gap-2">
-          <span className="text-xl">⚠️</span>
-          <span className="text-white font-bold text-sm">Trigger Failure</span>
+      <div className="flex items-center justify-between mb-4 pb-3 border-b border-orange-500/30">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">⚠️</span>
+          <span className="text-white font-bold text-base">Trigger Failure</span>
         </div>
         <button 
           onClick={onClose}
-          className="text-slate-400 hover:text-white text-xl leading-none"
+          className="text-slate-400 hover:text-white text-2xl leading-none transition-colors"
         >
           ×
         </button>
       </div>
 
       {/* Node Info */}
-      <div className="bg-slate-800/50 rounded-lg p-2 mb-3">
-        <div className="text-white font-semibold">{node.name}</div>
-        <div className="text-slate-400 text-xs">{node.type} • Health: {(node.health * 100).toFixed(0)}%</div>
+      <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-3 mb-4">
+        <div className="text-white font-semibold text-base">{node.name}</div>
+        <div className="text-orange-200 text-sm mt-1">{node.type} • Health: {(node.health * 100).toFixed(0)}%</div>
       </div>
 
       {/* Failure Type */}
-      <div className="mb-3">
-        <label className="block text-xs text-slate-400 mb-1">Failure Type</label>
+      <div className="mb-4">
+        <label className="block text-xs text-orange-300 font-semibold mb-2">Failure Type</label>
         <select
           value={failureType}
           onChange={(e) => setFailureType(e.target.value)}
-          className="w-full px-2 py-1.5 bg-slate-800 border border-slate-600 rounded text-white text-sm focus:outline-none focus:border-cyan-500"
+          className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-500/20 transition-all"
         >
           {FAILURE_TYPES.map(type => (
             <option key={type} value={type}>{type}</option>
@@ -182,9 +182,9 @@ function FailurePopup({ node, position, onClose, onTriggerFailure, isLoading }: 
       </div>
 
       {/* Severity */}
-      <div className="mb-4">
-        <label className="block text-xs text-slate-400 mb-1">Severity</label>
-        <div className="flex gap-1">
+      <div className="mb-5">
+        <label className="block text-xs text-orange-300 font-semibold mb-2">Severity Level</label>
+        <div className="flex gap-2">
           {SEVERITY_LEVELS.map(level => (
             <button
               key={level.value}
@@ -205,7 +205,7 @@ function FailurePopup({ node, position, onClose, onTriggerFailure, isLoading }: 
       <button
         onClick={() => onTriggerFailure(failureType, severity)}
         disabled={isLoading}
-        className="w-full py-2 bg-red-600 hover:bg-red-500 disabled:bg-slate-600 text-white rounded-lg font-bold text-sm transition-colors flex items-center justify-center gap-2"
+        className="w-full py-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 disabled:from-slate-700 disabled:to-slate-600 text-white rounded-lg font-bold text-sm transition-all shadow-lg hover:shadow-red-500/50 flex items-center justify-center gap-2"
       >
         {isLoading ? (
           <>
@@ -219,7 +219,7 @@ function FailurePopup({ node, position, onClose, onTriggerFailure, isLoading }: 
         )}
       </button>
 
-      <p className="text-[10px] text-slate-500 mt-2 text-center">
+      <p className="text-[11px] text-slate-400 mt-3 text-center">
         Impact will show on map & InfoPanel
       </p>
     </div>
@@ -310,10 +310,8 @@ export default function Map3D() {
       pipe: { targetTypes: ['pump', 'hospital', 'school', 'market', 'residential'], maxConnections: 3 },
       hospital: { targetTypes: ['pipe', 'power'], maxConnections: 2 },
       school: { targetTypes: ['pipe', 'power'], maxConnections: 2 },
-      market: { targetTypes: ['pipe', 'road'], maxConnections: 2 },
+      market: { targetTypes: ['pipe'], maxConnections: 2 },
       power: { targetTypes: ['pump', 'hospital', 'school'], maxConnections: 3 },
-      sensor: { targetTypes: ['pipe', 'tank', 'pump'], maxConnections: 2 },
-      road: { targetTypes: ['market', 'hospital', 'school'], maxConnections: 3 },
     };
     
     const rules = connectionRules[type] || { targetTypes: [], maxConnections: 2 };
