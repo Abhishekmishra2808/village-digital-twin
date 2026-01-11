@@ -7,7 +7,6 @@ import {
   Globe2,
   Zap,
   ChevronRight,
-  Play,
   Activity,
   LayoutDashboard,
   Server,
