@@ -9,7 +9,8 @@
     "dev": "node --watch server.js",
     "clear-db": "node clearDB.js",
     "cleanup-feedback": "node cleanupFeedback.js",
-    "export-pathway": "node scripts/export-to-pathway.js"
+    "export-pathway": "node scripts/export-to-pathway.js",
+    "pathway-server": "cd python-gnn && python pathway_api_server.py"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -20,6 +21,7 @@
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
     "express-rate-limit": "^8.2.1",
+    "form-data": "^4.0.5",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.2",
     "multer": "^2.0.2",

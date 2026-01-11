@@ -122,11 +122,18 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
               </button>
               
-              <button className="px-8 py-4 text-slate-300 hover:text-white font-medium transition-all flex items-center gap-3 group">
-                <div className="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center group-hover:border-white/50 transition-colors">
-                  <Play size={12} className="ml-0.5 fill-current" />
-                </div>
-                View Demo
+              <button 
+                className="group relative px-8 py-4 bg-red-600 hover:bg-red-500 text-white rounded-full font-semibold text-lg transition-all shadow-lg shadow-red-500/20 flex items-center gap-2 hover:scale-105 active:scale-95"
+                onClick={() => window.open('https://youtu.be/K7QxVA4PYDA', '_blank')}
+              >
+                <svg 
+                  className="w-6 h-6" 
+                  viewBox="0 0 24 24" 
+                  fill="currentColor"
+                >
+                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                </svg>
+                Watch Demo
               </button>
             </div>
           </motion.div>
@@ -309,4 +316,4 @@ function FeatureCard({ icon, title, desc }: { icon: React.ReactNode, title: stri
       </p>
     </div>
   );
-}
+} 

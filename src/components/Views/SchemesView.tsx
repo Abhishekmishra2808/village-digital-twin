@@ -1173,6 +1173,12 @@ function VendorReportsTab({ scheme }: { scheme: GovernmentScheme }) {
                       Submitted: {new Date(report.submittedDate).toLocaleDateString()}
                       {report.pdfFileName && ` • ${report.pdfFileName}`}
                     </div>
+                    {report.analysisMethod && (
+                      <div className="text-xs text-purple-400 mt-1 flex items-center gap-1">
+                        <Cpu size={10} />
+                        <span>Analyzed with {report.analysisMethod === 'pathway_python' ? 'Pathway AI' : 'Standard AI'}</span>
+                      </div>
+                    )}
                   </div>
                   <div className="flex flex-col items-end space-y-2">
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -1183,6 +1189,19 @@ function VendorReportsTab({ scheme }: { scheme: GovernmentScheme }) {
                     }`}>
                       {report.verificationStatus?.toUpperCase() || 'PENDING'}
                     </span>
+                    {/* Risk Level Badge */}
+                    {report.complianceAnalysis?.riskLevel && (
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        report.complianceAnalysis.riskLevel === 'critical' ? 'bg-red-600/20 text-red-300' :
+                        report.complianceAnalysis.riskLevel === 'high' ? 'bg-orange-600/20 text-orange-300' :
+                        report.complianceAnalysis.riskLevel === 'medium' ? 'bg-yellow-600/20 text-yellow-300' :
+                        'bg-green-600/20 text-green-300'
+                      }`}>
+                        {report.complianceAnalysis.riskLevel === 'critical' ? '🔴' :
+                         report.complianceAnalysis.riskLevel === 'high' ? '🟠' :
+                         report.complianceAnalysis.riskLevel === 'medium' ? '🟡' : '🟢'} Risk: {report.complianceAnalysis.riskLevel.toUpperCase()}
+                      </span>
+                    )}
                     {report.complianceAnalysis && (
                       <div className="text-right">
                         <div className="text-xs text-slate-400">Compliance Score</div>
@@ -1191,7 +1210,9 @@ function VendorReportsTab({ scheme }: { scheme: GovernmentScheme }) {
                           report.complianceAnalysis.overallCompliance >= 60 ? 'text-amber-400' :
                           'text-red-400'
                         }`}>
-                          {report.complianceAnalysis.overallCompliance}%
+                          {typeof report.complianceAnalysis.overallCompliance === 'number' 
+                            ? report.complianceAnalysis.overallCompliance.toFixed(0) 
+                            : report.complianceAnalysis.overallCompliance}%
                         </div>
                       </div>
                     )}
@@ -1202,6 +1223,49 @@ function VendorReportsTab({ scheme }: { scheme: GovernmentScheme }) {
               {/* AI Analysis Results */}
               {report.complianceAnalysis && report.complianceAnalysis.aiProcessed && (
                 <div className="p-4 space-y-4">
+                  
+                  {/* Compliance Breakdown - NEW */}
+                  {(report.complianceAnalysis.budgetCompliance || report.complianceAnalysis.timelineCompliance) && (
+                    <div className="grid grid-cols-4 gap-2 mb-4">
+                      <div className="bg-slate-800/50 rounded-lg p-3 text-center">
+                        <div className="text-xs text-slate-400 mb-1">Budget</div>
+                        <div className={`text-lg font-bold ${
+                          (report.complianceAnalysis.budgetCompliance || 0) >= 80 ? 'text-emerald-400' :
+                          (report.complianceAnalysis.budgetCompliance || 0) >= 60 ? 'text-amber-400' : 'text-red-400'
+                        }`}>
+                          {(report.complianceAnalysis.budgetCompliance || 0).toFixed(0)}%
+                        </div>
+                      </div>
+                      <div className="bg-slate-800/50 rounded-lg p-3 text-center">
+                        <div className="text-xs text-slate-400 mb-1">Timeline</div>
+                        <div className={`text-lg font-bold ${
+                          (report.complianceAnalysis.timelineCompliance || 0) >= 80 ? 'text-emerald-400' :
+                          (report.complianceAnalysis.timelineCompliance || 0) >= 60 ? 'text-amber-400' : 'text-red-400'
+                        }`}>
+                          {(report.complianceAnalysis.timelineCompliance || 0).toFixed(0)}%
+                        </div>
+                      </div>
+                      <div className="bg-slate-800/50 rounded-lg p-3 text-center">
+                        <div className="text-xs text-slate-400 mb-1">Scope</div>
+                        <div className={`text-lg font-bold ${
+                          (report.complianceAnalysis.scopeCompliance || 0) >= 80 ? 'text-emerald-400' :
+                          (report.complianceAnalysis.scopeCompliance || 0) >= 60 ? 'text-amber-400' : 'text-red-400'
+                        }`}>
+                          {(report.complianceAnalysis.scopeCompliance || 0).toFixed(0)}%
+                        </div>
+                      </div>
+                      <div className="bg-slate-800/50 rounded-lg p-3 text-center">
+                        <div className="text-xs text-slate-400 mb-1">Quality</div>
+                        <div className={`text-lg font-bold ${
+                          (report.complianceAnalysis.qualityCompliance || 0) >= 80 ? 'text-emerald-400' :
+                          (report.complianceAnalysis.qualityCompliance || 0) >= 60 ? 'text-amber-400' : 'text-red-400'
+                        }`}>
+                          {(report.complianceAnalysis.qualityCompliance || 0).toFixed(0)}%
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* AI Summary */}
                   <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
                     <div className="flex items-center space-x-2 mb-2">
@@ -1210,6 +1274,24 @@ function VendorReportsTab({ scheme }: { scheme: GovernmentScheme }) {
                     </div>
                     <p className="text-sm text-blue-300">{report.complianceAnalysis.aiSummary}</p>
                   </div>
+
+                  {/* Recommendations - NEW */}
+                  {report.complianceAnalysis.recommendations?.length > 0 && (
+                    <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-4">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Flag size={16} className="text-purple-400" />
+                        <h5 className="font-semibold text-purple-200">Recommendations</h5>
+                      </div>
+                      <ul className="space-y-2">
+                        {report.complianceAnalysis.recommendations.map((rec: string, idx: number) => (
+                          <li key={idx} className="text-sm text-purple-300 flex items-start space-x-2">
+                            <span className="text-purple-400 font-bold">{idx + 1}.</span>
+                            <span>{rec}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
                   {/* Matching Items */}
                   {report.complianceAnalysis.matchingItems?.length > 0 && (
@@ -1238,7 +1320,7 @@ function VendorReportsTab({ scheme }: { scheme: GovernmentScheme }) {
                       </h5>
                       <div className="space-y-3">
                         {report.complianceAnalysis.discrepancies.map((disc: any, idx: number) => (
-                          <div key={idx} className={`border-l-4 pl-3 py-2 ${
+                          <div key={idx} className={`border-l-4 pl-3 py-2 rounded-r ${
                             disc.severity === 'critical' ? 'border-red-500 bg-red-500/10' :
                             disc.severity === 'high' ? 'border-orange-500 bg-orange-500/10' :
                             disc.severity === 'medium' ? 'border-yellow-500 bg-yellow-500/10' :
@@ -1246,7 +1328,24 @@ function VendorReportsTab({ scheme }: { scheme: GovernmentScheme }) {
                           }`}>
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
-                                <div className="font-medium text-sm text-white">{disc.category?.toUpperCase()}</div>
+                                <div className="flex items-center gap-2">
+                                  <span className={`text-xs px-2 py-0.5 rounded uppercase font-bold ${
+                                    disc.severity === 'critical' ? 'bg-red-500/30 text-red-200' :
+                                    disc.severity === 'high' ? 'bg-orange-500/30 text-orange-200' :
+                                    disc.severity === 'medium' ? 'bg-yellow-500/30 text-yellow-200' :
+                                    'bg-blue-500/30 text-blue-200'
+                                  }`}>
+                                    {disc.severity === 'critical' ? '🔴' :
+                                     disc.severity === 'high' ? '🟠' :
+                                     disc.severity === 'medium' ? '🟡' : '🔵'} {disc.severity}
+                                  </span>
+                                  <span className="text-xs px-2 py-0.5 rounded bg-slate-700 text-slate-300 uppercase">
+                                    {disc.category}
+                                  </span>
+                                </div>
+                                {disc.title && (
+                                  <div className="font-medium text-sm text-white mt-2">{disc.title}</div>
+                                )}
                                 <div className="text-sm text-slate-300 mt-1">{disc.description}</div>
                                 <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
                                   <div>
@@ -1258,15 +1357,22 @@ function VendorReportsTab({ scheme }: { scheme: GovernmentScheme }) {
                                     <span className="font-medium text-white">{disc.actualValue}</span>
                                   </div>
                                 </div>
+                                {disc.variance && (
+                                  <div className="mt-2 text-xs">
+                                    <span className="text-slate-400">Variance: </span>
+                                    <span className={`font-bold ${disc.variance > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+                                      {disc.variance > 0 ? '+' : ''}{typeof disc.variance === 'number' ? disc.variance.toLocaleString('en-IN') : disc.variance}
+                                      {disc.variancePercentage && ` (${disc.variancePercentage}%)`}
+                                    </span>
+                                  </div>
+                                )}
+                                {disc.recommendation && (
+                                  <div className="mt-2 text-xs bg-slate-800/50 rounded p-2">
+                                    <span className="text-slate-400">💡 Action: </span>
+                                    <span className="text-slate-200">{disc.recommendation}</span>
+                                  </div>
+                                )}
                               </div>
-                              <span className={`text-xs px-2 py-1 rounded font-medium ${
-                                disc.severity === 'critical' ? 'bg-red-500/20 text-red-200' :
-                                disc.severity === 'high' ? 'bg-orange-500/20 text-orange-200' :
-                                disc.severity === 'medium' ? 'bg-yellow-500/20 text-yellow-200' :
-                                'bg-blue-500/20 text-blue-200'
-                              }`}>
-                                {disc.severity?.toUpperCase()}
-                              </span>
                             </div>
                           </div>
                         ))}
@@ -1292,11 +1398,11 @@ function VendorReportsTab({ scheme }: { scheme: GovernmentScheme }) {
                               </div>
                               <div>
                                 <span className="text-slate-400">Status: </span>
-                                <span className="font-medium text-white">{task.currentStatus}</span>
+                                <span className="font-medium text-white">{task.currentStatus || task.status}</span>
                               </div>
                               <div>
                                 <span className="text-slate-400">Delay: </span>
-                                <span className="font-medium text-red-400">{task.delayDays} days</span>
+                                <span className="font-medium text-red-400">{task.delayDays || task.delay_days} days</span>
                               </div>
                             </div>
                           </div>
@@ -1316,33 +1422,74 @@ function VendorReportsTab({ scheme }: { scheme: GovernmentScheme }) {
                         <div>
                           <div className="text-xs text-slate-400">Planned Budget</div>
                           <div className="text-lg font-bold text-white">
-                            ₹{(report.complianceAnalysis.budgetAnalysis.plannedBudget / 100000).toFixed(2)}L
+                            ₹{((report.complianceAnalysis.budgetAnalysis.plannedBudget || 0) / 100000).toFixed(2)}L
                           </div>
                         </div>
                         <div>
                           <div className="text-xs text-slate-400">Claimed Expense</div>
                           <div className="text-lg font-bold text-white">
-                            ₹{(report.complianceAnalysis.budgetAnalysis.claimedExpense / 100000).toFixed(2)}L
+                            ₹{((report.complianceAnalysis.budgetAnalysis.claimedExpense || 0) / 100000).toFixed(2)}L
                           </div>
                         </div>
                         <div>
                           <div className="text-xs text-slate-400">Variance</div>
                           <div className={`text-lg font-bold ${
-                            report.complianceAnalysis.budgetAnalysis.variance > 0 ? 'text-red-400' : 'text-emerald-400'
+                            (report.complianceAnalysis.budgetAnalysis.variance || 0) > 0 ? 'text-red-400' : 'text-emerald-400'
                           }`}>
-                            {report.complianceAnalysis.budgetAnalysis.variance > 0 ? '+' : ''}
-                            ₹{(report.complianceAnalysis.budgetAnalysis.variance / 100000).toFixed(2)}L
+                            {(report.complianceAnalysis.budgetAnalysis.variance || 0) > 0 ? '+' : ''}
+                            ₹{((report.complianceAnalysis.budgetAnalysis.variance || 0) / 100000).toFixed(2)}L
                           </div>
                         </div>
                         <div>
                           <div className="text-xs text-slate-400">Variance %</div>
                           <div className={`text-lg font-bold ${
-                            report.complianceAnalysis.budgetAnalysis.variancePercentage > 0 ? 'text-red-400' : 'text-emerald-400'
+                            parseFloat(report.complianceAnalysis.budgetAnalysis.variancePercentage || 0) > 0 ? 'text-red-400' : 'text-emerald-400'
                           }`}>
-                            {report.complianceAnalysis.budgetAnalysis.variancePercentage > 0 ? '+' : ''}
-                            {report.complianceAnalysis.budgetAnalysis.variancePercentage.toFixed(1)}%
+                            {parseFloat(report.complianceAnalysis.budgetAnalysis.variancePercentage || 0) > 0 ? '+' : ''}
+                            {parseFloat(report.complianceAnalysis.budgetAnalysis.variancePercentage || 0).toFixed(1)}%
                           </div>
                         </div>
+                      </div>
+                      
+                      {/* Budget Status Bar */}
+                      <div className="mt-4">
+                        <div className="flex justify-between text-xs text-slate-400 mb-1">
+                          <span>Budget Utilization</span>
+                          <span>{Math.min(100, ((report.complianceAnalysis.budgetAnalysis.claimedExpense || 0) / (report.complianceAnalysis.budgetAnalysis.plannedBudget || 1) * 100)).toFixed(0)}%</span>
+                        </div>
+                        <div className="w-full bg-slate-700 rounded-full h-2">
+                          <div 
+                            className={`h-2 rounded-full ${
+                              (report.complianceAnalysis.budgetAnalysis.claimedExpense || 0) > (report.complianceAnalysis.budgetAnalysis.plannedBudget || 0) 
+                                ? 'bg-red-500' 
+                                : 'bg-emerald-500'
+                            }`}
+                            style={{ 
+                              width: `${Math.min(100, ((report.complianceAnalysis.budgetAnalysis.claimedExpense || 0) / (report.complianceAnalysis.budgetAnalysis.plannedBudget || 1) * 100))}%` 
+                            }}
+                          />
+                        </div>
+                        {(report.complianceAnalysis.budgetAnalysis.claimedExpense || 0) > (report.complianceAnalysis.budgetAnalysis.plannedBudget || 0) && (
+                          <div className="text-xs text-red-400 mt-1 flex items-center gap-1">
+                            <AlertTriangle size={12} />
+                            <span>Budget Overrun Detected!</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Expense Breakdown - NEW */}
+                  {report.expenseBreakdown && Object.keys(report.expenseBreakdown).length > 0 && (
+                    <div className="bg-slate-800/50 border border-white/10 rounded-lg p-4">
+                      <h5 className="font-semibold text-white mb-3">Expense Breakdown</h5>
+                      <div className="space-y-2">
+                        {Object.entries(report.expenseBreakdown).map(([key, value]: [string, any]) => (
+                          <div key={key} className="flex justify-between items-center text-sm">
+                            <span className="text-slate-400 capitalize">{key.replace(/_/g, ' ')}</span>
+                            <span className="font-medium text-white">₹{((value as number) / 100000).toFixed(2)}L</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
@@ -1360,7 +1507,7 @@ function VendorReportsTab({ scheme }: { scheme: GovernmentScheme }) {
                   <div className="bg-slate-800/50 rounded-lg p-3 border border-white/5">
                     <div className="flex justify-between items-center">
                       <div className="text-sm text-slate-400">Expense Claimed</div>
-                      <div className="text-lg font-bold text-white">₹{(report.expenseClaimed / 100000).toFixed(2)}L</div>
+                      <div className="text-lg font-bold text-white">₹{((report.expenseClaimed || 0) / 100000).toFixed(2)}L</div>
                     </div>
                   </div>
                 </div>
@@ -2115,7 +2262,11 @@ function AddSchemeModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
           monitoringCheckpoints: []
         });
 
-        alert('✅ PDF data extracted successfully using RunAnywhere SDK (Qwen 2.5 0.5B)!\n\nAll processing done locally on your device.\n\nPlease review and edit if needed.');
+        const method = result.extractionMethod || 'standard';
+        const confidence = result.confidence || 'Medium';
+        const methodDisplay = method.includes('pathway') ? 'Pathway RAG AI' : 
+                             method === 'llm' ? 'AI-powered extraction' : method;
+        alert(`✅ PDF data extracted successfully!\n\nExtraction Method: ${methodDisplay}\nConfidence: ${confidence}\n\nPlease review and edit if needed.`);
       } else {
         throw new Error(result.error || 'Failed to extract data from PDF');
       }
@@ -2210,7 +2361,7 @@ function AddSchemeModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
                   {isExtractingPDF ? (
                     <>
                       <Loader size={18} className="animate-spin text-blue-400" />
-                      <span className="text-sm font-medium text-blue-400">Analyzing with RunAnywhere SDK...</span>
+                      <span className="text-sm font-medium text-blue-400">Analyzing with Pathway RAG AI...</span>
                     </>
                   ) : (
                     <>
@@ -2224,9 +2375,9 @@ function AddSchemeModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
               </label>
               
               <p className="text-xs text-slate-500 mt-2 text-center">
-                PDF analyzed locally using Qwen 2.5 0.5B via RunAnywhere SDK.
+                PDF analyzed using Pathway Docker RAG with vectorized retrieval.
                 <br/>
-                <span className="text-purple-400 font-medium">⚡ 100% Local AI - No Cloud Required</span>
+                <span className="text-purple-400 font-medium">⚡ AI-powered extraction for accurate data</span>
               </p>
             </div>
 

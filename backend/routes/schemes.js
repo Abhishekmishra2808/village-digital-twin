@@ -6,8 +6,16 @@ import Feedback from '../models/Feedback.js';
 // Switched from Gemini to Hugging Face Llama 3.1-8B-Instruct
 import { processFeedbackWithAI } from '../utils/huggingfaceService.js';
 import { extractSchemeFromPDF, analyzeVendorReport } from '../utils/pdfService.js';
+// Import Pathway-enhanced extraction services
+import { 
+  extractSchemeFromPDFWithPathway, 
+  analyzeVendorReportWithPathway 
+} from '../utils/pathwayPdfService.js';
 
 const router = express.Router();
+
+// Use Pathway extraction when available
+const USE_PATHWAY = process.env.USE_PATHWAY_EXTRACTION !== 'false';
 
 // Configure multer for PDF uploads (memory storage)
 const upload = multer({
@@ -317,7 +325,7 @@ router.get('/:id/feedback', async (req, res) => {
   }
 });
 
-// Extract scheme details from PDF using AI
+// Extract scheme details from PDF using Pathway AI (enhanced)
 router.post('/extract-from-pdf', upload.single('pdf'), async (req, res) => {
   try {
     if (!req.file) {
@@ -326,15 +334,33 @@ router.post('/extract-from-pdf', upload.single('pdf'), async (req, res) => {
 
     console.log('📄 Processing scheme PDF:', req.file.originalname, 'Size:', req.file.size);
 
-    // Extract scheme data using Gemini AI
-    const result = await extractSchemeFromPDF(req.file.buffer);
+    let result;
+    
+    // Try Pathway extraction first (more accurate for complex documents)
+    if (USE_PATHWAY) {
+      console.log('🚀 Using Pathway-enhanced extraction...');
+      try {
+        result = await extractSchemeFromPDFWithPathway(req.file.buffer, req.file.originalname);
+      } catch (pathwayError) {
+        console.warn('⚠️ Pathway extraction failed, falling back to standard:', pathwayError.message);
+        result = await extractSchemeFromPDF(req.file.buffer);
+      }
+    } else {
+      // Use standard extraction
+      result = await extractSchemeFromPDF(req.file.buffer);
+    }
 
     if (result.success) {
       console.log('✅ Successfully extracted scheme data from PDF');
+      console.log(`   Method: ${result.extractionMethod || 'standard'}`);
+      console.log(`   Confidence: ${result.data?.extractionConfidence || 'N/A'}`);
+      
       res.json({
         success: true,
         data: result.data,
-        message: 'Scheme data extracted successfully. Please review and submit.'
+        extractionMethod: result.extractionMethod || 'standard',
+        confidence: result.data?.extractionConfidence || 'Medium',
+        message: 'Scheme data extracted successfully using Pathway AI. Please review and submit.'
       });
     } else {
       console.error('❌ Failed to extract scheme data:', result.error);
@@ -350,7 +376,7 @@ router.post('/extract-from-pdf', upload.single('pdf'), async (req, res) => {
   }
 });
 
-// Upload and analyze vendor report against government plan
+// Upload and analyze vendor report against government plan (Pathway-enhanced)
 router.post('/:id/vendor-report', upload.single('pdf'), async (req, res) => {
   try {
     if (!req.file) {
@@ -368,11 +394,24 @@ router.post('/:id/vendor-report', upload.single('pdf'), async (req, res) => {
     console.log('📊 Analyzing vendor report for scheme:', scheme.name);
     console.log('📄 Vendor PDF:', req.file.originalname, 'Size:', req.file.size);
 
-    // Analyze vendor report using Gemini AI
-    const result = await analyzeVendorReport(req.file.buffer, scheme);
+    let result;
+    
+    // Try Pathway-enhanced analysis first (more accurate discrepancy detection)
+    if (USE_PATHWAY) {
+      console.log('🚀 Using Pathway-enhanced vendor analysis...');
+      try {
+        result = await analyzeVendorReportWithPathway(req.file.buffer, req.file.originalname, scheme);
+      } catch (pathwayError) {
+        console.warn('⚠️ Pathway analysis failed, falling back to standard:', pathwayError.message);
+        result = await analyzeVendorReport(req.file.buffer, scheme);
+      }
+    } else {
+      // Use standard analysis
+      result = await analyzeVendorReport(req.file.buffer, scheme);
+    }
 
     if (result.success) {
-      // Create vendor report entry
+      // Create vendor report entry with enhanced discrepancy data
       const vendorReport = {
         id: `VR-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
         vendorName: result.analysis.vendorName || 'Unknown Vendor',
@@ -380,15 +419,23 @@ router.post('/:id/vendor-report', upload.single('pdf'), async (req, res) => {
         phase: result.analysis.phase || 1,
         workCompleted: result.analysis.workCompleted || 'Not specified',
         expenseClaimed: result.analysis.expenseClaimed || 0,
+        expenseBreakdown: result.analysis.expenseBreakdown || {},
         verificationStatus: result.analysis.overallCompliance >= 80 ? 'approved' : 
                            result.analysis.overallCompliance >= 60 ? 'under-review' : 'rejected',
         pdfFileName: req.file.originalname,
+        analysisMethod: result.analysisMethod || 'standard',
         complianceAnalysis: {
           overallCompliance: result.analysis.overallCompliance,
+          budgetCompliance: result.analysis.budgetCompliance || result.analysis.overallCompliance,
+          timelineCompliance: result.analysis.timelineCompliance || result.analysis.overallCompliance,
+          scopeCompliance: result.analysis.scopeCompliance || result.analysis.overallCompliance,
+          qualityCompliance: result.analysis.qualityCompliance || result.analysis.overallCompliance,
+          riskLevel: result.analysis.riskLevel || 'medium',
           matchingItems: result.analysis.matchingItems || [],
           discrepancies: result.analysis.discrepancies || [],
           overdueWork: result.analysis.overdueWork || [],
           budgetAnalysis: result.analysis.budgetAnalysis || {},
+          recommendations: result.analysis.recommendations || [],
           aiSummary: result.analysis.aiSummary,
           aiProcessed: result.aiProcessed
         }

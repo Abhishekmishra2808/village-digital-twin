@@ -104,9 +104,14 @@ Be specific and cite sources.`
       throw error;
     }
 
+    // Extract citations from Pathway's retrieved documents
+    const citations = pathwayResponse.citations || [];
+    
+    console.log(`ℹ️  Pathway returned ${citations.length} citations [${trace_id}]`);
+
     // Enrich citations with metadata and geo coordinates
     const enrichedCitations = await enrichCitations(
-      pathwayResponse.citations,
+      citations,
       scheme_id,
       bbox
     );

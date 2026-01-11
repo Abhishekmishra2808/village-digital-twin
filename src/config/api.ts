@@ -4,8 +4,8 @@
 // Production backend URL (deployed on Render)
 const PRODUCTION_API_URL = 'https://village-digital-twin.onrender.com';
 
-// Local development IP - only used if you specifically want to test with local backend
-const LOCAL_DEV_IP = '192.168.29.179';
+// Local development - use localhost
+const LOCAL_DEV_HOST = 'localhost';
 const LOCAL_DEV_PORT = '3001';
 
 // Check if running on Capacitor (mobile app)
@@ -18,44 +18,51 @@ const isCapacitor = () => {
   }
 };
 
+// Check if running on localhost
+const isLocalhost = () => {
+  if (typeof window === 'undefined') return false;
+  const hostname = window.location.hostname;
+  return hostname === 'localhost' || hostname === '127.0.0.1';
+};
+
 const getApiUrl = () => {
-  // For Capacitor mobile app - ALWAYS use production backend
+  // ALWAYS check localhost FIRST - this ensures dev mode works
+  if (isLocalhost()) {
+    console.log('🔧 DEV MODE: Using local backend at localhost:3001');
+    return `http://${LOCAL_DEV_HOST}:${LOCAL_DEV_PORT}`;
+  }
+  
+  // For Capacitor mobile app - use production backend
   if (isCapacitor()) {
-    // Use production backend for mobile
     return PRODUCTION_API_URL;
   }
   
-  // Check if we're in production (deployed web)
-  if (import.meta.env.PROD) {
-    return import.meta.env.VITE_API_URL || PRODUCTION_API_URL;
-  }
-  
-  // Development web - use local server
-  return `http://${LOCAL_DEV_IP}:${LOCAL_DEV_PORT}`;
+  // Production web - use production backend
+  return import.meta.env.VITE_API_URL || PRODUCTION_API_URL;
 };
 
 const getWsUrl = () => {
+  // ALWAYS check localhost FIRST
+  if (isLocalhost()) {
+    return `ws://${LOCAL_DEV_HOST}:${LOCAL_DEV_PORT}`;
+  }
+  
   // For Capacitor mobile app - use production websocket
   if (isCapacitor()) {
     return PRODUCTION_API_URL.replace('https://', 'wss://').replace('http://', 'ws://');
   }
   
-  // Check if we're in production (deployed web)
-  if (import.meta.env.PROD) {
-    const apiUrl = import.meta.env.VITE_API_URL || PRODUCTION_API_URL;
-    return apiUrl.replace('https://', 'wss://').replace('http://', 'ws://');
-  }
-  
-  // Development web - use local websocket
-  return `ws://${LOCAL_DEV_IP}:${LOCAL_DEV_PORT}`;
+  // Production web
+  const apiUrl = import.meta.env.VITE_API_URL || PRODUCTION_API_URL;
+  return apiUrl.replace('https://', 'wss://').replace('http://', 'ws://');
 };
 
 export const API_URL = getApiUrl();
 export const WS_URL = getWsUrl();
 
-// Debug logging for mobile development
-if (isCapacitor()) {
-  console.log('📱 Running on Capacitor');
-  console.log('🔗 API URL:', API_URL);
-  console.log('🔌 WS URL:', WS_URL);
-}
+// Always log the API configuration for debugging
+console.log('🌐 API Configuration:');
+console.log('  Hostname:', typeof window !== 'undefined' ? window.location.hostname : 'SSR');
+console.log('  Is Localhost:', isLocalhost());
+console.log('  API URL:', API_URL);
+console.log('  WS URL:', WS_URL);

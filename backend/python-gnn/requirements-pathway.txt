@@ -1,0 +1,22 @@
+# Pathway Document Extractor Requirements
+# Install with: pip install -r requirements-pathway.txt
+
+# Core Dependencies
+fastapi>=0.100.0
+uvicorn>=0.23.0
+python-multipart>=0.0.6
+pydantic>=2.0.0
+
+# PDF Processing
+pdfplumber>=0.10.0
+PyPDF2>=3.0.0
+
+# AI/LLM
+google-generativeai>=0.3.0
+huggingface_hub>=0.20.0
+
+# Pathway (optional - for advanced document indexing)
+# pathway>=0.8.0
+
+# Utilities
+python-dotenv>=1.0.0
